@@ -4,22 +4,21 @@ export interface SelectionType {
   key: string;
   /** 选择项显示的文字 */
   text: React.ReactNode;
-  // todo 类型
   /** 选择项点击回调 */
-  onSelect: (changeableRowKeys: any) => void;
+  onSelect: (changeableRowKeys: React.Key[]) => void;
 }
 
-export interface RowSelectionType {
+export interface RowSelectionType<T> {
   /** 自定义列表选择框标题 */
   columnTitle?: React.ReactNode;
   /** 自定义列表选择框宽度 */
   columnWidth?: string | number;
   /** 选择框的默认属性配置 */
-  getCheckboxProps?: (record: any) => any;
+  getCheckboxProps?: (record: T) => any;
   /** 渲染除了表头的勾选框 */
   renderCell?: (
     checked: boolean,
-    record: any,
+    record: T,
     index: number,
     originNode: React.ReactNode,
   ) => React.ReactNode;
@@ -31,24 +30,24 @@ export interface RowSelectionType {
   selections?: boolean | SelectionType[];
   /** 多选/单选 */
   type: 'radio' | 'checkbox';
-  /** 选中项发生变化时的回调 todo 类型 */
-  onChange?: (selectedRowKeys: string[] | number[], selectedRows: any, info: any) => void;
-  /** 用户手动选择/取消选择某行的回调 todo 类型 */
-  onSelect?: (record: any, selected: boolean, selectedRows: any, nativeEvent: any) => void;
-  /** 用户手动选择/取消选择所有行的回调 todo 类型 */
-  onSelectAll?: (selected: boolean, selectedRows: any, changeRows: any) => void;
-  /** 用户手动选择反选的回调 todo 类型 */
+  /** 选中项发生变化时的回调 */
+  onChange?: (selectedRowKeys: string[] | number[], selectedRows: T[], info: any) => void;
+  /** 用户手动选择/取消选择某行的回调 */
+  onSelect?: (record: T, selected: boolean, selectedRows: T[], nativeEvent: any) => void;
+  /** 用户手动选择/取消选择所有行的回调 */
+  onSelectAll?: (selected: boolean, selectedRows: T[], changeRows: T[]) => void;
+  /** 用户手动选择反选的回调 */
   onSelectInvert?: (selectedRowKeys: string[] | number[]) => void;
-  /** 用户清空选择的回调 todo 类型 */
+  /** 用户清空选择的回调 */
   onSelectNone?: () => void;
 }
 
-export interface SorterType {
-  compare: (rowA: any, rowB: any) => any;
+export interface SorterType<T> {
+  compare: (rowA: T, rowB: T) => any;
   weight: number;
 }
 
-export interface ColumnsType {
+export interface ColumnsType<T> {
   /** 设置列的对齐方式 */
   align?: 'left' | 'center' | 'right';
   /** 列样式类名 */
@@ -56,7 +55,7 @@ export interface ColumnsType {
   /** 列固定 */
   fixed?: 'left' | 'right';
   /** 生成复杂数据的渲染函数 */
-  render?: (text: string, record: any, index: number) => any;
+  render?: (text: string, record: T, index: number) => any;
   /** 列头显示文字 */
   title?: React.ReactNode;
   /** 列宽度 */
@@ -68,13 +67,14 @@ export interface ColumnsType {
   /** 默认排序 */
   defaultOrder?: 'asc' | 'desc';
   /** 排序函数 */
-  sorter?: (rowA: any, rowB: any) => void | SorterType;
+  sorter?: (rowA: T, rowB: T) => void | SorterType<T>;
   // todo 表头列合并 是否需要还是放到onHeaderCell 中处理
   colSpan?: number;
   /** 设置单元格属性 */
-  onCell?: (record: any, rowIndex: number) => any;
-  /** 设置头部单元格属性 */
-  onHeaderCell?: (column: any) => any;
+  onCell?: (record: T, rowIndex: number) => any;
+  /** 设置头部单元格属性 todo */
+  onHeaderCell?: (column: T) => any;
+  /** 默认筛选值 */
   defaultFilteredValue?: string[];
   /** 可以自定义筛选菜单 todo */
   filterDropdown?: () => React.ReactNode;
@@ -94,32 +94,40 @@ export interface ColumnsType {
   onFilterDropdownOpenChange?: (open: boolean) => any;
 }
 
-export interface ExpandableType {
-  /** 自定义展开列表头 */
-  columnTitle?: React.ReactNode;
-  /** 自定义展开列宽度 */
-  columnWidth?: string | number;
-  /** 树形数据每层的缩进 */
-  indentSize?: number;
+export interface BaseExpandableType<T> {
   /** 初始时，是否展开所有行 */
   defaultExpandAllRows?: boolean;
   /** 默认展开的行 */
   defaultExpandedRowKeys?: string[];
   /** 展开行的 className todo indent 是否需要 */
-  expandedRowClassName?: (record: any, index: number, indent: number) => string;
+  expandedRowClassName?: (record: T, index: number, indent: number) => string;
   /** 展开的行，控制属性 */
   expandedRowKeys?: string[];
-  /** 渲染不是树形数据展开行的内容 */
+  /** 自定义展开图标 todo props 类型 */
+  expandIcon?: (props: any) => React.ReactNode;
+  /** 设置是否允许行展开 */
+  rowExpandable?: (record: T) => boolean;
+  /** 设置是否展示行展开列 */
+  onExpand?: (expanded: boolean, record: T) => void;
+}
+
+export interface ExpandableType<T> extends BaseExpandableType<T> {
+  /** 自定义展开列表头 */
+  columnTitle?: React.ReactNode;
+  /** 自定义展开列宽度 */
+  columnWidth?: string | number;
+  /** 渲染展开行的内容 */
   expandedRowRender?: (
-    record: any,
+    record: T,
     index: number,
     indent: number,
     expanded: boolean,
   ) => React.ReactNode;
-  /** 自定义展开图标 */
-  expandIcon?: (props: any) => React.ReactNode;
-  /** 设置是否允许行展开 */
-  rowExpandable?: (record: any) => boolean;
-  /** 设置是否展示行展开列 */
-  onExpand?: (expanded: boolean, record: any) => void;
 }
+
+export interface TreeExpandableType<T> extends BaseExpandableType<T> {
+  /** 树形数据每层的缩进 */
+  indentSize?: number;
+}
+
+export type KeysRefType = { [key: string]: boolean };
