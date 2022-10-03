@@ -53,7 +53,7 @@ const data: DataType[] = [
   },
 ];
 
-export default () => <Table dataSource={data} bordered rowKey="key" />;
+export default () => <Table dataSource={data} columns={columns} bordered rowKey="key" />;
 ```
 
 More skills for writing demo: https://d.umijs.org/guide/basic#write-component-demo

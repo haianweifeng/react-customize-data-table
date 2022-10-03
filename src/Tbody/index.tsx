@@ -1,17 +1,16 @@
 import React, { useRef } from 'react';
 import type { TableProps } from '../Table';
 import type { ColumnsType, KeysRefType } from '../interface';
+import Tr from '../Tr';
 import styles from './index.less';
 
 interface TbodyProps<T> extends TableProps<T> {
-  data: T[];
   columns: ColumnsType<T>[];
   startRowIndex: number;
-  rowKey: string | ((rowData: T) => string | number);
 }
 
-function Tbody<T>(props: Partial<TbodyProps<T>>) {
-  const { data, columns, startRowIndex, rowKey } = props;
+function Tbody<T>(props: TbodyProps<T>) {
+  const { dataSource, columns, startRowIndex, rowKey } = props;
 
   const keysRef = useRef<KeysRefType>({} as KeysRefType);
 
@@ -24,7 +23,7 @@ function Tbody<T>(props: Partial<TbodyProps<T>>) {
     return undefined;
   };
 
-  const renderTr = (rowData: any, i: number) => {
+  const renderTr = (rowData: T, i: number) => {
     let key = getRowKey(rowData);
     if (!(typeof key === 'string' || typeof key === 'number')) {
       console.error(new Error(`expect Tr has a string or a number key, get '${typeof key}'`));
@@ -37,13 +36,9 @@ function Tbody<T>(props: Partial<TbodyProps<T>>) {
       key = converted;
     }
     keysRef.current = key;
-    return (
-      <tr key={key}>
-        <td>hhahah</td>
-      </tr>
-    );
+    return <Tr key={key} rowData={rowData} rowIndex={i} {...props} />;
   };
 
-  return <tbody>{data?.map((d, i: number) => renderTr(d, i))}</tbody>;
+  return <tbody>{dataSource?.map((d, i: number) => renderTr(d, i))}</tbody>;
 }
 export default Tbody;

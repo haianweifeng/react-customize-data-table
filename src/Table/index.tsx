@@ -80,7 +80,7 @@ function Table<T>(props: TableProps<T>) {
     return (
       <div>
         <table>
-          <Tbody data={dataSource} columns={columns} startRowIndex={startRowIndex} {...others} />
+          <Tbody startRowIndex={startRowIndex} {...props} />
         </table>
       </div>
     );

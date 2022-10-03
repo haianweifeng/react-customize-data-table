@@ -47,17 +47,21 @@ export interface SorterType<T> {
   weight: number;
 }
 
+export type CellType = { colSpan?: number; rowSpan?: number };
+
 export interface ColumnsType<T> {
   /** 设置列的对齐方式 */
   align?: 'left' | 'center' | 'right';
   /** 列样式类名 */
   className?: string;
+  /** 列对应字段名 */
+  dataIndex: keyof T;
   /** 列固定 */
   fixed?: 'left' | 'right';
   /** 生成复杂数据的渲染函数 */
-  render?: (text: string, record: T, index: number) => any;
+  render: (text: string, record: T, index: number) => any;
   /** 列头显示文字 */
-  title?: React.ReactNode;
+  title: React.ReactNode;
   /** 列宽度 */
   width?: string | number;
   /** 最大可拖动列宽 */
@@ -71,7 +75,7 @@ export interface ColumnsType<T> {
   // todo 表头列合并 是否需要还是放到onHeaderCell 中处理
   colSpan?: number;
   /** 设置单元格属性 */
-  onCell?: (record: T, rowIndex: number) => any;
+  onCell?: (record: T, rowIndex: number) => CellType;
   /** 设置头部单元格属性 todo */
   onHeaderCell?: (column: T) => any;
   /** 默认筛选值 */
