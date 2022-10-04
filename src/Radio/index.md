@@ -1,21 +1,23 @@
-## Checkbox
+## Radio
 
 Demo:
 
 ```tsx
 import React, { useState } from 'react';
-import { Checkbox } from 'react-data-table';
+import { Radio } from 'react-data-table';
 
-const [checked, setChecked] = useState<boolean | 'indeterminate'>('indeterminate');
+const [checked, setChecked] = useState<boolean>(false);
 
 const handleChange = (value: boolean) => {
   setChecked(value);
 };
 
 export default () => (
-  <Checkbox checked={checked} onChange={handleChange}>
-    Checkbox
-  </Checkbox>
+  <>
+    <Radio checked={checked} onChange={handleChange}>
+      Radio
+    </Radio>
+  </>
 );
 ```
 

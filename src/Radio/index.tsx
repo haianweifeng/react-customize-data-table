@@ -1,27 +1,25 @@
-import React, { useRef } from 'react';
-import classnames from 'classnames';
-import { generateUUID } from '../utils/util';
 import styles from './index.less';
+import React, { useRef } from 'react';
+import { generateUUID } from '../utils/util';
+import classnames from 'classnames';
 
-interface CheckboxProps {
+interface RadioProps {
   className?: string;
   style?: React.CSSProperties;
-  checked: boolean | 'indeterminate';
+  checked: boolean;
   disabled?: boolean;
   onChange: (checked: boolean) => void;
   children?: React.ReactNode;
 }
-
-const Checkbox = (props: CheckboxProps) => {
+const Radio = (props: RadioProps) => {
   const { className = '', style = {}, disabled = false, checked, children, onChange } = props;
 
   const idRef = useRef<string>(generateUUID());
 
   const cls = classnames({
-    [styles.checkbox]: true,
+    [styles.radio]: true,
     [styles.disabled]: disabled,
     [styles.checked]: checked,
-    [styles.indeterminate]: checked === 'indeterminate',
     [className]: !!className,
   });
 
@@ -35,14 +33,15 @@ const Checkbox = (props: CheckboxProps) => {
       <input
         id={idRef.current}
         disabled={disabled}
-        type="checkbox"
+        type="radio"
+        name="radio"
         onChange={handleChange}
-        checked={!!checked}
-        className={styles.checkboxInput}
+        checked={checked}
+        className={styles.radioInput}
       />
-      <span className={styles.checkboxInner} />
+      <span className={styles.radioInner} />
       {children && <span className={styles.name}>{children}</span>}
     </label>
   );
 };
-export default Checkbox;
+export default Radio;
