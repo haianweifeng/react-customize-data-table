@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import type { TableProps } from '../Table';
 import type { ColumnsType, KeysRefType } from '../interface';
 import Tr from '../Tr';
@@ -17,6 +17,13 @@ function Tbody<T>(props: TbodyProps<T>) {
   const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
     return rowSelection?.defaultSelectedRowKeys || rowSelection?.selectedRowKeys || [];
   });
+
+  useEffect(() => {
+    if (rowSelection?.defaultSelectedRowKeys || rowSelection?.selectedRowKeys) {
+      const keys = rowSelection.defaultSelectedRowKeys || rowSelection.selectedRowKeys;
+      setSelectedKeys(keys as (string | number)[]);
+    }
+  }, [rowSelection]);
 
   const getSelectionType = () => {
     if (rowSelection) {

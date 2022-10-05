@@ -1,4 +1,6 @@
-## Table basic use
+### 可选择行
+
+#### 设置 rowSelection 会自动在第一列添加选择框,默认 rowSelection.type 为 checkbox
 
 Demo:
 
@@ -64,7 +66,7 @@ const rowSelection = {
     console.log(nativeEvent);
   },
   getCheckboxProps: (record) => ({
-    disabled: record.name === 'Joe1 Black', // Column configuration not to be checked
+    disabled: record.name === 'Joe Black', // Column configuration not to be checked
     name: record.name,
   }),
 };
@@ -73,5 +75,3 @@ export default () => (
   <Table rowSelection={rowSelection} dataSource={data} columns={columns} bordered rowKey="key" />
 );
 ```
-
-More skills for writing demo: https://d.umijs.org/guide/basic#write-component-demo
