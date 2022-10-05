@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import type { TableProps } from '../Table';
 import type { ColumnsType, KeysRefType } from '../interface';
 import Tr from '../Tr';
@@ -10,34 +10,94 @@ interface TbodyProps<T> extends TableProps<T> {
 }
 
 function Tbody<T>(props: TbodyProps<T>) {
-  const { dataSource, columns, startRowIndex, rowKey } = props;
+  const { dataSource, columns, startRowIndex, rowKey, rowSelection } = props;
 
   const keysRef = useRef<KeysRefType>({} as KeysRefType);
 
-  const getRowKey = (rowData: any) => {
+  const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
+    return rowSelection?.defaultSelectedRowKeys || rowSelection?.selectedRowKeys || [];
+  });
+
+  const getSelectionType = () => {
+    if (rowSelection) {
+      return rowSelection.type || 'checkbox';
+    }
+    return '';
+  };
+
+  const getRowKey = (rowData: T, i: number) => {
     if (typeof rowKey === 'string') {
-      return rowData[rowKey];
+      return rowData[rowKey as keyof T] as string;
     } else if (typeof rowKey === 'function') {
       return rowKey(rowData);
     }
-    return undefined;
+    console.warn(
+      `Tr has no set unique key.Already converted with ${i},Please sure Tr has unique key.`,
+    );
+    return i;
+  };
+
+  const getSelectedRowData = (keys: (string | number)[]) => {
+    return dataSource.filter((d, index) => {
+      const key = getRowKey(d, index);
+      return keys.indexOf(key) >= 0;
+    });
+  };
+
+  const handleSelect = (record: T, rowIndex: number, selected: boolean, event: Event) => {
+    const type = getSelectionType();
+    const isRadio = type === 'radio';
+    const key = getRowKey(record, rowIndex);
+    const isExist = selectedKeys.indexOf(key) >= 0;
+
+    let keys;
+
+    if (!isExist) {
+      keys = isRadio ? [key] : [...selectedKeys, key];
+    } else {
+      keys = selectedKeys.filter((p: string | number) => p !== key);
+    }
+
+    const selectedRows = getSelectedRowData(keys);
+    if (typeof rowSelection?.onSelect === 'function') {
+      rowSelection.onSelect(record, selected, selectedRows, event);
+    }
+    setSelectedKeys(keys);
+    if (typeof rowSelection?.onChange === 'function') {
+      rowSelection?.onChange(keys, getSelectedRowData(keys));
+    }
   };
 
   const renderTr = (rowData: T, i: number) => {
-    let key = getRowKey(rowData);
+    let key = getRowKey(rowData, i);
     if (!(typeof key === 'string' || typeof key === 'number')) {
       console.error(new Error(`expect Tr has a string or a number key, get '${typeof key}'`));
     }
     if (keysRef.current[key]) {
-      const converted = `converted_${i}`;
-      console.warn(
-        `Tr has same key: (${key}). Already converted with (${converted}), Please sure Tr has unique key.`,
-      );
+      const converted = `converted_key_${i}`;
+      let tips = `Tr has same key:(${key}).Already converted with (${converted}), Please sure Tr has unique key.`;
+      console.warn(tips);
       key = converted;
     }
-    keysRef.current = key;
-    return <Tr key={key} rowData={rowData} rowIndex={i} {...props} />;
+    keysRef.current[key] = true;
+
+    const checked = selectedKeys.indexOf(key) >= 0;
+
+    return (
+      <Tr
+        key={key}
+        rowId={key}
+        rowData={rowData}
+        rowIndex={i}
+        type={getSelectionType()}
+        checked={checked}
+        {...props}
+        onSelect={handleSelect}
+      />
+    );
   };
+
+  keysRef.current = {};
 
   return <tbody>{dataSource?.map((d, i: number) => renderTr(d, i))}</tbody>;
 }

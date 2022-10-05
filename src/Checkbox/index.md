@@ -8,7 +8,7 @@ import { Checkbox } from 'react-data-table';
 
 const [checked, setChecked] = useState<boolean | 'indeterminate'>('indeterminate');
 
-const handleChange = (value: boolean) => {
+const handleChange = (value: boolean, event: any) => {
   setChecked(value);
 };
 

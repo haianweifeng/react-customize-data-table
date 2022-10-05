@@ -8,7 +8,7 @@ interface CheckboxProps {
   style?: React.CSSProperties;
   checked: boolean | 'indeterminate';
   disabled?: boolean;
-  onChange: (checked: boolean) => void;
+  onChange: (checked: boolean, event: any) => void;
   children?: React.ReactNode;
 }
 
@@ -27,7 +27,7 @@ const Checkbox = (props: CheckboxProps) => {
 
   const handleChange = (event: any) => {
     const { checked } = event.target;
-    onChange(checked);
+    onChange(checked, event.nativeEvent);
   };
 
   return (

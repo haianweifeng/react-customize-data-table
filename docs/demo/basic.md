@@ -53,7 +53,25 @@ const data: DataType[] = [
   },
 ];
 
-export default () => <Table dataSource={data} columns={columns} bordered rowKey="key" />;
+const rowSelection = {
+  onChange: (selectedRowKeys, selectedRows) => {
+    console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+  },
+  onSelect: (record, selected, selectedRows, nativeEvent) => {
+    console.log(record);
+    console.log(selected);
+    console.log(selectedRows);
+    console.log(nativeEvent);
+  },
+  getCheckboxProps: (record) => ({
+    disabled: record.name === 'Joe1 Black', // Column configuration not to be checked
+    name: record.name,
+  }),
+};
+
+export default () => (
+  <Table rowSelection={rowSelection} dataSource={data} columns={columns} bordered rowKey="key" />
+);
 ```
 
 More skills for writing demo: https://d.umijs.org/guide/basic#write-component-demo

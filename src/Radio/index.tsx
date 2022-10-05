@@ -8,11 +8,20 @@ interface RadioProps {
   style?: React.CSSProperties;
   checked: boolean;
   disabled?: boolean;
-  onChange: (checked: boolean) => void;
+  name?: string;
+  onChange: (checked: boolean, event: any) => void;
   children?: React.ReactNode;
 }
 const Radio = (props: RadioProps) => {
-  const { className = '', style = {}, disabled = false, checked, children, onChange } = props;
+  const {
+    className = '',
+    style = {},
+    disabled = false,
+    checked,
+    children,
+    name = 'radio',
+    onChange,
+  } = props;
 
   const idRef = useRef<string>(generateUUID());
 
@@ -25,7 +34,7 @@ const Radio = (props: RadioProps) => {
 
   const handleChange = (event: any) => {
     const { checked } = event.target;
-    onChange(checked);
+    onChange(checked, event.nativeEvent);
   };
 
   return (
@@ -34,7 +43,7 @@ const Radio = (props: RadioProps) => {
         id={idRef.current}
         disabled={disabled}
         type="radio"
-        name="radio"
+        name={name}
         onChange={handleChange}
         checked={checked}
         className={styles.radioInput}

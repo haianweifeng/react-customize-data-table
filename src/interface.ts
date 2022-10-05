@@ -13,6 +13,8 @@ export interface RowSelectionType<T> {
   columnTitle?: React.ReactNode;
   /** 自定义列表选择框宽度 */
   columnWidth?: string | number;
+  /** 把选择框列固定在左边 */
+  fixed?: boolean;
   /** 选择框的默认属性配置 */
   getCheckboxProps?: (record: T) => any;
   /** 渲染除了表头的勾选框 */
@@ -31,9 +33,9 @@ export interface RowSelectionType<T> {
   /** 多选/单选 */
   type: 'radio' | 'checkbox';
   /** 选中项发生变化时的回调 */
-  onChange?: (selectedRowKeys: string[] | number[], selectedRows: T[], info: any) => void;
+  onChange?: (selectedRowKeys: (string | number)[], selectedRows: T[]) => void;
   /** 用户手动选择/取消选择某行的回调 */
-  onSelect?: (record: T, selected: boolean, selectedRows: T[], nativeEvent: any) => void;
+  onSelect?: (record: T, selected: boolean, selectedRows: T[], nativeEvent: Event) => void;
   /** 用户手动选择/取消选择所有行的回调 */
   onSelectAll?: (selected: boolean, selectedRows: T[], changeRows: T[]) => void;
   /** 用户手动选择反选的回调 */
@@ -55,11 +57,11 @@ export interface ColumnsType<T> {
   /** 列样式类名 */
   className?: string;
   /** 列对应字段名 */
-  dataIndex: keyof T;
+  dataIndex: string;
   /** 列固定 */
   fixed?: 'left' | 'right';
   /** 生成复杂数据的渲染函数 */
-  render: (text: string, record: T, index: number) => any;
+  render: (text: string, record: T, index: number) => React.ReactNode;
   /** 列头显示文字 */
   title: React.ReactNode;
   /** 列宽度 */
