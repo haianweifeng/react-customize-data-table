@@ -1,0 +1,39 @@
+@import './variables.less';
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.bordered {
+  table {
+    border: 1px solid @table-border-color;
+    border-right: 0;
+    border-bottom: 0;
+  }
+}
+
+td {
+  position: relative;
+  padding: @table-cell-padding-vertical @table-cell-padding-horizontal;
+  word-break: break-all;
+  border-right: 1px solid @table-border-color;
+  border-bottom: 1px solid @table-border-color;
+}
+
+td.align-center {
+  text-align: center;
+}
+
+td.align-right {
+  text-align: right;
+}
+
+td.align-left {
+  text-align: left;
+}
+
+td.selection-column {
+  text-align: center;
+}

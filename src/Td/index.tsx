@@ -1,8 +1,9 @@
 import React from 'react';
+import classnames from 'classnames';
 import Radio from '../Radio';
 import Checkbox from '../Checkbox';
+import '../style/index.less';
 import type { ColumnsType, RowSelectionType } from '../interface';
-import styles from './index.less';
 import { TableProps } from '../Table';
 
 interface TdProps<T> {
@@ -10,6 +11,7 @@ interface TdProps<T> {
   dataIndex?: string;
   rowIndex: number;
   colSpan: number;
+  rowSpan: number;
   type?: string;
   checked?: boolean;
   checkboxProps?: any;
@@ -27,8 +29,22 @@ interface TdProps<T> {
 }
 
 function Td<T>(props: TdProps<T>) {
-  const { data, type, render, dataIndex, rowIndex, checked, checkboxProps, renderCell, onSelect } =
-    props;
+  const {
+    data,
+    type,
+    render,
+    dataIndex,
+    rowIndex,
+    colSpan,
+    rowSpan,
+    checked,
+    checkboxProps,
+    renderCell,
+    onSelect,
+    align,
+    className = '',
+    fixed,
+  } = props;
 
   const handleChange = (selected: boolean, event: Event) => {
     if (typeof onSelect === 'function') {
@@ -61,12 +77,41 @@ function Td<T>(props: TdProps<T>) {
       }
       return renderCheckbox();
     }
-    if (typeof render === 'function' && dataIndex) {
-      return render(data[dataIndex as keyof T] as string, data, rowIndex);
+    if (dataIndex) {
+      if (typeof render === 'function') {
+        return render(data[dataIndex as keyof T] as string, data, rowIndex);
+      }
+      return data[dataIndex as keyof T];
     }
-    return dataIndex && data[dataIndex as keyof T];
+    return null;
   };
 
-  return <td>{renderContent() as React.ReactNode}</td>;
+  // const className = classnames(
+  //   this.props.className,
+  //   tableClass(
+  //     fixed === 'left' && CLASS_FIXED_LEFT,
+  //     fixed === 'right' && CLASS_FIXED_RIGHT,
+  //     firstFixed && 'fixed-first',
+  //     lastFixed && 'fixed-last',
+  //     (type === 'checkbox' || type === 'expand' || type === 'row-expand') && 'checkbox',
+  //     align !== 'left' && `align-${align}`,
+  //     ignoreBorderRight && 'ignore-right-border'
+  //   )
+  // )
+
+  // todo 选择框的fixed  固定列的样式还没写
+  const cls = classnames({
+    'fixed-left': fixed === 'left',
+    'fixed-right': fixed === 'right',
+    [`align-${align}`]: !!align,
+    'selection-column': !!type,
+    [className]: !!className,
+  });
+
+  return (
+    <td colSpan={colSpan} rowSpan={rowSpan} className={cls}>
+      {renderContent() as React.ReactNode}
+    </td>
+  );
 }
 export default Td;

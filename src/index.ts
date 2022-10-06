@@ -5,3 +5,5 @@ export { default as Checkbox } from './Checkbox';
 export { default as Radio } from './Radio';
 
 export type { ColumnsType } from './interface';
+
+// export * from './style/variables.less';

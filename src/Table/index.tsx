@@ -7,7 +7,8 @@ import type {
   ExpandableType,
   TreeExpandableType,
 } from '../interface';
-import styles from './index.less';
+import '../style/index.less';
+// import styles from './index.less';
 
 export interface TableProps<T> {
   /** 表格的样式类名 */
@@ -88,8 +89,8 @@ function Table<T>(props: TableProps<T>) {
 
   // todo
   const tableWrapClass = classnames({
-    [styles.size]: true,
-    [styles.bordered]: bordered,
+    size: true,
+    bordered: bordered,
     [className]: !!className,
   });
   return (

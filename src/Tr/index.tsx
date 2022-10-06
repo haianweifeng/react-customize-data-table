@@ -47,10 +47,12 @@ function Tr<T>(props: TrProps<T>) {
       const column = columns[i];
       const { dataIndex, onCell, align, className, fixed, render } = column;
       let colSpan = 1;
+      let rowSpan = 1;
       if (typeof onCell === 'function') {
         const cellProps = onCell(rowData, rowIndex);
         if (!cellProps.colSpan) continue;
         colSpan = cellProps.colSpan;
+        rowSpan = cellProps.rowSpan;
       }
       tds.push(
         <Td
@@ -59,6 +61,7 @@ function Tr<T>(props: TrProps<T>) {
           rowIndex={rowIndex}
           dataIndex={dataIndex}
           colSpan={colSpan}
+          rowSpan={rowSpan}
           align={align}
           className={className}
           fixed={fixed}
