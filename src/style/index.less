@@ -34,6 +34,49 @@ td.align-left {
   text-align: left;
 }
 
-td.selection-column {
+td.selection-expand-column {
   text-align: center;
+}
+
+.expand-icon {
+  position: relative;
+  display: inline-block;
+  box-sizing: border-box;
+  width: 17px;
+  height: 17px;
+  vertical-align: middle;
+  background: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.3s;
+
+  &:before,
+  &:after {
+    position: absolute;
+    display: block;
+    background-color: #333;
+    transition: transform 0.3s ease-out;
+    content: '';
+  }
+
+  &:before {
+    top: 7px;
+    right: 3px;
+    left: 3px;
+    height: 1px;
+  }
+
+  &:after {
+    top: 3px;
+    bottom: 3px;
+    left: 7px;
+    width: 1px;
+  }
+
+  &-divider {
+    &:after {
+      transform: rotate(90deg);
+    }
+  }
 }

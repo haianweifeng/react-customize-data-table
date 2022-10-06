@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect } from 'react';
 import type { TableProps } from '../Table';
 import type { ColumnsType, KeysRefType } from '../interface';
 import Tr from '../Tr';
-import styles from './index.less';
 
 interface TbodyProps<T> extends TableProps<T> {
   columns: ColumnsType<T>[];
@@ -10,27 +9,13 @@ interface TbodyProps<T> extends TableProps<T> {
 }
 
 function Tbody<T>(props: TbodyProps<T>) {
-  const { dataSource, columns, startRowIndex, rowKey, rowSelection } = props;
+  const { dataSource, columns, startRowIndex, rowKey, rowSelection, expandable } = props;
 
   const keysRef = useRef<KeysRefType>({} as KeysRefType);
 
   const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
     return rowSelection?.defaultSelectedRowKeys || rowSelection?.selectedRowKeys || [];
   });
-
-  useEffect(() => {
-    if (rowSelection?.defaultSelectedRowKeys || rowSelection?.selectedRowKeys) {
-      const keys = rowSelection.defaultSelectedRowKeys || rowSelection.selectedRowKeys;
-      setSelectedKeys(keys as (string | number)[]);
-    }
-  }, [rowSelection]);
-
-  const getSelectionType = () => {
-    if (rowSelection) {
-      return rowSelection.type || 'checkbox';
-    }
-    return '';
-  };
 
   const getRowKey = (rowData: T, i: number) => {
     if (typeof rowKey === 'string') {
@@ -44,6 +29,19 @@ function Tbody<T>(props: TbodyProps<T>) {
     return i;
   };
 
+  const getAllExpandKeys = () => {
+    return dataSource.map((d, i) => {
+      return getRowKey(d, i);
+    });
+  };
+
+  const [expandedRowKeys, setExpandedRowKeys] = useState<(string | number)[]>(() => {
+    if (expandable?.defaultExpandAllRows) {
+      return getAllExpandKeys();
+    }
+    return expandable?.defaultExpandedRowKeys || expandable?.expandedRowKeys || [];
+  });
+
   const getSelectedRowData = (keys: (string | number)[]) => {
     return dataSource.filter((d, index) => {
       const key = getRowKey(d, index);
@@ -51,9 +49,13 @@ function Tbody<T>(props: TbodyProps<T>) {
     });
   };
 
-  const handleSelect = (record: T, rowIndex: number, selected: boolean, event: Event) => {
-    const type = getSelectionType();
-    const isRadio = type === 'radio';
+  const handleSelect = (
+    isRadio: boolean,
+    record: T,
+    rowIndex: number,
+    selected: boolean,
+    event: Event,
+  ) => {
     const key = getRowKey(record, rowIndex);
     const isExist = selectedKeys.indexOf(key) >= 0;
 
@@ -75,6 +77,21 @@ function Tbody<T>(props: TbodyProps<T>) {
     }
   };
 
+  const handleExpand = (expanded: boolean, record: T, rowIndex: number) => {
+    let key = getRowKey(record, rowIndex);
+    setExpandedRowKeys((prev) => {
+      const isExist = prev.indexOf(key) >= 0;
+      return isExist ? prev.filter((p) => p !== key) : [...prev, key];
+    });
+  };
+
+  useEffect(() => {
+    if (rowSelection?.defaultSelectedRowKeys || rowSelection?.selectedRowKeys) {
+      const keys = rowSelection.defaultSelectedRowKeys || rowSelection.selectedRowKeys;
+      setSelectedKeys(keys as (string | number)[]);
+    }
+  }, [rowSelection]);
+
   const renderTr = (rowData: T, i: number) => {
     let key = getRowKey(rowData, i);
     if (!(typeof key === 'string' || typeof key === 'number')) {
@@ -93,12 +110,12 @@ function Tbody<T>(props: TbodyProps<T>) {
     return (
       <Tr
         key={key}
-        rowId={key}
         rowData={rowData}
         rowIndex={i}
-        type={getSelectionType()}
         checked={checked}
+        expanded={expandedRowKeys.indexOf(key) >= 0}
         {...props}
+        onExpand={handleExpand}
         onSelect={handleSelect}
       />
     );

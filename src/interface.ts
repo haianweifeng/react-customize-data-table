@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 
 export interface SelectionType {
   key: string;
@@ -70,16 +70,16 @@ export interface ColumnsType<T> {
   maxWidth?: string | number;
   /** 最小列宽 */
   minWidth?: string | number;
-  /** 默认排序 */
-  defaultOrder?: 'asc' | 'desc';
-  /** 排序函数 */
-  sorter?: (rowA: T, rowB: T) => void | SorterType<T>;
   // todo 表头列合并 是否需要还是放到onHeaderCell 中处理
   colSpan?: number;
   /** 设置单元格属性 */
   onCell?: (record: T, rowIndex: number) => CellType;
   /** 设置头部单元格属性 todo */
   onHeaderCell?: (column: T) => any;
+  /** 默认排序 */
+  defaultOrder?: 'asc' | 'desc';
+  /** 排序函数 */
+  sorter?: (rowA: T, rowB: T) => void | SorterType<T>;
   /** 默认筛选值 */
   defaultFilteredValue?: string[];
   /** 可以自定义筛选菜单 todo */
@@ -104,20 +104,22 @@ export interface BaseExpandableType<T> {
   /** 初始时，是否展开所有行 */
   defaultExpandAllRows?: boolean;
   /** 默认展开的行 */
-  defaultExpandedRowKeys?: string[];
+  defaultExpandedRowKeys?: string[] | number[];
   /** 展开行的 className todo indent 是否需要 */
   expandedRowClassName?: (record: T, index: number, indent: number) => string;
   /** 展开的行，控制属性 */
-  expandedRowKeys?: string[];
+  expandedRowKeys?: string[] | number[];
   /** 自定义展开图标 todo props 类型 */
-  expandIcon?: (props: any) => React.ReactNode;
+  expandIcon?: (record: T, expanded: boolean) => React.ReactNode;
   /** 设置是否允许行展开 */
   rowExpandable?: (record: T) => boolean;
-  /** 设置是否展示行展开列 */
+  /** 点击展开图标时触发 */
   onExpand?: (expanded: boolean, record: T) => void;
 }
 
 export interface ExpandableType<T> extends BaseExpandableType<T> {
+  /** 可展开行嵌入哪一列之前 */
+  insertBeforeColumnName?: string;
   /** 自定义展开列表头 */
   columnTitle?: React.ReactNode;
   /** 自定义展开列宽度 */
@@ -134,6 +136,23 @@ export interface ExpandableType<T> extends BaseExpandableType<T> {
 export interface TreeExpandableType<T> extends BaseExpandableType<T> {
   /** 树形数据每层的缩进 */
   indentSize?: number;
+}
+
+export interface CellProps {
+  /** 是否是chekbox radio 或者可扩展行列 */
+  isSelectionExpandColumn: boolean;
+  /** 设置对齐方式 */
+  align?: 'left' | 'center' | 'right';
+  /** 样式类名 */
+  className?: string;
+  /** 列固定 */
+  fixed?: 'left' | 'right';
+  /** 单元格占据的列数 */
+  colSpan: number;
+  /** 单元格占据的行数 */
+  rowSpan: number;
+  /** 单元格渲染内容 */
+  content: React.ReactNode;
 }
 
 export type KeysRefType = { [key: string]: boolean };

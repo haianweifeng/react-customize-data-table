@@ -1,78 +1,157 @@
 import React from 'react';
-import Td from '../Td';
-import type { ColumnsType } from '../interface';
-import type { CellType } from '../interface';
+import classnames from 'classnames';
+import type { CellProps } from '../interface';
 import type { TableProps } from '../Table';
-import styles from './index.less';
+import Radio from '../Radio';
+import Checkbox from '../Checkbox';
+import Td from '../Td';
 
 interface TrProps<T> extends TableProps<T> {
   rowData: T;
-  rowId: string | number;
   rowIndex: number;
-  type: string;
   checked: boolean;
-  onSelect: (record: T, rowIndex: number, selected: boolean, event: Event) => void;
+  expanded: boolean;
+  onSelect: (
+    isRadio: boolean,
+    record: T,
+    rowIndex: number,
+    selected: boolean,
+    event: Event,
+  ) => void;
+  onExpand: (expanded: boolean, record: T, rowIndex: number) => void;
 }
 function Tr<T>(props: TrProps<T>) {
-  const { rowData, columns, rowSelection, rowIndex, type, checked, rowId, onSelect } = props;
+  const {
+    rowData,
+    rowIndex,
+    columns,
+    checked,
+    rowSelection,
+    expandable,
+    expanded,
+    onExpand,
+    onSelect,
+  } = props;
 
-  const handleSelect = (record: T, selected: boolean, nativeEvent: Event) => {
-    onSelect(record, rowIndex, selected, nativeEvent);
+  const handleChange = (isRadio: boolean, selected: boolean, event: Event) => {
+    onSelect(isRadio, rowData, rowIndex, selected, event);
   };
 
-  const renderSelectionTd = () => {
+  const handleExpandClick = () => {
+    onExpand(!expanded, rowData, rowIndex);
+  };
+
+  const getSelectionType = () => {
     if (rowSelection) {
-      const { getCheckboxProps, fixed, renderCell } = rowSelection;
-      const checkboxProps = typeof getCheckboxProps === 'function' ? getCheckboxProps(rowData) : {};
-      return (
-        <Td
-          key={rowId}
-          data={rowData}
-          colSpan={1}
-          rowIndex={rowIndex}
-          checkboxProps={checkboxProps}
-          type={type}
-          checked={checked}
-          fixed={!!fixed}
-          renderCell={renderCell}
-          onSelect={handleSelect}
+      return rowSelection.type || 'checkbox';
+    }
+    return '';
+  };
+
+  const getColumns = () => {
+    let insertIndex = 0;
+    const formatColumns = columns.map((column, index: number) => {
+      const { render, dataIndex, onCell, align, className, fixed, title } = column;
+      if (expandable?.insertBeforeColumnName === title) insertIndex = index;
+      const cell: CellProps = {
+        isSelectionExpandColumn: false,
+        align,
+        className,
+        fixed,
+        colSpan: 1,
+        rowSpan: 1,
+        content: '',
+      };
+      if (typeof onCell === 'function') {
+        const cellProps = onCell(rowData, rowIndex);
+        cell.colSpan = cellProps?.colSpan === 0 ? 0 : cellProps?.colSpan || 1;
+        cell.rowSpan = cellProps?.rowSpan === 0 ? 0 : cellProps?.rowSpan || 1;
+      }
+      if (typeof render === 'function') {
+        cell.content = render(rowData[dataIndex as keyof T] as string, rowData, rowIndex);
+      }
+      cell.content = rowData[dataIndex as keyof T] as string;
+      return cell;
+    });
+
+    const type = getSelectionType();
+
+    if (type) {
+      const checkboxProps =
+        typeof rowSelection?.getCheckboxProps === 'function'
+          ? rowSelection.getCheckboxProps(rowData)
+          : {};
+      const isRadio = type === 'radio';
+      const defaultContent = isRadio ? (
+        <Radio
+          {...checkboxProps}
+          checked={!!checked}
+          onChange={(selected: boolean, event: Event) => {
+            handleChange(isRadio, selected, event);
+          }}
+        />
+      ) : (
+        <Checkbox
+          {...checkboxProps}
+          checked={!!checked}
+          onChange={(selected: boolean, event: Event) => {
+            handleChange(isRadio, selected, event);
+          }}
         />
       );
+
+      // todo fixed
+      formatColumns.unshift({
+        isSelectionExpandColumn: true,
+        // fixed: rowSelection?.fixed,
+        colSpan: 1,
+        rowSpan: 1,
+        content:
+          typeof rowSelection?.renderCell === 'function'
+            ? rowSelection.renderCell(!!checked, rowData, rowIndex, defaultContent)
+            : defaultContent,
+      });
     }
+
+    let ableExpand = !!expandable;
+
+    if (expandable?.rowExpandable && expandable?.rowExpandable(rowData) === false) {
+      ableExpand = false;
+    }
+
+    if (ableExpand) {
+      const expandIcon = (
+        <span
+          className={classnames({
+            'expand-icon': true,
+            'expand-icon-divider': expanded,
+          })}
+          onClick={handleExpandClick}
+        />
+      );
+
+      // todo fixed
+      formatColumns.splice(insertIndex, 0, {
+        isSelectionExpandColumn: true,
+        colSpan: 1,
+        rowSpan: 1,
+        content:
+          typeof expandable?.expandIcon === 'function'
+            ? expandable.expandIcon(rowData, expanded)
+            : expandIcon,
+      });
+    }
+
+    return formatColumns;
   };
 
   const renderTds = () => {
     const tds = [];
-    for (let i = 0; i < columns.length; i++) {
-      const column = columns[i];
-      const { dataIndex, onCell, align, className, fixed, render } = column;
-      let colSpan = 1;
-      let rowSpan = 1;
-      if (typeof onCell === 'function') {
-        const cellProps = onCell(rowData, rowIndex);
-        if (!cellProps.colSpan) continue;
-        colSpan = cellProps.colSpan;
-        rowSpan = cellProps.rowSpan;
-      }
-      tds.push(
-        <Td
-          key={dataIndex as React.Key}
-          data={rowData}
-          rowIndex={rowIndex}
-          dataIndex={dataIndex}
-          colSpan={colSpan}
-          rowSpan={rowSpan}
-          align={align}
-          className={className}
-          fixed={fixed}
-          render={render}
-        />,
-      );
-    }
-
-    if (type) {
-      const selectionTd = renderSelectionTd();
-      tds.unshift(selectionTd);
+    const formatColumns = getColumns();
+    for (let i = 0; i < formatColumns.length; i++) {
+      const column = formatColumns[i];
+      if (!column.colSpan || !column.rowSpan) continue;
+      tds.push(<Td key={i} {...column} />);
     }
 
     return tds;
