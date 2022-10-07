@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 
 export interface SelectionType {
   key: string;
@@ -105,11 +105,9 @@ export interface BaseExpandableType<T> {
   defaultExpandAllRows?: boolean;
   /** 默认展开的行 */
   defaultExpandedRowKeys?: string[] | number[];
-  /** 展开行的 className todo indent 是否需要 */
-  expandedRowClassName?: (record: T, index: number, indent: number) => string;
   /** 展开的行，控制属性 */
   expandedRowKeys?: string[] | number[];
-  /** 自定义展开图标 todo props 类型 */
+  /** 自定义展开图标 */
   expandIcon?: (record: T, expanded: boolean) => React.ReactNode;
   /** 设置是否允许行展开 */
   rowExpandable?: (record: T) => boolean;
@@ -125,12 +123,9 @@ export interface ExpandableType<T> extends BaseExpandableType<T> {
   /** 自定义展开列宽度 */
   columnWidth?: string | number;
   /** 渲染展开行的内容 */
-  expandedRowRender?: (
-    record: T,
-    index: number,
-    indent: number,
-    expanded: boolean,
-  ) => React.ReactNode;
+  expandedRowRender?: (record: T, index: number, expanded: boolean) => React.ReactNode;
+  /** 展开行的 className */
+  expandedRowClassName?: (record: T, index: number) => string;
 }
 
 export interface TreeExpandableType<T> extends BaseExpandableType<T> {

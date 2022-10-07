@@ -4,6 +4,10 @@ table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+
+  tr.row-selected td {
+    background-color: @table-selected-row-bg;
+  }
 }
 
 .bordered {
@@ -12,6 +16,19 @@ table {
     border-right: 0;
     border-bottom: 0;
   }
+}
+
+tbody > tr:hover,
+tbody > tr:hover > td {
+  background-color: @table-bg-hover;
+}
+
+tbody > .row-even > td {
+  background-color: @table-even-td-bg;
+}
+
+tbody > .row-odd > td {
+  background-color: @table-odd-td-bg;
 }
 
 td {

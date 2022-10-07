@@ -31,6 +31,8 @@ function Tr<T>(props: TrProps<T>) {
     expanded,
     onExpand,
     onSelect,
+    striped,
+    rowClassName,
   } = props;
 
   const handleChange = (isRadio: boolean, selected: boolean, event: Event) => {
@@ -157,6 +159,39 @@ function Tr<T>(props: TrProps<T>) {
     return tds;
   };
 
-  return <tr>{renderTds()}</tr>;
+  const renderExpandRow = () => {
+    if (!expandable || !expandable.expandedRowRender || !expanded) return;
+    const formatColumns = getColumns();
+    const cls =
+      expandable?.expandedRowClassName && expandable.expandedRowClassName(rowData, rowIndex);
+    return (
+      <tr key="1" className={cls}>
+        <td colSpan={formatColumns.length}>
+          {expandable.expandedRowRender(rowData, rowIndex, expanded)}
+        </td>
+      </tr>
+    );
+  };
+
+  const clsInfo: any = {
+    'row-even': striped && rowIndex % 2 === 1,
+    'row-odd': striped && rowIndex % 2 !== 1,
+    'row-selected': checked,
+  };
+
+  if (rowClassName && rowClassName(rowData, rowIndex)) {
+    clsInfo[rowClassName(rowData, rowIndex)] = !!rowClassName(rowData, rowIndex);
+  }
+
+  const cls = classnames(clsInfo);
+
+  return (
+    <>
+      <tr key="0" className={cls}>
+        {renderTds()}
+      </tr>
+      {renderExpandRow()}
+    </>
+  );
 }
 export default Tr;
