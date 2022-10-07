@@ -113,6 +113,10 @@ function Tr<T>(props: TrProps<T>) {
             ? rowSelection.renderCell(!!checked, rowData, rowIndex, defaultContent)
             : defaultContent,
       });
+
+      if (expandable?.insertBeforeColumnName) {
+        insertIndex += 1;
+      }
     }
 
     let ableExpand = !!expandable;
@@ -142,6 +146,10 @@ function Tr<T>(props: TrProps<T>) {
             ? expandable.expandIcon(rowData, expanded)
             : expandIcon,
       });
+
+      if (expandable?.insertBeforeColumnName) {
+        insertIndex += 1;
+      }
     }
 
     return formatColumns;
