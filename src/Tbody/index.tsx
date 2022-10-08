@@ -36,7 +36,10 @@ function Tbody<T>(props: TbodyProps<T>) {
   };
 
   const [expandedRowKeys, setExpandedRowKeys] = useState<(string | number)[]>(() => {
-    if (expandable?.defaultExpandAllRows) {
+    if (
+      expandable?.defaultExpandAllRows &&
+      !(expandable?.defaultExpandedRowKeys || expandable?.expandedRowKeys)
+    ) {
       return getAllExpandKeys();
     }
     return expandable?.defaultExpandedRowKeys || expandable?.expandedRowKeys || [];
@@ -79,11 +82,21 @@ function Tbody<T>(props: TbodyProps<T>) {
 
   const handleExpand = (expanded: boolean, record: T, rowIndex: number) => {
     let key = getRowKey(record, rowIndex);
+    if (expandable?.expandedRowKeys) {
+      expandable?.onExpand && expandable.onExpand(expanded, record);
+      return;
+    }
     setExpandedRowKeys((prev) => {
       const isExist = prev.indexOf(key) >= 0;
       return isExist ? prev.filter((p) => p !== key) : [...prev, key];
     });
   };
+
+  useEffect(() => {
+    if (expandable?.expandedRowKeys) {
+      setExpandedRowKeys(expandable.expandedRowKeys);
+    }
+  }, [expandable]);
 
   useEffect(() => {
     if (rowSelection?.defaultSelectedRowKeys || rowSelection?.selectedRowKeys) {

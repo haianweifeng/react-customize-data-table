@@ -109,8 +109,6 @@ export interface BaseExpandableType<T> {
   expandedRowKeys?: string[] | number[];
   /** 自定义展开图标 */
   expandIcon?: (record: T, expanded: boolean) => React.ReactNode;
-  /** 设置是否允许行展开 */
-  rowExpandable?: (record: T) => boolean;
   /** 点击展开图标时触发 */
   onExpand?: (expanded: boolean, record: T) => void;
 }
@@ -127,6 +125,8 @@ export interface ExpandableType<T> extends BaseExpandableType<T> {
   expandedRowRender?: (record: T, index: number, expanded: boolean) => React.ReactNode;
   /** 展开行的 className */
   expandedRowClassName?: (record: T, index: number) => string;
+  /** 设置是否允许行展开 */
+  rowExpandable?: (record: T) => boolean;
 }
 
 export interface TreeExpandableType<T> extends BaseExpandableType<T> {

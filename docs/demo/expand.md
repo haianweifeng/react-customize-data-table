@@ -58,6 +58,8 @@ const data: DataType[] = [
 ];
 
 const App = () => {
+  const [expandedKeys, setExpandedKeys] = useState<string[]>(['3']);
+
   const rowSelection = {
     onChange: (selectedRowKeys, selectedRows) => {
       console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
@@ -87,12 +89,20 @@ const App = () => {
         }
       }}
       expandable={{
-        // defaultExpandAllRows: true,
-        defaultExpandedRowKeys: ['3'],
+        defaultExpandedRowKeys: expandedKeys,
+        // expandedRowKeys: expandedKeys,
+        defaultExpandAllRows: true,
+        // defaultExpandedRowKeys: expandedKeys,
         expandedRowRender: (record) => <p style={{ margin: 0 }}>{record.description}</p>,
-        // rowExpandable: (record) => record.name !== 'Jim Green',
+        rowExpandable: (record) => record.name !== 'Jim Green',
         expandedRowClassName: (record, index) => {
           return 'expand-row';
+        },
+        onExpand: (expanded, record) => {
+          console.log(record);
+          // setExpandedKeys((prev) => {
+          // return expanded ? [...prev, record.key] : prev.filter((p) => p !== record.key)
+          // });
         },
       }}
     />
