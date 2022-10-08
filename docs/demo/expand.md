@@ -87,9 +87,10 @@ const App = () => {
         }
       }}
       expandable={{
-        defaultExpandAllRows: true,
+        // defaultExpandAllRows: true,
+        defaultExpandedRowKeys: ['3'],
         expandedRowRender: (record) => <p style={{ margin: 0 }}>{record.description}</p>,
-        rowExpandable: (record) => record.name !== 'Not Expandable',
+        // rowExpandable: (record) => record.name !== 'Jim Green',
         expandedRowClassName: (record, index) => {
           return 'expand-row';
         },

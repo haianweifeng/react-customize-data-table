@@ -119,13 +119,13 @@ function Tr<T>(props: TrProps<T>) {
       }
     }
 
-    let ableExpand = !!expandable;
+    let ableExpand = true;
 
     if (expandable?.rowExpandable && expandable?.rowExpandable(rowData) === false) {
       ableExpand = false;
     }
 
-    if (ableExpand) {
+    if (!!expandable) {
       const expandIcon = (
         <span
           className={classnames({
@@ -136,15 +136,17 @@ function Tr<T>(props: TrProps<T>) {
         />
       );
 
+      let content =
+        typeof expandable?.expandIcon === 'function'
+          ? expandable.expandIcon(rowData, expanded)
+          : expandIcon;
+
       // todo fixed
       formatColumns.splice(insertIndex, 0, {
         isSelectionExpandColumn: true,
         colSpan: 1,
         rowSpan: 1,
-        content:
-          typeof expandable?.expandIcon === 'function'
-            ? expandable.expandIcon(rowData, expanded)
-            : expandIcon,
+        content: ableExpand ? content : '',
       });
 
       if (expandable?.insertBeforeColumnName) {
@@ -168,7 +170,13 @@ function Tr<T>(props: TrProps<T>) {
   };
 
   const renderExpandRow = () => {
-    if (!expandable || !expandable.expandedRowRender || !expanded) return;
+    if (
+      !expandable ||
+      !expandable.expandedRowRender ||
+      !expanded ||
+      (expandable?.rowExpandable && expandable?.rowExpandable(rowData) === false)
+    )
+      return;
     const formatColumns = getColumns();
     const cls =
       expandable?.expandedRowClassName && expandable.expandedRowClassName(rowData, rowIndex);

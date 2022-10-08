@@ -116,6 +116,7 @@ export interface BaseExpandableType<T> {
 }
 
 export interface ExpandableType<T> extends BaseExpandableType<T> {
+  // todo fixed 属性
   /** 可展开行嵌入哪一列之前 */
   insertBeforeColumnName?: string;
   /** 自定义展开列表头 */

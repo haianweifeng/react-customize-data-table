@@ -1,3 +1,7 @@
+const base = require('@umijs/fabric/dist/eslint');
+module.exports = {
+  ...base,
+};
 // module.exports = {
 //   "rules": {
 //     "@typescript-eslint/consistent-type-imports": "off"
