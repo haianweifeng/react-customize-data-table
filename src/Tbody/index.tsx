@@ -74,22 +74,25 @@ function Tbody<T>(props: TbodyProps<T>) {
     if (typeof rowSelection?.onSelect === 'function') {
       rowSelection.onSelect(record, selected, selectedRows, event);
     }
-    setSelectedKeys(keys);
+
     if (typeof rowSelection?.onChange === 'function') {
       rowSelection?.onChange(keys, getSelectedRowData(keys));
+    }
+
+    if (!rowSelection?.selectedRowKeys) {
+      setSelectedKeys(keys);
     }
   };
 
   const handleExpand = (expanded: boolean, record: T, rowIndex: number) => {
     let key = getRowKey(record, rowIndex);
-    if (expandable?.expandedRowKeys) {
-      expandable?.onExpand && expandable.onExpand(expanded, record);
-      return;
+    if (!expandable?.expandedRowKeys) {
+      setExpandedRowKeys((prev) => {
+        const isExist = prev.indexOf(key) >= 0;
+        return isExist ? prev.filter((p) => p !== key) : [...prev, key];
+      });
     }
-    setExpandedRowKeys((prev) => {
-      const isExist = prev.indexOf(key) >= 0;
-      return isExist ? prev.filter((p) => p !== key) : [...prev, key];
-    });
+    expandable?.onExpand && expandable.onExpand(expanded, record);
   };
 
   useEffect(() => {
@@ -99,9 +102,8 @@ function Tbody<T>(props: TbodyProps<T>) {
   }, [expandable]);
 
   useEffect(() => {
-    if (rowSelection?.defaultSelectedRowKeys || rowSelection?.selectedRowKeys) {
-      const keys = rowSelection.defaultSelectedRowKeys || rowSelection.selectedRowKeys;
-      setSelectedKeys(keys as (string | number)[]);
+    if (rowSelection?.selectedRowKeys) {
+      setSelectedKeys(rowSelection.selectedRowKeys as (string | number)[]);
     }
   }, [rowSelection]);
 

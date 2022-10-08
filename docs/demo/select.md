@@ -60,7 +60,7 @@ const App = () => {
     selectedRowKeys,
     onChange: (selectedRowKeys, selectedRows) => {
       console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-      setSelectedRowKeys(selectedRowKeys);
+      // setSelectedRowKeys(selectedRowKeys);
     },
     onSelect: (record, selected, selectedRows, nativeEvent) => {
       console.log(record);
@@ -76,7 +76,7 @@ const App = () => {
 
   useEffect(() => {
     setTimeout(() => {
-      setSelectedRowKeys(['1', '3']);
+      // setSelectedRowKeys([]);
     }, 2000);
   }, []);
 

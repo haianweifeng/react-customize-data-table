@@ -90,7 +90,7 @@ const App = () => {
       }}
       expandable={{
         defaultExpandedRowKeys: expandedKeys,
-        // expandedRowKeys: expandedKeys,
+        expandedRowKeys: expandedKeys,
         defaultExpandAllRows: true,
         // defaultExpandedRowKeys: expandedKeys,
         expandedRowRender: (record) => <p style={{ margin: 0 }}>{record.description}</p>,
@@ -100,9 +100,9 @@ const App = () => {
         },
         onExpand: (expanded, record) => {
           console.log(record);
-          // setExpandedKeys((prev) => {
-          // return expanded ? [...prev, record.key] : prev.filter((p) => p !== record.key)
-          // });
+          setExpandedKeys((prev) => {
+            return expanded ? [...prev, record.key] : prev.filter((p) => p !== record.key);
+          });
         },
       }}
     />
