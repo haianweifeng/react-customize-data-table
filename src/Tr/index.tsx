@@ -1,6 +1,6 @@
 import React from 'react';
 import classnames from 'classnames';
-import type { CellProps, TreeLevelType } from '../interface';
+import type { CellProps } from '../interface';
 import type { TableProps } from '../Table';
 import Radio from '../Radio';
 import Checkbox from '../Checkbox';
@@ -107,7 +107,8 @@ function Tr<T extends { children?: T[] }>(props: TrProps<T>) {
       content = rowData[dataIndex as keyof T] as string;
 
       const isTreeColumn =
-        (treeProps?.treeColumnsName && treeProps.treeColumnsName === title) || index === 0;
+        (treeProps?.treeColumnsName && treeProps.treeColumnsName === title) ||
+        (index === 0 && !treeProps?.treeColumnsName);
 
       if (hasChildren && isTreeColumn) {
         cell.content = (
