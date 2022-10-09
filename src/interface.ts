@@ -132,6 +132,8 @@ export interface ExpandableType<T> extends BaseExpandableType<T> {
 export interface TreeExpandableType<T> extends BaseExpandableType<T> {
   /** 树形数据每层的缩进 */
   indentSize?: number;
+  /** 展开图标所在列名 */
+  treeColumnsName?: string;
 }
 
 export interface CellProps {
@@ -152,3 +154,5 @@ export interface CellProps {
 }
 
 export type KeysRefType = { [key: string]: boolean };
+
+export type TreeLevelType = { [key: string | number]: number };

@@ -71,7 +71,7 @@ export interface TableProps<T> {
   treeProps?: TreeExpandableType<T>;
 }
 
-function Table<T>(props: TableProps<T>) {
+function Table<T extends { children?: T[] }>(props: TableProps<T>) {
   const { className = '', style = {}, size = 'default', bordered } = props;
 
   const [startRowIndex, setStartRowIndex] = useState<number>(0);

@@ -1,6 +1,6 @@
 import React from 'react';
 import classnames from 'classnames';
-import type { CellProps } from '../interface';
+import type { CellProps, TreeLevelType } from '../interface';
 import type { TableProps } from '../Table';
 import Radio from '../Radio';
 import Checkbox from '../Checkbox';
@@ -11,6 +11,9 @@ interface TrProps<T> extends TableProps<T> {
   rowIndex: number;
   checked: boolean;
   expanded: boolean;
+  treeExpanded: boolean;
+  treeLevel: number;
+  isTree: boolean;
   onSelect: (
     isRadio: boolean,
     record: T,
@@ -19,8 +22,9 @@ interface TrProps<T> extends TableProps<T> {
     event: Event,
   ) => void;
   onExpand: (expanded: boolean, record: T, rowIndex: number) => void;
+  onTreeExpand: (expanded: boolean, record: T, rowIndex: number) => void;
 }
-function Tr<T>(props: TrProps<T>) {
+function Tr<T extends { children?: T[] }>(props: TrProps<T>) {
   const {
     rowData,
     rowIndex,
@@ -29,10 +33,15 @@ function Tr<T>(props: TrProps<T>) {
     rowSelection,
     expandable,
     expanded,
+    treeExpanded,
     onExpand,
     onSelect,
     striped,
     rowClassName,
+    treeLevel,
+    treeProps,
+    isTree,
+    onTreeExpand,
   } = props;
 
   const handleChange = (isRadio: boolean, selected: boolean, event: Event) => {
@@ -41,6 +50,10 @@ function Tr<T>(props: TrProps<T>) {
 
   const handleExpandClick = () => {
     onExpand(!expanded, rowData, rowIndex);
+  };
+
+  const handleTreeExpand = () => {
+    onTreeExpand(!treeExpanded, rowData, rowIndex);
   };
 
   const getSelectionType = () => {
@@ -52,6 +65,8 @@ function Tr<T>(props: TrProps<T>) {
 
   const getColumns = () => {
     let insertIndex = 0;
+    const hasChildren = rowData?.children && rowData.children.length > 0;
+    const treeIndent = treeProps?.indentSize || 15;
     const formatColumns = columns.map((column, index: number) => {
       const { render, dataIndex, onCell, align, className, fixed, title } = column;
       if (expandable?.insertBeforeColumnName === title) insertIndex = index;
@@ -69,10 +84,53 @@ function Tr<T>(props: TrProps<T>) {
         cell.colSpan = cellProps?.colSpan === 0 ? 0 : cellProps?.colSpan || 1;
         cell.rowSpan = cellProps?.rowSpan === 0 ? 0 : cellProps?.rowSpan || 1;
       }
+
+      const defaultTreeIcon = (
+        <span
+          onClick={handleTreeExpand}
+          className={classnames({
+            'expand-icon': true,
+            'icon-tree': true,
+            'expand-icon-divider': treeExpanded,
+          })}
+        />
+      );
+      const treeIcon =
+        typeof treeProps?.expandIcon === 'function'
+          ? treeProps.expandIcon(rowData, treeExpanded)
+          : defaultTreeIcon;
+
+      let content;
       if (typeof render === 'function') {
-        cell.content = render(rowData[dataIndex as keyof T] as string, rowData, rowIndex);
+        content = render(rowData[dataIndex as keyof T] as string, rowData, rowIndex);
       }
-      cell.content = rowData[dataIndex as keyof T] as string;
+      content = rowData[dataIndex as keyof T] as string;
+
+      const isTreeColumn =
+        (treeProps?.treeColumnsName && treeProps.treeColumnsName === title) || index === 0;
+
+      if (hasChildren && isTreeColumn) {
+        cell.content = (
+          <span style={{ marginLeft: treeLevel * treeIndent }}>
+            {treeIcon}
+            {content}
+          </span>
+        );
+      } else if (isTreeColumn) {
+        cell.content = (
+          <span
+            style={{
+              marginLeft: treeLevel * treeIndent,
+              paddingLeft: treeLevel > 0 || (isTree && treeLevel === 0) ? 25 : 0,
+            }}
+          >
+            {content}
+          </span>
+        );
+      } else {
+        cell.content = content;
+      }
+
       return cell;
     });
 

@@ -96,4 +96,17 @@ td.selection-expand-column {
       transform: rotate(90deg);
     }
   }
+
+  &:hover {
+    border-color: @expand-icon-border-active-color;
+
+    &:before,
+    &:after {
+      background-color: @expand-icon-background-active-color;
+    }
+  }
+}
+
+.icon-tree {
+  margin-right: 8px;
 }
