@@ -8,7 +8,9 @@ interface TbodyProps<T> extends TableProps<T> {
   startRowIndex: number;
 }
 
-function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
+function Tbody<T extends { children?: T[]; parent?: T; rowKey: number | string }>(
+  props: TbodyProps<T>,
+) {
   const { dataSource, columns, startRowIndex, rowKey, rowSelection, expandable, treeProps } = props;
 
   const keysRef = useRef<KeysRefType>({} as KeysRefType);
@@ -70,16 +72,107 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     return treeProps?.defaultExpandedRowKeys || treeProps?.expandedRowKeys || [];
   });
 
-  const getSelectedRowData = useCallback(
-    (keys: (string | number)[]) => {
-      return dataSource.filter((d, index) => {
-        const key = getRowKey(d, index);
-        return keys.indexOf(key) >= 0;
+  const getChildrenData = (parentKey: string | number, level: number = 0, parent: T) => {
+    const arr: T[] = [];
+    const data = parent?.children;
+    if (data && data.length && treeExpandKeys.indexOf(parentKey) >= 0) {
+      data.forEach((item, i) => {
+        const key = getRowKey(item, i);
+        arr.push({ ...item, parent, rowKey: key });
+        treeLevel.current[key] = level + 1;
+        const records = getChildrenData(key, level + 1, { ...item, parent, rowKey: key });
+        arr.push(...records);
       });
-    },
-    [dataSource],
-  );
+    }
+    return arr;
+  };
 
+  const getData = useCallback(() => {
+    const arr: T[] = [];
+    treeLevel.current = {};
+    const parentLevel = 0;
+    dataSource?.forEach((d, i) => {
+      const key = getRowKey(d, i);
+      arr.push(d);
+      treeLevel.current[key] = parentLevel;
+      const childrenData = getChildrenData(key, parentLevel, d);
+      arr.push(...childrenData);
+    });
+    return arr;
+  }, [dataSource, getChildrenData, getRowKey]);
+
+  const getSelectedRowData = (data: T[], keys: (string | number)[]) => {
+    const arr: T[] = [];
+    data.forEach((d, index) => {
+      const key = getRowKey(d, index);
+      if (keys.indexOf(key) >= 0) {
+        arr.push(d);
+      }
+      if (d?.children && d.children.length) {
+        arr.push(...getSelectedRowData(d.children, keys));
+      }
+    });
+    return arr;
+  };
+
+  const getChildrenKeys = (data?: T[]) => {
+    const keys: (number | string)[] = [];
+    (data || []).map((c, i) => {
+      keys.push(getRowKey(c, i));
+      if (c?.children && c.children.length) {
+        keys.push(...getChildrenKeys(c.children));
+      }
+    });
+    return keys;
+  };
+
+  const getSelectParent = (
+    d: T,
+    selectKeys: (string | number)[],
+    currSelectedKey: number | string,
+  ) => {
+    const arr: T[] = [];
+    const childKeys = getChildrenKeys(d?.children);
+    const exist = childKeys.filter((cKey) => selectKeys.indexOf(cKey) >= 0);
+    if (exist.length + 1 === childKeys.length || (childKeys.length === 1 && !exist.length)) {
+      arr.push(d);
+      if (d?.parent) {
+        arr.unshift(...getSelectParent(d.parent, [...selectKeys, currSelectedKey], d.rowKey));
+      }
+    }
+    return arr;
+  };
+
+  const getSelectedItems = (data: T[] = [], currSelectedKey?: number | string) => {
+    const arr: T[] = [];
+
+    for (let i = 0; i < data.length; i++) {
+      const d = data[i];
+      const key = getRowKey(d, i);
+      if (currSelectedKey) {
+        if (currSelectedKey === key) {
+          if (d?.parent) {
+            arr.push(...getSelectParent(d.parent, selectedKeys, currSelectedKey));
+          }
+          arr.push(d);
+          const childrenData = getSelectedItems(d?.children);
+          if (childrenData.length) {
+            arr.push(...childrenData);
+          }
+        }
+      } else {
+        arr.push(d);
+        const childrenData = getSelectedItems(d?.children);
+        if (childrenData.length) {
+          arr.push(...childrenData);
+        }
+      }
+    }
+
+    return arr;
+  };
+
+  // todo 还得实现半选状态 如果是勾选了最后一个子选项则父选项也需要被选中
   const handleSelect = (
     isRadio: boolean,
     record: T,
@@ -89,22 +182,35 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
   ) => {
     const key = getRowKey(record, rowIndex);
     const isExist = selectedKeys.indexOf(key) >= 0;
+    const childrenKeys = getChildrenKeys(record?.children);
+
+    const selectedItems = getSelectedItems(getData(), key);
+    console.log(selectedItems);
+
+    const selectedItemKeys = selectedItems.map((s, i) => {
+      return getRowKey(s, i);
+    });
 
     let keys;
 
     if (!isExist) {
-      keys = isRadio ? [key] : [...selectedKeys, key];
+      // keys = isRadio ? [key] : [...selectedKeys, key, ...childrenKeys];
+      keys = isRadio ? [key] : [...selectedKeys, ...selectedItemKeys];
     } else {
-      keys = selectedKeys.filter((p: string | number) => p !== key);
+      // todo 取消勾选的  半选状态
+      keys = selectedKeys.filter((p: string | number) => {
+        return [key, ...childrenKeys].indexOf(p) < 0;
+      });
     }
 
-    const selectedRows = getSelectedRowData(keys);
+    // const selectedRows = selectedItems;
+    const selectedRows = getSelectedRowData(dataSource, keys);
     if (typeof rowSelection?.onSelect === 'function') {
       rowSelection.onSelect(record, selected, selectedRows, event);
     }
 
     if (typeof rowSelection?.onChange === 'function') {
-      rowSelection?.onChange(keys, getSelectedRowData(keys));
+      rowSelection?.onChange(keys, selectedRows);
     }
 
     if (!rowSelection?.selectedRowKeys) {
@@ -131,7 +237,7 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
         return isExist ? prev.filter((p) => p !== key) : [...prev, key];
       });
     }
-    treeProps?.onExpand && treeProps?.onExpand(treeExpanded, record);
+    treeProps?.onExpand && treeProps.onExpand(treeExpanded, record);
   };
 
   useEffect(() => {
@@ -152,34 +258,6 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     }
   }, [treeProps]);
 
-  const getChildrenData = (parentKey: string | number, data?: T[], level: number = 0) => {
-    const arr: T[] = [];
-    if (data && data.length && treeExpandKeys.indexOf(parentKey) >= 0) {
-      data?.forEach((item, i) => {
-        const key = getRowKey(item, i);
-        arr.push(item);
-        treeLevel.current[key] = level + 1;
-        const records = getChildrenData(key, item?.children, level + 1);
-        arr.push(...records);
-      });
-    }
-    return arr;
-  };
-
-  const getData = useCallback(() => {
-    const arr: T[] = [];
-    treeLevel.current = {};
-    const parentLevel = 0;
-    dataSource?.forEach((d, i) => {
-      const key = getRowKey(d, i);
-      arr.push(d);
-      treeLevel.current[key] = parentLevel;
-      const childrenData = getChildrenData(key, d?.children, parentLevel);
-      arr.push(...childrenData);
-    });
-    return arr;
-  }, [dataSource, treeExpandKeys, getChildrenData]);
-
   const isTree = useMemo(() => {
     const data = dataSource.filter((d) => d?.children && d.children.length);
     return data.length > 0;
@@ -198,14 +276,39 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     }
     keysRef.current[key] = true;
 
-    const checked = selectedKeys.indexOf(key) >= 0;
+    const childrenKeys = getChildrenKeys(rowData?.children);
+
+    const allChildrenSelected = childrenKeys.every((cKey) => {
+      // if (rowData.key === 13) {
+      //   console.log(childrenKeys.length);
+      //   console.log(selectedKeys);
+      // }
+      return selectedKeys.indexOf(cKey) >= 0;
+    });
+
+    const childrenSelected = childrenKeys.some((cKey) => {
+      return selectedKeys.indexOf(cKey) >= 0;
+    });
+
+    // console.log(rowData);
+    // console.log(childrenKeys.length);
+    // console.log(allChildrenSelected);
+
+    let checked = false;
+    // console.log(childrenKeys.length);
+
+    if (childrenKeys.length) {
+      checked = allChildrenSelected ? true : childrenSelected ? 'indeterminate' : false;
+    } else {
+      checked = selectedKeys.indexOf(key) >= 0;
+    }
 
     return (
       <Tr
         key={key}
         rowData={rowData}
         rowIndex={i}
-        checked={checked}
+        checked={selectedKeys.indexOf(key) >= 0}
         expanded={expandedRowKeys.indexOf(key) >= 0}
         treeExpanded={treeExpandKeys.indexOf(key) >= 0}
         treeLevel={treeLevel.current[key]}

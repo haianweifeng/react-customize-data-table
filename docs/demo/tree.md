@@ -105,16 +105,15 @@ const App = () => {
   const [expandedRowKeys, setExpandedRowKeys] = useState<number[]>([]);
 
   const rowSelection = {
-    // selectedRowKeys,
+    selectedRowKeys,
     onChange: (selectedRowKeys, selectedRows) => {
-      console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-      // setSelectedRowKeys(selectedRowKeys);
+      // console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+      setSelectedRowKeys(selectedRowKeys);
     },
     onSelect: (record, selected, selectedRows, nativeEvent) => {
-      console.log(record);
-      console.log(selected);
-      console.log(selectedRows);
-      console.log(nativeEvent);
+      // console.log(record);
+      // console.log(selected);
+      // console.log(selectedRows);
     },
     getCheckboxProps: (record) => ({
       disabled: record.name === 'Joe1 Black', // Column configuration not to be checked
@@ -125,7 +124,7 @@ const App = () => {
   return (
     <Table
       treeProps={{
-        defaultExpandAllRows: true,
+        // defaultExpandAllRows: true,
         // expandedRowKeys,
         onExpand: (expanded, record) => {
           setExpandedRowKeys((prev) => {

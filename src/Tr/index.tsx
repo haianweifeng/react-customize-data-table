@@ -9,7 +9,7 @@ import Td from '../Td';
 interface TrProps<T> extends TableProps<T> {
   rowData: T;
   rowIndex: number;
-  checked: boolean;
+  checked: boolean | 'indeterminate';
   expanded: boolean;
   treeExpanded: boolean;
   treeLevel: number;
@@ -146,7 +146,7 @@ function Tr<T extends { children?: T[] }>(props: TrProps<T>) {
       const defaultContent = isRadio ? (
         <Radio
           {...checkboxProps}
-          checked={!!checked}
+          checked={checked}
           onChange={(selected: boolean, event: Event) => {
             handleChange(isRadio, selected, event);
           }}
@@ -154,7 +154,7 @@ function Tr<T extends { children?: T[] }>(props: TrProps<T>) {
       ) : (
         <Checkbox
           {...checkboxProps}
-          checked={!!checked}
+          checked={checked}
           onChange={(selected: boolean, event: Event) => {
             handleChange(isRadio, selected, event);
           }}
