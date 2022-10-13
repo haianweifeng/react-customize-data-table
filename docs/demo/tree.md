@@ -107,7 +107,7 @@ const App = () => {
   const rowSelection = {
     selectedRowKeys,
     onChange: (selectedRowKeys, selectedRows) => {
-      // console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+      console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
       setSelectedRowKeys(selectedRowKeys);
     },
     onSelect: (record, selected, selectedRows, nativeEvent) => {

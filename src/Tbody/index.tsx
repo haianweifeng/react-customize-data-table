@@ -93,19 +93,19 @@ function Tbody<T extends { children?: T[]; parent?: T; rowKey: number | string }
     const parentLevel = 0;
     dataSource?.forEach((d, i) => {
       const key = getRowKey(d, i);
-      arr.push(d);
+      const obj = { ...d, rowKey: key };
+      arr.push(obj);
       treeLevel.current[key] = parentLevel;
-      const childrenData = getChildrenData(key, parentLevel, d);
+      const childrenData = getChildrenData(key, parentLevel, obj);
       arr.push(...childrenData);
     });
     return arr;
   }, [dataSource, getChildrenData, getRowKey]);
 
-  const getSelectedRowData = (data: T[], keys: (string | number)[]) => {
+  const getSelectedRowData = (data: T[] = [], keys: (string | number)[]) => {
     const arr: T[] = [];
-    data.forEach((d, index) => {
-      const key = getRowKey(d, index);
-      if (keys.indexOf(key) >= 0) {
+    data.forEach((d) => {
+      if (keys.indexOf(d.rowKey) >= 0) {
         arr.push(d);
       }
       if (d?.children && d.children.length) {
@@ -185,7 +185,7 @@ function Tbody<T extends { children?: T[]; parent?: T; rowKey: number | string }
     const childrenKeys = getChildrenKeys(record?.children);
 
     const selectedItems = getSelectedItems(getData(), key);
-    console.log(selectedItems);
+    // console.log(selectedItems);
 
     const selectedItemKeys = selectedItems.map((s, i) => {
       return getRowKey(s, i);
@@ -197,14 +197,20 @@ function Tbody<T extends { children?: T[]; parent?: T; rowKey: number | string }
       // keys = isRadio ? [key] : [...selectedKeys, key, ...childrenKeys];
       keys = isRadio ? [key] : [...selectedKeys, ...selectedItemKeys];
     } else {
+      keys = [record.rowKey, ...childrenKeys];
       // todo 取消勾选的  半选状态
+      let parent = record.parent;
+      while (parent) {
+        keys.unshift(parent.rowKey);
+        parent = parent.parent;
+      }
       keys = selectedKeys.filter((p: string | number) => {
-        return [key, ...childrenKeys].indexOf(p) < 0;
+        return keys.indexOf(p) < 0;
       });
     }
 
-    // const selectedRows = selectedItems;
-    const selectedRows = getSelectedRowData(dataSource, keys);
+    // todo getSelectedRowData 需要优化 现在采用的是getData
+    const selectedRows = getSelectedRowData(getData(), keys);
     if (typeof rowSelection?.onSelect === 'function') {
       rowSelection.onSelect(record, selected, selectedRows, event);
     }
@@ -276,29 +282,19 @@ function Tbody<T extends { children?: T[]; parent?: T; rowKey: number | string }
     }
     keysRef.current[key] = true;
 
-    const childrenKeys = getChildrenKeys(rowData?.children);
-
-    const allChildrenSelected = childrenKeys.every((cKey) => {
-      // if (rowData.key === 13) {
-      //   console.log(childrenKeys.length);
-      //   console.log(selectedKeys);
-      // }
-      return selectedKeys.indexOf(cKey) >= 0;
-    });
-
-    const childrenSelected = childrenKeys.some((cKey) => {
-      return selectedKeys.indexOf(cKey) >= 0;
-    });
-
-    // console.log(rowData);
-    // console.log(childrenKeys.length);
-    // console.log(allChildrenSelected);
-
     let checked = false;
-    // console.log(childrenKeys.length);
 
-    if (childrenKeys.length) {
-      checked = allChildrenSelected ? true : childrenSelected ? 'indeterminate' : false;
+    if (rowData?.children && rowData.children.length) {
+      const childrenKeys = getChildrenKeys(rowData?.children);
+      const allChildrenSelected = childrenKeys.every((cKey) => {
+        return selectedKeys.indexOf(cKey) >= 0;
+      });
+      const childrenSelected = childrenKeys.some((cKey) => {
+        return selectedKeys.indexOf(cKey) >= 0;
+      });
+      if (childrenKeys.length) {
+        checked = allChildrenSelected ? true : childrenSelected ? 'indeterminate' : false;
+      }
     } else {
       checked = selectedKeys.indexOf(key) >= 0;
     }
@@ -308,7 +304,7 @@ function Tbody<T extends { children?: T[]; parent?: T; rowKey: number | string }
         key={key}
         rowData={rowData}
         rowIndex={i}
-        checked={selectedKeys.indexOf(key) >= 0}
+        checked={checked}
         expanded={expandedRowKeys.indexOf(key) >= 0}
         treeExpanded={treeExpandKeys.indexOf(key) >= 0}
         treeLevel={treeLevel.current[key]}
