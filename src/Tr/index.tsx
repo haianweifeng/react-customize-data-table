@@ -21,8 +21,8 @@ interface TrProps<T> extends TableProps<T> {
     selected: boolean,
     event: Event,
   ) => void;
-  onExpand: (expanded: boolean, record: T, rowIndex: number) => void;
-  onTreeExpand: (expanded: boolean, record: T, rowIndex: number) => void;
+  onExpand: (expanded: boolean, record: T) => void;
+  onTreeExpand: (expanded: boolean, record: T) => void;
 }
 function Tr<T extends { children?: T[] }>(props: TrProps<T>) {
   const {
@@ -49,11 +49,11 @@ function Tr<T extends { children?: T[] }>(props: TrProps<T>) {
   };
 
   const handleExpandClick = () => {
-    onExpand(!expanded, rowData, rowIndex);
+    onExpand(!expanded, rowData);
   };
 
   const handleTreeExpand = () => {
-    onTreeExpand(!treeExpanded, rowData, rowIndex);
+    onTreeExpand(!treeExpanded, rowData);
   };
 
   const getSelectionType = () => {

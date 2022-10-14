@@ -124,7 +124,7 @@ const App = () => {
   return (
     <Table
       treeProps={{
-        // defaultExpandAllRows: true,
+        defaultExpandAllRows: true,
         // expandedRowKeys,
         onExpand: (expanded, record) => {
           setExpandedRowKeys((prev) => {
