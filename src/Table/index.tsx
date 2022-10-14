@@ -145,7 +145,7 @@ function Table<
       arr.push(obj);
     });
     return arr;
-  }, [dataSource, getRowKey]);
+  }, [dataSource, getRowKey, formatChildrenData]);
 
   const renderBody = () => {
     const { dataSource, columns, ...others } = props;

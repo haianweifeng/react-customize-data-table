@@ -34,7 +34,7 @@ function Tbody<
 
   const getAllTreeKeys = (data: T[]) => {
     const keys: (string | number)[] = [];
-    data.forEach((d, i) => {
+    data.forEach((d) => {
       keys.push(d.rowKey);
       if (d?.children && d.children.length) {
         keys.push(...getAllTreeKeys(d.children));
@@ -57,7 +57,7 @@ function Tbody<
     const keys: (string | number)[] = [];
     const data = parent?.children;
     if (data && data.length && treeExpandKeys && treeExpandKeys.indexOf(parent.rowKey) >= 0) {
-      data.forEach((item, i) => {
+      data.forEach((item) => {
         keys.push(item.rowKey);
         const treeKeys = getTreeChildrenKeys(item);
         keys.push(...treeKeys);
@@ -68,7 +68,7 @@ function Tbody<
 
   const getAllExpandKeys = (data: T[]) => {
     const keys: (string | number)[] = [];
-    data.forEach((d, i) => {
+    data.forEach((d) => {
       keys.push(d.rowKey);
       if (d?.children && d.children.length) {
         const treeChildrenData = getTreeChildrenKeys(d);
@@ -92,7 +92,7 @@ function Tbody<
     const arr: T[] = [];
     const data = parent?.children;
     if (data && data.length && treeExpandKeys && treeExpandKeys.indexOf(parent.rowKey) >= 0) {
-      data.forEach((item, i) => {
+      data.forEach((item) => {
         arr.push(item);
         const records = getTreeChildrenData(item);
         arr.push(...records);
@@ -106,7 +106,7 @@ function Tbody<
 
     const arr: T[] = [];
 
-    dataSource.forEach((d, i) => {
+    dataSource.forEach((d) => {
       arr.push(d);
       const childrenData = getTreeChildrenData(d);
       arr.push(...childrenData);
@@ -117,7 +117,7 @@ function Tbody<
 
   const getChildrenKeys = (data: T[] = [], all = true) => {
     const keys: (number | string)[] = [];
-    data.map((c, i) => {
+    data.map((c) => {
       keys.push(c.rowKey);
       if (c?.children && c.children.length && all) {
         keys.push(...getChildrenKeys(c.children));
@@ -205,7 +205,7 @@ function Tbody<
     if (!isExist) {
       const selectedItems = getSelectedItems(list, key);
 
-      const selectedItemKeys = selectedItems.map((s, i) => {
+      const selectedItemKeys = selectedItems.map((s) => {
         return s.rowKey;
       });
       selectedRows = isRadio ? [record] : [...cacheSelectedRows.current, ...selectedItems];

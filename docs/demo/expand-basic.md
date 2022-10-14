@@ -1,11 +1,11 @@
-### 可展开行受控
+### 可展开
 
-###### 设置 expandable.expandedRowKeys 属性表示展开会变成受控的
+###### 设置 expandable 属性表示此行可以展开
 
 Demo:
 
 ```tsx
-import React, { useState } from 'react';
+import React from 'react';
 import type { ColumnsType } from 'react-data-table';
 import { Table } from 'react-data-table';
 
@@ -60,8 +60,6 @@ const data: DataType[] = [
 ];
 
 const App = () => {
-  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
-
   const rowSelection = {
     onChange: (selectedRowKeys, selectedRows) => {
       console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
@@ -96,9 +94,6 @@ const App = () => {
         }
       }}
       expandable={{
-        expandedRowKeys,
-        // defaultExpandedRowKeys: expandedRowKeys,
-        defaultExpandAllRows: true,
         expandedRowRender: (record) => <p style={{ margin: 0 }}>{record.description}</p>,
         rowExpandable: (record) => record.name !== 'Jim Green',
         expandedRowClassName: (record, index) => {
@@ -107,9 +102,6 @@ const App = () => {
         },
         onExpand: (expanded, record) => {
           console.log(`expanded: ${expanded}`, 'record: ', record);
-          setExpandedRowKeys((prev) => {
-            return expanded ? [...prev, record.key] : prev.filter((p) => p !== record.key);
-          });
         },
       }}
     />

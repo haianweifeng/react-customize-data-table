@@ -1,11 +1,11 @@
-### 可展开行受控
+### 展开行图标展示在其他列
 
-###### 设置 expandable.expandedRowKeys 属性表示展开会变成受控的
+###### 设置 expandable.insertBeforeColumnName 属性控制可展开图标嵌入哪一列之前, 默认展示在第一列
 
 Demo:
 
 ```tsx
-import React, { useState } from 'react';
+import React from 'react';
 import type { ColumnsType } from 'react-data-table';
 import { Table } from 'react-data-table';
 
@@ -60,8 +60,6 @@ const data: DataType[] = [
 ];
 
 const App = () => {
-  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
-
   const rowSelection = {
     onChange: (selectedRowKeys, selectedRows) => {
       console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
@@ -96,9 +94,7 @@ const App = () => {
         }
       }}
       expandable={{
-        expandedRowKeys,
-        // defaultExpandedRowKeys: expandedRowKeys,
-        defaultExpandAllRows: true,
+        insertBeforeColumnName: 'Name',
         expandedRowRender: (record) => <p style={{ margin: 0 }}>{record.description}</p>,
         rowExpandable: (record) => record.name !== 'Jim Green',
         expandedRowClassName: (record, index) => {
@@ -107,9 +103,6 @@ const App = () => {
         },
         onExpand: (expanded, record) => {
           console.log(`expanded: ${expanded}`, 'record: ', record);
-          setExpandedRowKeys((prev) => {
-            return expanded ? [...prev, record.key] : prev.filter((p) => p !== record.key);
-          });
         },
       }}
     />

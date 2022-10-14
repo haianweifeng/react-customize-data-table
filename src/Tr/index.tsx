@@ -96,7 +96,7 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
   const renderExpandColumn = () => {
     let ableExpand = true;
 
-    if (expandable?.rowExpandable && expandable?.rowExpandable(rowData) === false) {
+    if (expandable?.rowExpandable && !expandable?.rowExpandable(rowData)) {
       ableExpand = false;
     }
     const expandIcon = (
@@ -163,8 +163,9 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
       let content;
       if (typeof render === 'function') {
         content = render(rowData[dataIndex as keyof T] as string, rowData, rowIndex);
+      } else {
+        content = rowData[dataIndex as keyof T] as string;
       }
-      content = rowData[dataIndex as keyof T] as string;
 
       const isTreeColumn =
         (treeProps?.treeColumnsName && treeProps.treeColumnsName === title) ||
@@ -206,13 +207,8 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
       }
     }
 
-    // todo 待验证是不是存在 expandable.expandedRowRender 这个才可以
     if (expandable && expandable?.expandedRowRender) {
       formatColumns.splice(insertIndex, 0, renderExpandColumn());
-      // todo 下面这段代码是不是没用的
-      // if (expandable?.insertBeforeColumnName) {
-      //   insertIndex += 1;
-      // }
     }
 
     return formatColumns;
@@ -236,7 +232,7 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
       !expandable ||
       !expandable?.expandedRowRender ||
       !expanded ||
-      (expandable?.rowExpandable && expandable?.rowExpandable(rowData) === false)
+      (expandable?.rowExpandable && !expandable?.rowExpandable(rowData))
     )
       return;
     const formatColumns = getColumns();
