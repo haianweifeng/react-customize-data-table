@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import classnames from 'classnames';
 import Tbody from '../Tbody';
 import type {
@@ -6,6 +6,7 @@ import type {
   ColumnsType,
   ExpandableType,
   TreeExpandableType,
+  KeysRefType,
 } from '../interface';
 import '../style/index.less';
 // import styles from './index.less';
@@ -71,17 +72,87 @@ export interface TableProps<T> {
   treeProps?: TreeExpandableType<T>;
 }
 
-function Table<T extends { children?: T[] }>(props: TableProps<T>) {
-  const { className = '', style = {}, size = 'default', bordered } = props;
+function Table<
+  T extends {
+    children?: T[];
+    rowKey: number | string;
+    parentKey?: number | string;
+    treeLevel: number;
+  },
+>(props: TableProps<T>) {
+  const { className = '', style = {}, size = 'default', bordered, rowKey, dataSource } = props;
+
+  const keysRef = useRef<KeysRefType>({} as KeysRefType);
 
   const [startRowIndex, setStartRowIndex] = useState<number>(0);
+
+  const getRowKey = (rowData: T, i: number | string) => {
+    let key;
+    if (typeof rowKey === 'string') {
+      key = rowData[rowKey as keyof T] as string;
+    } else if (typeof rowKey === 'function') {
+      key = rowKey(rowData);
+    }
+
+    if (key) {
+      if (!(typeof key === 'string' || typeof key === 'number')) {
+        console.error(new Error(`expect Tr has a string or a number key, get '${typeof key}'`));
+      }
+    } else {
+      key = i;
+      console.warn(
+        `Tr has no set unique key.Already converted with ${i},Please sure Tr has unique key.`,
+      );
+    }
+
+    if (keysRef.current[key]) {
+      const converted = `converted_key_${i}`;
+      let tips = `Tr has same key:(${key}).Already converted with (${converted}), Please sure Tr has unique key.`;
+      console.warn(tips);
+      key = converted;
+    }
+    keysRef.current[key] = true;
+
+    return key;
+  };
+
+  const formatChildrenData = (parent: T, parentIndex: string | number, level: number = 0) => {
+    const arr: T[] = [];
+    const data = parent?.children || [];
+    data.map((d, i) => {
+      const key = getRowKey(d, `${parentIndex}_${i}`);
+      const obj = { ...d, parentKey: parent.rowKey, rowKey: key, treeLevel: level + 1 };
+      const res = formatChildrenData(obj, `${parentIndex}_${i}`, level + 1);
+      if (res && res.length) {
+        obj.children = res;
+      }
+      arr.push(obj);
+    });
+    return arr;
+  };
+
+  const formatData = useMemo(() => {
+    const arr: T[] = [];
+    keysRef.current = {};
+    const parentLevel = 0;
+
+    dataSource.forEach((d, i) => {
+      const key = getRowKey(d, i);
+      const obj = { ...d, rowKey: key, treeLevel: parentLevel };
+      if (obj?.children && obj.children.length) {
+        obj.children = formatChildrenData(obj, i, parentLevel);
+      }
+      arr.push(obj);
+    });
+    return arr;
+  }, [dataSource, getRowKey]);
 
   const renderBody = () => {
     const { dataSource, columns, ...others } = props;
     return (
       <div>
         <table>
-          <Tbody startRowIndex={startRowIndex} {...props} />
+          <Tbody startRowIndex={startRowIndex} {...props} dataSource={formatData} />
         </table>
       </div>
     );

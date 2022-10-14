@@ -154,5 +154,3 @@ export interface CellProps {
 }
 
 export type KeysRefType = { [key: string]: boolean };
-
-export type TreeLevelType = { [key: string | number]: number };

@@ -12,7 +12,6 @@ interface TrProps<T> extends TableProps<T> {
   checked: boolean | 'indeterminate';
   expanded: boolean;
   treeExpanded: boolean;
-  treeLevel: number;
   isTree: boolean;
   onSelect: (
     isRadio: boolean,
@@ -24,7 +23,7 @@ interface TrProps<T> extends TableProps<T> {
   onExpand: (expanded: boolean, record: T) => void;
   onTreeExpand: (expanded: boolean, record: T) => void;
 }
-function Tr<T extends { children?: T[] }>(props: TrProps<T>) {
+function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) {
   const {
     rowData,
     rowIndex,
@@ -38,7 +37,6 @@ function Tr<T extends { children?: T[] }>(props: TrProps<T>) {
     onSelect,
     striped,
     rowClassName,
-    treeLevel,
     treeProps,
     isTree,
     onTreeExpand,
@@ -65,6 +63,7 @@ function Tr<T extends { children?: T[] }>(props: TrProps<T>) {
 
   const getColumns = () => {
     let insertIndex = 0;
+    const treeLevel = rowData.treeLevel;
     const hasChildren = rowData?.children && rowData.children.length > 0;
     const treeIndent = treeProps?.indentSize || 15;
     const formatColumns = columns.map((column, index: number) => {
@@ -183,8 +182,8 @@ function Tr<T extends { children?: T[] }>(props: TrProps<T>) {
     if (expandable?.rowExpandable && expandable?.rowExpandable(rowData) === false) {
       ableExpand = false;
     }
-
-    if (!!expandable) {
+    // todo
+    if (expandable && expandable.expandedRowRender) {
       const expandIcon = (
         <span
           className={classnames({

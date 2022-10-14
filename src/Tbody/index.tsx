@@ -1,6 +1,6 @@
-import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import type { TableProps } from '../Table';
-import type { ColumnsType, KeysRefType, TreeLevelType } from '../interface';
+import type { ColumnsType } from '../interface';
 import Tr from '../Tr';
 
 interface TbodyProps<T> extends TableProps<T> {
@@ -9,7 +9,12 @@ interface TbodyProps<T> extends TableProps<T> {
 }
 
 function Tbody<
-  T extends { children?: T[]; parent?: T; rowKey: number | string; parentKey?: number | string },
+  T extends {
+    children?: T[];
+    rowKey: number | string;
+    parentKey?: number | string;
+    treeLevel: number;
+  },
 >(props: TbodyProps<T>) {
   const {
     dataSource = [],
@@ -21,77 +26,23 @@ function Tbody<
     treeProps,
   } = props;
 
-  const keysRef = useRef<KeysRefType>({} as KeysRefType);
-
-  const treeLevel = useRef<TreeLevelType>({} as TreeLevelType);
-
   const cacheSelectedRows = useRef<T[]>([]);
 
   const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
     return rowSelection?.defaultSelectedRowKeys || rowSelection?.selectedRowKeys || [];
   });
 
-  const getRowKey = (rowData: T, i: number | string) => {
-    let key;
-    if (typeof rowKey === 'string') {
-      key = rowData[rowKey as keyof T] as string;
-    } else if (typeof rowKey === 'function') {
-      key = rowKey(rowData);
-    }
-
-    if (key) {
-      if (!(typeof key === 'string' || typeof key === 'number')) {
-        console.error(new Error(`expect Tr has a string or a number key, get '${typeof key}'`));
-      }
-    } else {
-      key = i;
-      console.warn(
-        `Tr has no set unique key.Already converted with ${i},Please sure Tr has unique key.`,
-      );
-    }
-
-    if (keysRef.current[key]) {
-      const converted = `converted_key_${i}`;
-      let tips = `Tr has same key:(${key}).Already converted with (${converted}), Please sure Tr has unique key.`;
-      console.warn(tips);
-      key = converted;
-    }
-    keysRef.current[key] = true;
-
-    return key;
-  };
-
-  // todo 考虑dataSource  这个还没优化
-  const getAllExpandKeys = useCallback(() => {
-    return dataSource.map((d, i) => {
-      return getRowKey(d, i);
-    });
-  }, [dataSource]);
-
-  // 优化过
-  const getAllTreeKeys = (data: T[], index?: number) => {
+  const getAllTreeKeys = (data: T[]) => {
     const keys: (string | number)[] = [];
     data.forEach((d, i) => {
-      const num = index ? `${index}_${i}` : i;
-      const key = getRowKey(d, num);
-      keys.push(key);
+      keys.push(d.rowKey);
       if (d?.children && d.children.length) {
-        keys.push(...getAllTreeKeys(d.children, i));
+        keys.push(...getAllTreeKeys(d.children));
       }
     });
     return keys;
   };
 
-  const [expandedRowKeys, setExpandedRowKeys] = useState<(string | number)[]>(() => {
-    if (
-      expandable?.defaultExpandAllRows &&
-      !(expandable?.defaultExpandedRowKeys || expandable?.expandedRowKeys)
-    ) {
-      return getAllExpandKeys();
-    }
-    return expandable?.defaultExpandedRowKeys || expandable?.expandedRowKeys || [];
-  });
-  // 优化过
   const [treeExpandKeys, setTreeExpandKeys] = useState<(string | number)[]>(() => {
     if (
       treeProps?.defaultExpandAllRows &&
@@ -102,69 +53,79 @@ function Tbody<
     return treeProps?.defaultExpandedRowKeys || treeProps?.expandedRowKeys || [];
   });
 
-  // 优化过
-  const getTreeChildrenData = (level: number = 0, parent: T) => {
+  const getTreeChildrenKeys = (parent: T) => {
+    const keys: (string | number)[] = [];
+    const data = parent?.children;
+    if (data && data.length && treeExpandKeys && treeExpandKeys.indexOf(parent.rowKey) >= 0) {
+      data.forEach((item, i) => {
+        keys.push(item.rowKey);
+        const treeKeys = getTreeChildrenKeys(item);
+        keys.push(...treeKeys);
+      });
+    }
+    return keys;
+  };
+
+  const getAllExpandKeys = (data: T[]) => {
+    const keys: (string | number)[] = [];
+    data.forEach((d, i) => {
+      keys.push(d.rowKey);
+      if (d?.children && d.children.length) {
+        const treeChildrenData = getTreeChildrenKeys(d);
+        treeChildrenData.length && keys.push(...treeChildrenData);
+      }
+    });
+    return keys;
+  };
+
+  const [expandedRowKeys, setExpandedRowKeys] = useState<(string | number)[]>(() => {
+    if (
+      expandable?.defaultExpandAllRows &&
+      !(expandable?.defaultExpandedRowKeys || expandable?.expandedRowKeys)
+    ) {
+      return getAllExpandKeys(dataSource);
+    }
+    return expandable?.defaultExpandedRowKeys || expandable?.expandedRowKeys || [];
+  });
+
+  const getTreeChildrenData = (parent: T) => {
     const arr: T[] = [];
     const data = parent?.children;
     if (data && data.length && treeExpandKeys && treeExpandKeys.indexOf(parent.rowKey) >= 0) {
       data.forEach((item, i) => {
         arr.push(item);
-        const key = item.rowKey;
-        treeLevel.current[key] = level + 1;
-        const records = getTreeChildrenData(level + 1, item);
+        const records = getTreeChildrenData(item);
         arr.push(...records);
       });
     }
     return arr;
   };
-  // 优化过
-  const formatChildrenData = (parent: T, parentIndex: string | number) => {
-    const arr: T[] = [];
-    const data = parent?.children || [];
-    data.map((d, i) => {
-      const key = getRowKey(d, `${parentIndex}_${i}`);
-      const obj = { ...d, parentKey: parent.rowKey, rowKey: key };
-      const res = formatChildrenData(obj, `${parentIndex}_${i}`);
-      if (res && res.length) {
-        obj.children = res;
-      }
-      arr.push(obj);
-    });
-    return arr;
-  };
 
-  // 优化过
-  const formatData = useMemo(() => {
+  const list = useMemo(() => {
+    if (!treeExpandKeys.length) return dataSource;
+
     const arr: T[] = [];
-    keysRef.current = {};
-    treeLevel.current = {};
-    const parentLevel = 0;
+
     dataSource.forEach((d, i) => {
-      const key = getRowKey(d, i);
-      const obj = { ...d, rowKey: key };
-      if (obj?.children && obj.children.length) {
-        obj.children = formatChildrenData(obj, i);
-      }
-      arr.push(obj);
-      treeLevel.current[key] = parentLevel;
-      const childrenData = getTreeChildrenData(parentLevel, obj);
+      arr.push(d);
+      const childrenData = getTreeChildrenData(d);
       arr.push(...childrenData);
     });
-    return arr;
-  }, [dataSource, getTreeChildrenData, getRowKey]);
 
-  // 优化过
-  const getChildrenKeys = (data: T[] = []) => {
+    return arr;
+  }, [dataSource, getTreeChildrenData]);
+
+  const getChildrenKeys = (data: T[] = [], all = true) => {
     const keys: (number | string)[] = [];
     data.map((c, i) => {
       keys.push(c.rowKey);
-      if (c?.children && c.children.length) {
+      if (c?.children && c.children.length && all) {
         keys.push(...getChildrenKeys(c.children));
       }
     });
     return keys;
   };
-  // 优化过
+
   const findParentByKey = (data: T[] = [], key: string | number) => {
     let item: undefined | T;
     for (let i = 0; i < data.length; i++) {
@@ -183,16 +144,16 @@ function Tbody<
     }
     return item;
   };
-  // 优化过
+
   const getSelectParent = (
     parentKey: string | number,
     selectKeys: (string | number)[],
     currSelectedKey: number | string,
   ) => {
     const arr: T[] = [];
-    const parent = findParentByKey(formatData, parentKey);
+    const parent = findParentByKey(list, parentKey);
     if (!parent) return arr;
-    const childKeys = getChildrenKeys(parent?.children);
+    const childKeys = getChildrenKeys(parent?.children, false);
     const exist = childKeys.filter((cKey) => selectKeys.indexOf(cKey) >= 0);
     if (exist.length + 1 === childKeys.length || (childKeys.length === 1 && !exist.length)) {
       arr.push(parent);
@@ -204,7 +165,7 @@ function Tbody<
     }
     return arr;
   };
-  // 优化过
+
   const getSelectedItems = (data: T[] = [], currSelectedKey?: number | string) => {
     const arr: T[] = [];
 
@@ -219,6 +180,8 @@ function Tbody<
             arr.push(...childrenData);
           }
           if (d?.parentKey) {
+            // todo 少加了一项
+            // console.log(getSelectParent(d.parentKey, selectedKeys, currSelectedKey));
             arr.push(...getSelectParent(d.parentKey, selectedKeys, currSelectedKey));
           }
         }
@@ -234,7 +197,6 @@ function Tbody<
     return arr;
   };
 
-  // 优化过
   const handleSelect = (
     isRadio: boolean,
     record: T,
@@ -249,7 +211,8 @@ function Tbody<
     let selectedRows;
 
     if (!isExist) {
-      const selectedItems = getSelectedItems(formatData, key);
+      const selectedItems = getSelectedItems(list, key);
+      // console.log(selectedItems);
 
       const selectedItemKeys = selectedItems.map((s, i) => {
         return s.rowKey;
@@ -263,7 +226,7 @@ function Tbody<
       let parentKey = record?.parentKey;
       while (parentKey) {
         keys.push(parentKey);
-        const parent = findParentByKey(formatData, parentKey);
+        const parent = findParentByKey(list, parentKey);
         parentKey = parent?.parentKey;
       }
 
@@ -300,7 +263,7 @@ function Tbody<
     }
     expandable?.onExpand && expandable.onExpand(expanded, record);
   };
-  // 优化过
+
   const handleTreeExpand = (treeExpanded: boolean, record: T) => {
     if (!treeProps?.expandedRowKeys) {
       setTreeExpandKeys((prev) => {
@@ -362,7 +325,6 @@ function Tbody<
         checked={checked}
         expanded={expandedRowKeys.indexOf(key) >= 0}
         treeExpanded={treeExpandKeys.indexOf(key) >= 0}
-        treeLevel={treeLevel.current[key]}
         isTree={isTree}
         {...props}
         onExpand={handleExpand}
@@ -372,6 +334,6 @@ function Tbody<
     );
   };
 
-  return <tbody>{formatData.map((d, i: number) => renderTr(d, i))}</tbody>;
+  return <tbody>{list.map((d, i: number) => renderTr(d, i))}</tbody>;
 }
 export default Tbody;

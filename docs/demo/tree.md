@@ -124,7 +124,7 @@ const App = () => {
   return (
     <Table
       treeProps={{
-        defaultExpandAllRows: true,
+        // defaultExpandAllRows: true,
         // expandedRowKeys,
         onExpand: (expanded, record) => {
           setExpandedRowKeys((prev) => {
@@ -132,6 +132,11 @@ const App = () => {
           });
         },
       }}
+      expandable={
+        {
+          // defaultExpandAllRows: true,
+        }
+      }
       rowSelection={rowSelection}
       dataSource={data}
       columns={columns}
