@@ -195,13 +195,7 @@ function Tbody<
     return arr;
   };
 
-  const handleSelect = (
-    isRadio: boolean,
-    record: T,
-    rowIndex: number,
-    selected: boolean,
-    event: Event,
-  ) => {
+  const handleSelect = (isRadio: boolean, record: T, selected: boolean, event: Event) => {
     const key = record.rowKey;
     const isExist = selectedKeys.indexOf(key) >= 0;
 
@@ -210,7 +204,6 @@ function Tbody<
 
     if (!isExist) {
       const selectedItems = getSelectedItems(list, key);
-      // console.log(selectedItems);
 
       const selectedItemKeys = selectedItems.map((s, i) => {
         return s.rowKey;

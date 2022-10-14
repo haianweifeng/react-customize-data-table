@@ -13,13 +13,7 @@ interface TrProps<T> extends TableProps<T> {
   expanded: boolean;
   treeExpanded: boolean;
   isTree: boolean;
-  onSelect: (
-    isRadio: boolean,
-    record: T,
-    rowIndex: number,
-    selected: boolean,
-    event: Event,
-  ) => void;
+  onSelect: (isRadio: boolean, record: T, selected: boolean, event: Event) => void;
   onExpand: (expanded: boolean, record: T) => void;
   onTreeExpand: (expanded: boolean, record: T) => void;
 }
@@ -43,7 +37,7 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
   } = props;
 
   const handleChange = (isRadio: boolean, selected: boolean, event: Event) => {
-    onSelect(isRadio, rowData, rowIndex, selected, event);
+    onSelect(isRadio, rowData, selected, event);
   };
 
   const handleExpandClick = () => {
@@ -59,6 +53,73 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
       return rowSelection.type || 'checkbox';
     }
     return '';
+  };
+
+  const renderSelectionColumn = (type: string) => {
+    const checkboxProps =
+      typeof rowSelection?.getCheckboxProps === 'function'
+        ? rowSelection.getCheckboxProps(rowData)
+        : {};
+    const isRadio = type === 'radio';
+    const defaultContent = isRadio ? (
+      <Radio
+        {...checkboxProps}
+        checked={checked}
+        onChange={(selected: boolean, event: Event) => {
+          handleChange(isRadio, selected, event);
+        }}
+      />
+    ) : (
+      <Checkbox
+        {...checkboxProps}
+        checked={checked}
+        onChange={(selected: boolean, event: Event) => {
+          handleChange(isRadio, selected, event);
+        }}
+      />
+    );
+    // todo fixed
+    const cellProps = {
+      isSelectionExpandColumn: true,
+      // fixed: rowSelection?.fixed,
+      colSpan: 1,
+      rowSpan: 1,
+      content:
+        typeof rowSelection?.renderCell === 'function'
+          ? rowSelection.renderCell(!!checked, rowData, rowIndex, defaultContent)
+          : defaultContent,
+    };
+
+    return cellProps;
+  };
+  // todo fixed
+  const renderExpandColumn = () => {
+    let ableExpand = true;
+
+    if (expandable?.rowExpandable && expandable?.rowExpandable(rowData) === false) {
+      ableExpand = false;
+    }
+    const expandIcon = (
+      <span
+        className={classnames({
+          'expand-icon': true,
+          'expand-icon-divider': expanded,
+        })}
+        onClick={handleExpandClick}
+      />
+    );
+
+    let content =
+      typeof expandable?.expandIcon === 'function'
+        ? expandable.expandIcon(rowData, expanded)
+        : expandIcon;
+
+    return {
+      isSelectionExpandColumn: true,
+      colSpan: 1,
+      rowSpan: 1,
+      content: ableExpand ? content : '',
+    };
   };
 
   const getColumns = () => {
@@ -116,7 +177,8 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
             {content}
           </span>
         );
-      } else if (isTreeColumn) {
+      } else if (isTreeColumn && isTree) {
+        // todo 测试配置了treeProps?.treeColumnsName 但是数据中没有children
         cell.content = (
           <span
             style={{
@@ -137,79 +199,20 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
     const type = getSelectionType();
 
     if (type) {
-      const checkboxProps =
-        typeof rowSelection?.getCheckboxProps === 'function'
-          ? rowSelection.getCheckboxProps(rowData)
-          : {};
-      const isRadio = type === 'radio';
-      const defaultContent = isRadio ? (
-        <Radio
-          {...checkboxProps}
-          checked={checked}
-          onChange={(selected: boolean, event: Event) => {
-            handleChange(isRadio, selected, event);
-          }}
-        />
-      ) : (
-        <Checkbox
-          {...checkboxProps}
-          checked={checked}
-          onChange={(selected: boolean, event: Event) => {
-            handleChange(isRadio, selected, event);
-          }}
-        />
-      );
-
-      // todo fixed
-      formatColumns.unshift({
-        isSelectionExpandColumn: true,
-        // fixed: rowSelection?.fixed,
-        colSpan: 1,
-        rowSpan: 1,
-        content:
-          typeof rowSelection?.renderCell === 'function'
-            ? rowSelection.renderCell(!!checked, rowData, rowIndex, defaultContent)
-            : defaultContent,
-      });
+      formatColumns.unshift(renderSelectionColumn(type));
 
       if (expandable?.insertBeforeColumnName) {
         insertIndex += 1;
       }
     }
 
-    let ableExpand = true;
-
-    if (expandable?.rowExpandable && expandable?.rowExpandable(rowData) === false) {
-      ableExpand = false;
-    }
-    // todo
-    if (expandable && expandable.expandedRowRender) {
-      const expandIcon = (
-        <span
-          className={classnames({
-            'expand-icon': true,
-            'expand-icon-divider': expanded,
-          })}
-          onClick={handleExpandClick}
-        />
-      );
-
-      let content =
-        typeof expandable?.expandIcon === 'function'
-          ? expandable.expandIcon(rowData, expanded)
-          : expandIcon;
-
-      // todo fixed
-      formatColumns.splice(insertIndex, 0, {
-        isSelectionExpandColumn: true,
-        colSpan: 1,
-        rowSpan: 1,
-        content: ableExpand ? content : '',
-      });
-
-      if (expandable?.insertBeforeColumnName) {
-        insertIndex += 1;
-      }
+    // todo 待验证是不是存在 expandable.expandedRowRender 这个才可以
+    if (expandable && expandable?.expandedRowRender) {
+      formatColumns.splice(insertIndex, 0, renderExpandColumn());
+      // todo 下面这段代码是不是没用的
+      // if (expandable?.insertBeforeColumnName) {
+      //   insertIndex += 1;
+      // }
     }
 
     return formatColumns;
@@ -220,6 +223,7 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
     const formatColumns = getColumns();
     for (let i = 0; i < formatColumns.length; i++) {
       const column = formatColumns[i];
+      // todo 待测试单元格合并
       if (!column.colSpan || !column.rowSpan) continue;
       tds.push(<Td key={i} {...column} />);
     }
@@ -230,7 +234,7 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
   const renderExpandRow = () => {
     if (
       !expandable ||
-      !expandable.expandedRowRender ||
+      !expandable?.expandedRowRender ||
       !expanded ||
       (expandable?.rowExpandable && expandable?.rowExpandable(rowData) === false)
     )
@@ -248,8 +252,8 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
   };
 
   const clsInfo: any = {
-    'row-even': striped && rowIndex % 2 === 1,
-    'row-odd': striped && rowIndex % 2 !== 1,
+    'row-even': striped && rowIndex % 2 !== 0,
+    'row-odd': striped && rowIndex % 2 === 0,
     'row-selected': checked,
   };
 
