@@ -9,7 +9,7 @@ import Td from '../Td';
 interface TrProps<T> extends TableProps<T> {
   rowData: T;
   rowIndex: number;
-  checked: boolean | 'indeterminate';
+  checked: 'indeterminate' | boolean;
   expanded: boolean;
   treeExpanded: boolean;
   isTree: boolean;

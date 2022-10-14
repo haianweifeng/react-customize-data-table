@@ -180,8 +180,6 @@ function Tbody<
             arr.push(...childrenData);
           }
           if (d?.parentKey) {
-            // todo 少加了一项
-            // console.log(getSelectParent(d.parentKey, selectedKeys, currSelectedKey));
             arr.push(...getSelectParent(d.parentKey, selectedKeys, currSelectedKey));
           }
         }
@@ -299,7 +297,7 @@ function Tbody<
 
   const renderTr = (rowData: T, i: number) => {
     const key = rowData.rowKey;
-    let checked = false;
+    let checked: boolean | 'indeterminate' = false;
 
     if (rowData?.children && rowData.children.length) {
       const childrenKeys = getChildrenKeys(rowData?.children);
@@ -310,7 +308,6 @@ function Tbody<
         return selectedKeys.indexOf(cKey) >= 0;
       });
       if (childrenKeys.length) {
-        // todo 类型处理
         checked = allChildrenSelected ? true : childrenSelected ? 'indeterminate' : false;
       }
     } else {
