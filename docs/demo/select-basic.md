@@ -1,6 +1,6 @@
 ### 可选择行
 
-#### 设置 rowSelection 会自动在第一列添加选择框,默认 rowSelection.type 为 checkbox
+###### 设置 rowSelection 会自动在第一列添加选择框,默认 rowSelection.type 为 checkbox
 
 Demo:
 
@@ -60,10 +60,15 @@ const rowSelection = {
     console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
   },
   onSelect: (record, selected, selectedRows, nativeEvent) => {
-    console.log(record);
-    console.log(selected);
-    console.log(selectedRows);
-    console.log(nativeEvent);
+    console.log(
+      'record: ',
+      record,
+      `selected: ${selected}`,
+      'selectedRows: ',
+      selectedRows,
+      'nativeEvent:',
+      nativeEvent,
+    );
   },
   getCheckboxProps: (record) => ({
     disabled: record.name === 'Joe Black', // Column configuration not to be checked

@@ -101,7 +101,8 @@
     box-shadow: none;
 
     &:after {
-      border-color: rgba(0, 0, 0, 0.25);
+      border-color: transparent;
+      // border-color: rgba(0, 0, 0, 0.25);
       transform: translate(-50%, -65%) rotate(-45deg);
     }
   }
@@ -110,6 +111,14 @@
   &:focus {
     .checkboxInner {
       border-color: @disabled-border-color;
+    }
+  }
+}
+
+.checked.disabled {
+  .checkboxInner {
+    &:after {
+      border-color: rgba(0, 0, 0, 0.25);
     }
   }
 }
