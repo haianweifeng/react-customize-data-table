@@ -222,7 +222,6 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
     const formatColumns = getColumns();
     for (let i = 0; i < formatColumns.length; i++) {
       const column = formatColumns[i];
-      // todo 待测试单元格合并
       if (!column.colSpan || !column.rowSpan) continue;
       tds.push(<Td key={i} {...column} />);
     }
