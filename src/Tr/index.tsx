@@ -168,8 +168,9 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
       }
 
       const isTreeColumn =
-        (treeProps?.treeColumnsName && treeProps.treeColumnsName === title) ||
-        (index === 0 && !treeProps?.treeColumnsName);
+        ((treeProps?.treeColumnsName && treeProps.treeColumnsName === title) ||
+          (index === 0 && !treeProps?.treeColumnsName)) &&
+        isTree;
 
       if (hasChildren && isTreeColumn) {
         cell.content = (
@@ -178,8 +179,7 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
             {content}
           </span>
         );
-      } else if (isTreeColumn && isTree) {
-        // todo 测试配置了treeProps?.treeColumnsName 但是数据中没有children
+      } else if (isTreeColumn) {
         cell.content = (
           <span
             style={{

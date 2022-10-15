@@ -1,5 +1,7 @@
 ### 树形数据
 
+###### 表格支持树形数据的展示，当数据中有 children 字段时会自动展示为树形表格
+
 Demo:
 
 ```tsx
@@ -105,18 +107,25 @@ const App = () => {
   const [expandedRowKeys, setExpandedRowKeys] = useState<number[]>([]);
 
   const rowSelection = {
+    type: 'radio',
     selectedRowKeys,
     onChange: (selectedRowKeys, selectedRows) => {
       console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
       setSelectedRowKeys(selectedRowKeys);
     },
     onSelect: (record, selected, selectedRows, nativeEvent) => {
-      // console.log(record);
-      // console.log(selected);
-      // console.log(selectedRows);
+      console.log(
+        'record: ',
+        record,
+        `selected: ${selected}`,
+        'selectedRows: ',
+        selectedRows,
+        'nativeEvent:',
+        nativeEvent,
+      );
     },
     getCheckboxProps: (record) => ({
-      disabled: record.name === 'Joe1 Black', // Column configuration not to be checked
+      disabled: record.name === 'Jim Green jr.', // Column configuration not to be checked
       name: record.name,
     }),
   };

@@ -50,7 +50,7 @@ function Tbody<
     ) {
       return getAllTreeKeys(dataSource);
     }
-    return treeProps?.defaultExpandedRowKeys || treeProps?.expandedRowKeys || [];
+    return treeProps?.expandedRowKeys || treeProps?.defaultExpandedRowKeys || [];
   });
 
   const getTreeChildrenKeys = (parent: T) => {
@@ -292,7 +292,11 @@ function Tbody<
     const key = rowData.rowKey;
     let checked: boolean | 'indeterminate' = false;
 
-    if (rowData?.children && rowData.children.length) {
+    const hasChildren = rowData?.children && rowData.children.length;
+
+    if (rowSelection?.type === 'radio' || !hasChildren) {
+      checked = selectedKeys.indexOf(key) >= 0;
+    } else {
       const childrenKeys = getChildrenKeys(rowData?.children);
       const allChildrenSelected = childrenKeys.every((cKey) => {
         return selectedKeys.indexOf(cKey) >= 0;
@@ -303,8 +307,6 @@ function Tbody<
       if (childrenKeys.length) {
         checked = allChildrenSelected ? true : childrenSelected ? 'indeterminate' : false;
       }
-    } else {
-      checked = selectedKeys.indexOf(key) >= 0;
     }
 
     return (
