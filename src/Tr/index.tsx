@@ -1,5 +1,6 @@
 import React from 'react';
 import classnames from 'classnames';
+import { omitRowsProps } from '../utils/util';
 import type { CellProps } from '../interface';
 import type { TableProps } from '../Table';
 import Radio from '../Radio';
@@ -36,6 +37,8 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
     onTreeExpand,
   } = props;
 
+  const record = omitRowsProps(rowData)[0];
+
   const handleChange = (isRadio: boolean, selected: boolean, event: Event) => {
     onSelect(isRadio, rowData, selected, event);
   };
@@ -58,7 +61,7 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
   const renderSelectionColumn = (type: string) => {
     const checkboxProps =
       typeof rowSelection?.getCheckboxProps === 'function'
-        ? rowSelection.getCheckboxProps(rowData)
+        ? rowSelection.getCheckboxProps(record)
         : {};
     const isRadio = type === 'radio';
     const defaultContent = isRadio ? (
@@ -86,7 +89,7 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
       rowSpan: 1,
       content:
         typeof rowSelection?.renderCell === 'function'
-          ? rowSelection.renderCell(!!checked, rowData, rowIndex, defaultContent)
+          ? rowSelection.renderCell(!!checked, record, rowIndex, defaultContent)
           : defaultContent,
     };
 
@@ -96,7 +99,7 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
   const renderExpandColumn = () => {
     let ableExpand = true;
 
-    if (expandable?.rowExpandable && !expandable?.rowExpandable(rowData)) {
+    if (expandable?.rowExpandable && !expandable?.rowExpandable(record)) {
       ableExpand = false;
     }
     const expandIcon = (
@@ -111,7 +114,7 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
 
     let content =
       typeof expandable?.expandIcon === 'function'
-        ? expandable.expandIcon(rowData, expanded)
+        ? expandable.expandIcon(record, expanded)
         : expandIcon;
 
     return {
@@ -140,7 +143,7 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
         content: '',
       };
       if (typeof onCell === 'function') {
-        const cellProps = onCell(rowData, rowIndex);
+        const cellProps = onCell(record, rowIndex);
         cell.colSpan = cellProps?.colSpan === 0 ? 0 : cellProps?.colSpan || 1;
         cell.rowSpan = cellProps?.rowSpan === 0 ? 0 : cellProps?.rowSpan || 1;
       }
@@ -157,12 +160,12 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
       );
       const treeIcon =
         typeof treeProps?.expandIcon === 'function'
-          ? treeProps.expandIcon(rowData, treeExpanded)
+          ? treeProps.expandIcon(record, treeExpanded)
           : defaultTreeIcon;
 
       let content;
       if (typeof render === 'function') {
-        content = render(rowData[dataIndex as keyof T] as string, rowData, rowIndex);
+        content = render(rowData[dataIndex as keyof T] as string, record, rowIndex);
       } else {
         content = rowData[dataIndex as keyof T] as string;
       }
@@ -232,16 +235,16 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
       !expandable ||
       !expandable?.expandedRowRender ||
       !expanded ||
-      (expandable?.rowExpandable && !expandable?.rowExpandable(rowData))
+      (expandable?.rowExpandable && !expandable?.rowExpandable(record))
     )
       return;
     const formatColumns = getColumns();
     const cls =
-      expandable?.expandedRowClassName && expandable.expandedRowClassName(rowData, rowIndex);
+      expandable?.expandedRowClassName && expandable.expandedRowClassName(record, rowIndex);
     return (
       <tr key="1" className={cls}>
         <td colSpan={formatColumns.length}>
-          {expandable.expandedRowRender(rowData, rowIndex, expanded)}
+          {expandable.expandedRowRender(record, rowIndex, expanded)}
         </td>
       </tr>
     );
@@ -253,8 +256,8 @@ function Tr<T extends { treeLevel: number; children?: T[] }>(props: TrProps<T>) 
     'row-selected': checked,
   };
 
-  if (rowClassName && rowClassName(rowData, rowIndex)) {
-    clsInfo[rowClassName(rowData, rowIndex)] = !!rowClassName(rowData, rowIndex);
+  if (rowClassName && rowClassName(record, rowIndex)) {
+    clsInfo[rowClassName(record, rowIndex)] = !!rowClassName(record, rowIndex);
   }
 
   const cls = classnames(clsInfo);

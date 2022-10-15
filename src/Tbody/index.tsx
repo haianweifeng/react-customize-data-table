@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
+import { omitRowsProps } from '../utils/util';
 import type { TableProps } from '../Table';
 import type { ColumnsType } from '../interface';
 import Tr from '../Tr';
@@ -25,7 +26,6 @@ function Tbody<
     expandable,
     treeProps,
   } = props;
-
   const cacheSelectedRows = useRef<T[]>([]);
 
   const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
@@ -194,7 +194,7 @@ function Tbody<
 
     return arr;
   };
-  // todo 选择项需要删除掉添加进去的属性
+
   const handleSelect = (isRadio: boolean, record: T, selected: boolean, event: Event) => {
     const key = record.rowKey;
     const isExist = selectedKeys.indexOf(key) >= 0;
@@ -231,8 +231,12 @@ function Tbody<
 
     cacheSelectedRows.current = selectedRows;
 
+    if (selectedRows && selectedRows.length) {
+      selectedRows = omitRowsProps(selectedRows);
+    }
+
     if (typeof rowSelection?.onSelect === 'function') {
-      rowSelection.onSelect(record, selected, selectedRows, event);
+      rowSelection.onSelect(omitRowsProps(record)[0], selected, selectedRows, event);
     }
 
     if (typeof rowSelection?.onChange === 'function') {
@@ -252,7 +256,7 @@ function Tbody<
         return isExist ? prev.filter((p) => p !== key) : [...prev, key];
       });
     }
-    expandable?.onExpand && expandable.onExpand(expanded, record);
+    expandable?.onExpand && expandable.onExpand(expanded, omitRowsProps(record)[0]);
   };
 
   const handleTreeExpand = (treeExpanded: boolean, record: T) => {
@@ -262,7 +266,7 @@ function Tbody<
         return isExist ? prev.filter((p) => p !== record.rowKey) : [...prev, record.rowKey];
       });
     }
-    treeProps?.onExpand && treeProps.onExpand(treeExpanded, record);
+    treeProps?.onExpand && treeProps.onExpand(treeExpanded, omitRowsProps(record)[0]);
   };
 
   useEffect(() => {
