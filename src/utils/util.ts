@@ -13,8 +13,7 @@ export function omitRowsProps(data: any = []) {
   data.forEach((d: any) => {
     const obj = omit(d, ['treeLevel', 'rowKey', 'parentKey']);
     if (obj?.children && obj.children.length) {
-      const res = omitRowsProps(obj.children);
-      obj.children = res;
+      obj.children = omitRowsProps(obj.children);
     }
     arr.push(obj);
   });
