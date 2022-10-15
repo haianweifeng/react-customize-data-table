@@ -194,7 +194,7 @@ function Tbody<
 
     return arr;
   };
-
+  // todo 选择项需要删除掉添加进去的属性
   const handleSelect = (isRadio: boolean, record: T, selected: boolean, event: Event) => {
     const key = record.rowKey;
     const isExist = selectedKeys.indexOf(key) >= 0;

@@ -1,6 +1,4 @@
-### 树形数据展开行受控
-
-###### 设置 treeProps.expandedRowKeys 使树形展开行受控
+### 树形数据和扩展行
 
 Demo:
 
@@ -14,6 +12,7 @@ interface DataType {
   name: string;
   age: number;
   address: string;
+  description: string;
   children?: DataType[];
 }
 
@@ -43,24 +42,32 @@ const data: DataType[] = [
     name: 'John Brown sr.',
     age: 60,
     address: 'New York No. 1 Lake Park',
+    description:
+      'My name is John Brown sr., I am 60 years old, living in New York No. 1 Lake Park.',
     children: [
       {
         key: 11,
         name: 'John Brown',
         age: 42,
         address: 'New York No. 2 Lake Park',
+        description:
+          'My name is John Brown, I am 42 years old, living in New York No. 2 Lake Park.',
       },
       {
         key: 12,
         name: 'John Brown jr.',
         age: 30,
         address: 'New York No. 3 Lake Park',
+        description:
+          'My name is John Brown jr., I am 30 years old, living in New York No. 3 Lake Park.',
         children: [
           {
             key: 121,
             name: 'Jimmy Brown',
             age: 16,
             address: 'New York No. 3 Lake Park',
+            description:
+              'My name is Jimmy Brown, I am 16 years old, living in New York No. 3 Lake Park.',
           },
         ],
       },
@@ -69,24 +76,32 @@ const data: DataType[] = [
         name: 'Jim Green sr.',
         age: 72,
         address: 'London No. 1 Lake Park',
+        description:
+          'My name is Jim Green sr., I am 72 years old, living in London No. 1 Lake Park.',
         children: [
           {
             key: 131,
             name: 'Jim Green',
             age: 42,
             address: 'London No. 2 Lake Park',
+            description:
+              'My name is Jim Green, I am 42 years old, living in London No. 2 Lake Park.',
             children: [
               {
                 key: 1311,
                 name: 'Jim Green jr.',
                 age: 25,
                 address: 'London No. 3 Lake Park',
+                description:
+                  'My name is Jim Green jr., I am 25 years old, living in London No. 3 Lake Park.',
               },
               {
                 key: 1312,
                 name: 'Jimmy Green sr.',
                 age: 18,
                 address: 'London No. 4 Lake Park',
+                description:
+                  'My name is Jimmy Green sr., I am 18 years old, living in London No. 4 Lake Park.',
               },
             ],
           },
@@ -99,6 +114,7 @@ const data: DataType[] = [
     name: 'Joe Black',
     age: 32,
     address: 'Sidney No. 1 Lake Park',
+    description: 'My name is Joe Black, I am 32 years old, living in Sidney No. 1 Lake Park.',
   },
 ];
 
@@ -124,7 +140,7 @@ const App = () => {
       );
     },
     getCheckboxProps: (record) => ({
-      disabled: record.name === 'Jim Green jr', // Column configuration not to be checked
+      disabled: record.name === 'Jim Green jr.1', // Column configuration not to be checked
       name: record.name,
     }),
   };
@@ -132,11 +148,19 @@ const App = () => {
   return (
     <Table
       treeProps={{
+        // treeColumnsName: 'Address',
+        // defaultExpandAllRows: true,
         expandedRowKeys,
         onExpand: (expanded, record) => {
           setExpandedRowKeys((prev) => {
             return expanded ? [...prev, record.key] : prev.filter((p) => p !== record.key);
           });
+        },
+      }}
+      expandable={{
+        defaultExpandAllRows: true,
+        expandedRowRender: (record, index, expanded) => {
+          return <p style={{ margin: 0 }}>{record.description}</p>;
         },
       }}
       rowSelection={rowSelection}

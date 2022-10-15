@@ -1,6 +1,10 @@
-### 树形数据展开行受控
+### 树形数据
 
-###### 设置 treeProps.expandedRowKeys 使树形展开行受控
+###### 表格支持树形数据的展示，当数据中有 children 字段时会自动展示为树形表格。
+
+###### 可以通过设置 treeProps.indentSize 以控制每一层的缩进宽度，默认 indentSize 是 15。
+
+###### 通过设置 treeProps.treeColumnsName 控制展开图标所在列，默认是第一列
 
 Demo:
 
@@ -104,7 +108,6 @@ const data: DataType[] = [
 
 const App = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [expandedRowKeys, setExpandedRowKeys] = useState<number[]>([]);
 
   const rowSelection = {
     selectedRowKeys,
@@ -124,21 +127,19 @@ const App = () => {
       );
     },
     getCheckboxProps: (record) => ({
-      disabled: record.name === 'Jim Green jr', // Column configuration not to be checked
+      disabled: record.name === 'Jim Green jr.', // Column configuration not to be checked
       name: record.name,
     }),
   };
 
   return (
     <Table
-      treeProps={{
-        expandedRowKeys,
-        onExpand: (expanded, record) => {
-          setExpandedRowKeys((prev) => {
-            return expanded ? [...prev, record.key] : prev.filter((p) => p !== record.key);
-          });
-        },
-      }}
+      treeProps={
+        {
+          // treeColumnsName: 'Address',
+          // defaultExpandAllRows: true,
+        }
+      }
       rowSelection={rowSelection}
       dataSource={data}
       columns={columns}
