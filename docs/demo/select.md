@@ -1,9 +1,11 @@
-### 选择行选中项的可受控
+### 选择行受控
+
+###### 设置 rowSelection.selectedRowKeys 属性表示选择行会受控
 
 Demo:
 
 ```tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import type { ColumnsType } from 'react-data-table';
 import { Table } from 'react-data-table';
 
@@ -60,7 +62,7 @@ const App = () => {
     selectedRowKeys,
     onChange: (selectedRowKeys, selectedRows) => {
       console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-      // setSelectedRowKeys(selectedRowKeys);
+      setSelectedRowKeys(selectedRowKeys);
     },
     onSelect: (record, selected, selectedRows, nativeEvent) => {
       console.log(record);
@@ -73,12 +75,6 @@ const App = () => {
       name: record.name,
     }),
   };
-
-  useEffect(() => {
-    setTimeout(() => {
-      // setSelectedRowKeys([]);
-    }, 2000);
-  }, []);
 
   return (
     <Table rowSelection={rowSelection} dataSource={data} columns={columns} bordered rowKey="key" />

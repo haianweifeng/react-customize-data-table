@@ -29,7 +29,7 @@ function Tbody<
   const cacheSelectedRows = useRef<T[]>([]);
 
   const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
-    return rowSelection?.defaultSelectedRowKeys || rowSelection?.selectedRowKeys || [];
+    return rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
   });
 
   const getAllTreeKeys = (data: T[]) => {
@@ -85,7 +85,7 @@ function Tbody<
     ) {
       return getAllExpandKeys(dataSource);
     }
-    return expandable?.defaultExpandedRowKeys || expandable?.expandedRowKeys || [];
+    return expandable?.expandedRowKeys || expandable?.defaultExpandedRowKeys || [];
   });
 
   const getTreeChildrenData = (parent: T) => {
