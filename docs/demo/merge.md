@@ -117,7 +117,7 @@ const data: DataType[] = [
   },
 ];
 
-const App = () => <Table columns={columns} dataSource={data} bordered />;
+const App = () => <Table columns={columns} dataSource={data} bordered rowKey="key" />;
 
 export default App;
 ```

@@ -479,6 +479,7 @@ function Tbody<
   const renderTr = (rowData: T, i: number) => {
     const key = rowData.rowKey;
     let checked: boolean | 'indeterminate' = false;
+    const record = omitRowsProps(rowData)[0];
 
     const hasChildren = rowData?.children && rowData.children.length;
 
@@ -505,16 +506,11 @@ function Tbody<
       <Tr
         key={key}
         cols={cols}
-        rowData={rowData}
+        rowData={record}
         rowIndex={i}
         checked={checked}
-        expanded={expandedRowKeys.indexOf(key) >= 0}
-        treeExpanded={treeExpandKeys.indexOf(key) >= 0}
-        isTree={isTree}
+        expanded={expanded}
         {...props}
-        onExpand={handleExpand}
-        onSelect={handleSelect}
-        onTreeExpand={handleTreeExpand}
       />
     );
   };
