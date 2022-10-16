@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import classnames from 'classnames';
 import Tbody from '../Tbody';
+import Colgroup from '../Colgroup';
 import type {
   RowSelectionType,
   ColumnsType,
@@ -84,6 +85,8 @@ function Table<
 
   const keysRef = useRef<KeysRefType>({} as KeysRefType);
 
+  const [colWidths, setColWidths] = useState<number[]>([]);
+
   const [startRowIndex, setStartRowIndex] = useState<number>(0);
 
   const getRowKey = (rowData: T, i: number | string) => {
@@ -148,10 +151,11 @@ function Table<
   }, [dataSource, getRowKey, formatChildrenData]);
 
   const renderBody = () => {
-    const { dataSource, columns, ...others } = props;
+    const { dataSource, columns, scroll = {}, ...others } = props;
     return (
-      <div>
-        <table>
+      <div className="table-tbody">
+        <table style={{ width: scroll.width }}>
+          {/*<Colgroup colWidths={colWidths} columns={columns} />*/}
           <Tbody startRowIndex={startRowIndex} {...props} dataSource={formatData} />
         </table>
       </div>

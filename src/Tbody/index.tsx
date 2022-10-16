@@ -1,8 +1,11 @@
-import React, { useRef, useState, useEffect, useMemo } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { omitRowsProps } from '../utils/util';
 import type { TableProps } from '../Table';
-import type { ColumnsType } from '../interface';
+import type { CellProps, ColumnsType } from '../interface';
 import Tr from '../Tr';
+import classnames from 'classnames';
+import Radio from '../Radio';
+import Checkbox from '../Checkbox';
 
 interface TbodyProps<T> extends TableProps<T> {
   columns: ColumnsType<T>[];
@@ -292,6 +295,187 @@ function Tbody<
     return data.length > 0;
   }, [dataSource]);
 
+  const renderSelectionColumn = (
+    type: string,
+    rowData: T,
+    checked: boolean | 'indeterminate',
+    rowIndex: number,
+  ) => {
+    const record = omitRowsProps(rowData)[0];
+    const checkboxProps =
+      typeof rowSelection?.getCheckboxProps === 'function'
+        ? rowSelection.getCheckboxProps(record)
+        : {};
+    const isRadio = type === 'radio';
+    const defaultContent = isRadio ? (
+      <Radio
+        {...checkboxProps}
+        checked={checked}
+        onChange={(selected: boolean, event: Event) => {
+          handleSelect(isRadio, rowData, selected, event);
+        }}
+      />
+    ) : (
+      <Checkbox
+        {...checkboxProps}
+        checked={checked}
+        onChange={(selected: boolean, event: Event) => {
+          handleSelect(isRadio, rowData, selected, event);
+        }}
+      />
+    );
+    // todo fixed
+    const cellProps = {
+      isSelectionExpandColumn: true,
+      // fixed: rowSelection?.fixed,
+      colSpan: 1,
+      rowSpan: 1,
+      content:
+        typeof rowSelection?.renderCell === 'function'
+          ? rowSelection.renderCell(!!checked, record, rowIndex, defaultContent)
+          : defaultContent,
+    };
+
+    return cellProps;
+  };
+
+  const renderExpandColumn = (rowData: T, expanded: boolean) => {
+    let ableExpand = true;
+    const record = omitRowsProps(rowData)[0];
+
+    if (expandable?.rowExpandable && !expandable?.rowExpandable(record)) {
+      ableExpand = false;
+    }
+    const expandIcon = (
+      <span
+        className={classnames({
+          'expand-icon': true,
+          'expand-icon-divider': expanded,
+        })}
+        onClick={() => {
+          handleExpand(!expanded, rowData);
+        }}
+      />
+    );
+
+    let content =
+      typeof expandable?.expandIcon === 'function'
+        ? expandable.expandIcon(record, expanded)
+        : expandIcon;
+
+    return {
+      isSelectionExpandColumn: true,
+      colSpan: 1,
+      rowSpan: 1,
+      content: ableExpand ? content : '',
+    };
+  };
+
+  const getColumns = useCallback(
+    (
+      rowData: T,
+      rowIndex: number,
+      treeExpanded: boolean,
+      checked: boolean | 'indeterminate',
+      expanded: boolean,
+    ) => {
+      let insertIndex = 0;
+      const treeLevel = rowData.treeLevel;
+      const hasChildren = rowData?.children && rowData.children.length > 0;
+      const treeIndent = treeProps?.indentSize || 15;
+      const record = omitRowsProps(rowData)[0];
+
+      const cols = columns.map((column, index: number) => {
+        const { render, dataIndex, onCell, align, className, fixed, title } = column;
+        if (expandable?.insertBeforeColumnName === title) insertIndex = index;
+        const cell: CellProps = {
+          isSelectionExpandColumn: false,
+          align,
+          className,
+          fixed,
+          colSpan: 1,
+          rowSpan: 1,
+          content: '',
+        };
+        if (typeof onCell === 'function') {
+          const cellProps = onCell(record, rowIndex);
+          cell.colSpan = cellProps?.colSpan === 0 ? 0 : cellProps?.colSpan || 1;
+          cell.rowSpan = cellProps?.rowSpan === 0 ? 0 : cellProps?.rowSpan || 1;
+        }
+
+        let content;
+        if (typeof render === 'function') {
+          content = render(rowData[dataIndex as keyof T] as string, record, rowIndex);
+        } else {
+          content = rowData[dataIndex as keyof T] as string;
+        }
+
+        const isTreeColumn =
+          ((treeProps?.treeColumnsName && treeProps.treeColumnsName === title) ||
+            (index === 0 && !treeProps?.treeColumnsName)) &&
+          isTree;
+
+        if (hasChildren && isTreeColumn) {
+          const defaultTreeIcon = (
+            <span
+              onClick={() => {
+                handleTreeExpand(!treeExpanded, rowData);
+              }}
+              className={classnames({
+                'expand-icon': true,
+                'icon-tree': true,
+                'expand-icon-divider': treeExpanded,
+              })}
+            />
+          );
+          const treeIcon =
+            typeof treeProps?.expandIcon === 'function'
+              ? treeProps.expandIcon(record, treeExpanded)
+              : defaultTreeIcon;
+
+          cell.content = (
+            <span style={{ marginLeft: treeLevel * treeIndent }}>
+              {treeIcon}
+              {content}
+            </span>
+          );
+        } else if (isTreeColumn) {
+          cell.content = (
+            <span
+              style={{
+                marginLeft: treeLevel * treeIndent,
+                paddingLeft: treeLevel > 0 || (isTree && treeLevel === 0) ? 25 : 0,
+              }}
+            >
+              {content}
+            </span>
+          );
+        } else {
+          cell.content = content;
+        }
+
+        return cell;
+      });
+
+      if (rowSelection) {
+        cols.unshift(
+          renderSelectionColumn(rowSelection?.type || 'checkbox', rowData, checked, rowIndex),
+        );
+
+        if (expandable?.insertBeforeColumnName) {
+          insertIndex += 1;
+        }
+      }
+
+      if (expandable && expandable?.expandedRowRender) {
+        cols.splice(insertIndex, 0, renderExpandColumn(rowData, expanded));
+      }
+
+      return cols;
+    },
+    [treeProps, columns, expandable, renderSelectionColumn, renderExpandColumn],
+  );
+
   const renderTr = (rowData: T, i: number) => {
     const key = rowData.rowKey;
     let checked: boolean | 'indeterminate' = false;
@@ -312,10 +496,15 @@ function Tbody<
         checked = allChildrenSelected ? true : childrenSelected ? 'indeterminate' : false;
       }
     }
+    const expanded = expandedRowKeys.indexOf(key) >= 0;
+    const treeExpanded = treeExpandKeys.indexOf(key) >= 0;
+
+    const cols = getColumns(rowData, i, treeExpanded, checked, expanded);
 
     return (
       <Tr
         key={key}
+        cols={cols}
         rowData={rowData}
         rowIndex={i}
         checked={checked}

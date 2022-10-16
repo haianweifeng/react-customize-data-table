@@ -1,7 +1,16 @@
 @import './variables.less';
 
+*,
+:after,
+:before {
+  box-sizing: border-box;
+}
+
 .table-container {
   max-width: 100%;
+  .table-tbody {
+    min-width: 100%;
+  }
 }
 
 table {
@@ -57,6 +66,8 @@ td.align-left {
 }
 
 td.selection-expand-column {
+  // todo 把这个宽度设置到colgroup 中
+  // width: 48px;
   text-align: center;
 }
 

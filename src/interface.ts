@@ -11,7 +11,7 @@ export interface SelectionType {
 export interface RowSelectionType<T> {
   /** 自定义列表选择框标题 */
   columnTitle?: React.ReactNode;
-  /** 自定义列表选择框宽度 */
+  /** 自定义列表选择框宽度 todo 把这个宽度设置到colgroup 中 */
   columnWidth?: string | number;
   /** 把选择框列固定在左边 */
   fixed?: boolean;
