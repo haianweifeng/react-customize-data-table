@@ -70,6 +70,8 @@ export interface ColumnsType<T> {
   maxWidth?: string | number;
   /** 最小列宽 */
   minWidth?: string | number;
+  /** 超过宽度将自动省略 todo */
+  ellipsis?: boolean | { showTitle: boolean };
   // todo 表头列合并 是否需要还是放到onHeaderCell 中处理
   colSpan?: number;
   /** 设置单元格属性 */
@@ -151,6 +153,13 @@ export interface CellProps {
   rowSpan: number;
   /** 单元格渲染内容 */
   content: React.ReactNode;
+}
+
+export interface ScrollType {
+  /** 设置横向滚动时table 的宽度 */
+  width?: number;
+  /** 设置纵向滚动时table 的高度 */
+  height?: number;
 }
 
 export type KeysRefType = { [key: string]: boolean };

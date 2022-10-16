@@ -7,6 +7,7 @@ import type {
   ExpandableType,
   TreeExpandableType,
   KeysRefType,
+  ScrollType,
 } from '../interface';
 import '../style/index.less';
 // import styles from './index.less';
@@ -46,14 +47,12 @@ export interface TableProps<T> {
   disabled?: (data: any) => boolean | boolean;
   /** 空数据文案 */
   empty?: string | React.ReactNode;
-  /** 超过宽度将自动省略 */
-  ellipsis?: { showTitle: boolean; width: number | string };
   /** 单行表格的预期高度 */
   rowHeight?: number;
   /** 单次render的最大行数 */
   rowsInView?: number;
-  /** 虚拟滚动条方向 不设置则使用原生滚动条 */
-  scroll?: 'both' | 'x' | 'y';
+  /** 表格是否可以滚动 设置滚动时表格的宽 高 */
+  scroll?: ScrollType;
   /** 滚动条滚动后回调函数 */
   onScroll?: (x: number, y: number) => void;
   /** 列宽伸缩后的回调 */
@@ -71,7 +70,8 @@ export interface TableProps<T> {
   /** 配置树形数据属性 */
   treeProps?: TreeExpandableType<T>;
 }
-
+// todo scroll: { width, height } 设置滚动时候表格的宽度 高度
+// 设置colgroup 列的宽度  然后获取每个单元格最后渲染的宽度 重新设置 colgroup 的宽度
 function Table<
   T extends {
     children?: T[];
@@ -160,6 +160,7 @@ function Table<
 
   // todo
   const tableWrapClass = classnames({
+    'table-container': true,
     size: true,
     bordered: bordered,
     [className]: !!className,

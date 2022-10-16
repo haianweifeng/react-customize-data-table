@@ -1,7 +1,12 @@
 @import './variables.less';
 
+.table-container {
+  max-width: 100%;
+}
+
 table {
-  width: 100%;
+  min-width: 100%;
+  table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
 
@@ -9,7 +14,7 @@ table {
     background-color: @table-selected-row-bg;
   }
 }
-
+// todo .bordered 要不要加个前缀
 .bordered {
   table {
     border: 1px solid @table-border-color;
