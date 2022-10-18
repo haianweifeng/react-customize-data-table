@@ -19,3 +19,9 @@ export function omitRowsProps(data: any = []) {
   });
   return arr;
 }
+
+export function toPoint(value: string | number) {
+  if (typeof value === 'number') return value;
+  const val = value.replace('%', '');
+  return Number(val) / 100;
+}

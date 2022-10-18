@@ -61,15 +61,15 @@ export interface ColumnsType<T> {
   /** 列固定 */
   fixed?: 'left' | 'right';
   /** 生成复杂数据的渲染函数 */
-  render: (text: string, record: T, index: number) => React.ReactNode;
+  render?: (text: string, record: T, index: number) => React.ReactNode;
   /** 列头显示文字 */
   title: React.ReactNode;
   /** 列宽度 */
   width?: string | number;
-  /** 最大可拖动列宽 */
-  maxWidth?: string | number;
-  /** 最小列宽 */
-  minWidth?: string | number;
+  // /** 最大可拖动列宽 */
+  // maxWidth?: string | number;
+  // /** 最小列宽 */
+  // minWidth?: string | number;
   /** 超过宽度将自动省略 todo */
   ellipsis?: boolean | { showTitle: boolean };
   // todo 表头列合并 是否需要还是放到onHeaderCell 中处理
@@ -97,7 +97,7 @@ export interface ColumnsType<T> {
   /** 表头的筛选菜单项 */
   filters?: any[];
   /** 筛选函数 */
-  onFilter: () => any;
+  onFilter?: () => any;
   /** 自定义筛选菜单可见变化时调用 */
   onFilterDropdownOpenChange?: (open: boolean) => any;
 }
@@ -139,8 +139,8 @@ export interface TreeExpandableType<T> extends BaseExpandableType<T> {
 }
 
 export interface CellProps {
-  /** 是否是chekbox radio 或者可扩展行列 */
-  isSelectionExpandColumn: boolean;
+  /** 列的类型 'checkbox' | 'radio' | 'expanded' | '' */
+  type: string;
   /** 设置对齐方式 */
   align?: 'left' | 'center' | 'right';
   /** 样式类名 */

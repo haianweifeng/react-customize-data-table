@@ -6,22 +6,14 @@ import type { CellProps } from '../interface';
 interface TdProps<T> extends CellProps {}
 
 function Td<T>(props: TdProps<T>) {
-  const {
-    colSpan,
-    rowSpan,
-    align,
-    className = '',
-    fixed,
-    content,
-    isSelectionExpandColumn,
-  } = props;
+  const { colSpan, rowSpan, align, className = '', fixed, content, type } = props;
 
   // todo 选择框的fixed  固定列的样式还没写
   const cls = classnames({
     'fixed-left': fixed === 'left',
     'fixed-right': fixed === 'right',
     [`align-${align}`]: !!align,
-    'selection-expand-column': isSelectionExpandColumn,
+    'selection-expand-column': type === 'checkbox' || type === 'radio' || type === 'expanded',
     [className]: !!className,
   });
 

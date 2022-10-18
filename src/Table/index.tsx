@@ -11,6 +11,7 @@ import type {
   ScrollType,
 } from '../interface';
 import '../style/index.less';
+import { toPoint } from '../utils/util';
 // import styles from './index.less';
 
 export interface TableProps<T> {
@@ -81,11 +82,25 @@ function Table<
     treeLevel: number;
   },
 >(props: TableProps<T>) {
-  const { className = '', style = {}, size = 'default', bordered, rowKey, dataSource } = props;
+  const {
+    className = '',
+    style = {},
+    size = 'default',
+    bordered,
+    rowKey,
+    dataSource,
+    columns,
+    expandable,
+    rowSelection,
+  } = props;
+
+  const SELECTION_EXPAND_COLUMN_WIDTH = 48;
 
   const keysRef = useRef<KeysRefType>({} as KeysRefType);
+  const tbodyTableRef = useRef<any>(null);
 
   const [colWidths, setColWidths] = useState<number[]>([]);
+  console.log(colWidths);
 
   const [startRowIndex, setStartRowIndex] = useState<number>(0);
 
@@ -150,13 +165,97 @@ function Table<
     return arr;
   }, [dataSource, getRowKey, formatChildrenData]);
 
+  const formatColumns = useMemo(() => {
+    let insertIndex = 0;
+    const cols = columns.map((column, index: number) => {
+      const { title } = column;
+      if (expandable?.insertBeforeColumnName === title) insertIndex = index;
+      const cell: ColumnsType<T> & { type: string } = {
+        type: '',
+        ...column,
+      };
+
+      return cell;
+    });
+
+    if (rowSelection) {
+      cols.unshift({
+        type: rowSelection.type || 'checkbox',
+        dataIndex: 'checkbox',
+        title: '',
+        width: rowSelection?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
+      });
+
+      if (expandable?.insertBeforeColumnName) {
+        insertIndex += 1;
+      }
+    }
+
+    if (expandable && expandable?.expandedRowRender) {
+      cols.splice(insertIndex, 0, {
+        type: 'expanded',
+        dataIndex: 'expanded',
+        title: '',
+        width: expandable?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
+      });
+    }
+
+    return cols;
+  }, [columns, expandable, rowSelection]);
+
+  const converToPixel = (val: string | number | undefined) => {
+    if (typeof val === 'number' || val === undefined) return val;
+    const res = toPoint(val);
+    const { width } = tbodyTableRef.current.getBoundingClientRect();
+    return width * res;
+  };
+
+  const handleBodyRender = (tds: HTMLElement[]) => {
+    const widths = [];
+    for (let i = 0; i < tds.length; i++) {
+      const td = tds[i];
+      const { width } = td.getBoundingClientRect();
+      const colSpan = Number(td.getAttribute('colspan'));
+
+      if (colSpan === 1) {
+        widths.push(width);
+      } else {
+        let count = 0;
+        let sum = 0;
+        const colWidth: any = [];
+        for (let j = 0; j < colSpan; j++) {
+          const w = converToPixel(columns[i + j].width);
+          // todo 待测试列宽设为0
+          if (w) {
+            count++;
+            sum += w;
+          }
+          colWidth.push(w);
+        }
+        const remain = width - sum;
+        const averageWidth = remain / (colSpan - count);
+        const formatColWidth = colWidth.map((c: number | undefined) => {
+          return c || averageWidth;
+        });
+        widths.push(...formatColWidth);
+      }
+    }
+    setColWidths(widths);
+  };
+
   const renderBody = () => {
     const { dataSource, columns, scroll = {}, ...others } = props;
     return (
       <div className="table-tbody">
         <table style={{ width: scroll.width }}>
-          {/*<Colgroup colWidths={colWidths} columns={columns} />*/}
-          <Tbody startRowIndex={startRowIndex} {...props} dataSource={formatData} />
+          <Colgroup colWidths={colWidths} columns={formatColumns} />
+          <Tbody
+            startRowIndex={startRowIndex}
+            {...props}
+            dataSource={formatData}
+            columns={formatColumns}
+            onBodyRender={handleBodyRender}
+          />
         </table>
       </div>
     );

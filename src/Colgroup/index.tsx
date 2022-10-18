@@ -1,10 +1,29 @@
+import React from 'react';
 import { ColumnsType } from '../interface';
 
 interface ColgroupProps<T> {
   colWidths: number[];
-  columns: ColumnsType<T>[];
+  columns: (ColumnsType<T> & { type: string })[];
 }
 
-function Colgroup<T>(props: ColgroupProps<T>) {}
+function Colgroup<T>(props: ColgroupProps<T>) {
+  const { colWidths, columns } = props;
+  if (colWidths && colWidths.length === columns.length) {
+    return (
+      <colgroup>
+        {colWidths.map((c, i) => {
+          return <col key={`${columns[i].dataIndex}_${i}`} style={{ width: c }} />;
+        })}
+      </colgroup>
+    );
+  }
+  return (
+    <colgroup>
+      {columns.map((c, i) => {
+        return <col key={`${c.dataIndex}_${i}`} style={{ width: c?.width }} />;
+      })}
+    </colgroup>
+  );
+}
 
 export default Colgroup;
