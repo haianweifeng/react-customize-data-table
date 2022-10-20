@@ -1,9 +1,9 @@
 import React from 'react';
-import { ColumnsType } from '../interface';
+import { ColumnsWithType } from '../interface';
 
 interface ColgroupProps<T> {
   colWidths: number[];
-  columns: (ColumnsType<T> & { type: string })[];
+  columns: ColumnsWithType<T>[];
 }
 
 function Colgroup<T>(props: ColgroupProps<T>) {

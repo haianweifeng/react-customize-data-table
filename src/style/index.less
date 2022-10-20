@@ -8,6 +8,10 @@
 
 .table-container {
   max-width: 100%;
+  .table-thead {
+    overflow: hidden;
+    background-color: @table-head-bg;
+  }
   .table-tbody {
     min-width: 100%;
   }
@@ -15,6 +19,7 @@
 
 table {
   min-width: 100%;
+  text-align: left;
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
@@ -30,6 +35,21 @@ table {
     border-right: 0;
     border-bottom: 0;
   }
+
+  .table-tbody table {
+    border-top: 0;
+  }
+}
+
+thead > tr > th {
+  padding: @table-cell-padding-vertical @table-cell-padding-horizontal;
+  color: rgba(0, 0, 0, 0.85);
+  font-weight: 500;
+  text-align: left;
+  word-break: break-all;
+  background-color: @table-head-bg;
+  border-right: 1px solid @table-border-color;
+  border-bottom: 1px solid @table-border-color;
 }
 
 tbody > tr:hover,

@@ -76,7 +76,7 @@ export interface ColumnsType<T> {
   colSpan?: number;
   /** 设置单元格属性 */
   onCell?: (record: T, rowIndex: number) => CellType;
-  /** 设置头部单元格属性 todo */
+  /** 设置头部单元格属性 todo header */
   onHeaderCell?: (column: T) => any;
   /** 默认排序 */
   defaultOrder?: 'asc' | 'desc';
@@ -100,6 +100,18 @@ export interface ColumnsType<T> {
   onFilter?: () => any;
   /** 自定义筛选菜单可见变化时调用 */
   onFilterDropdownOpenChange?: (open: boolean) => any;
+}
+
+export interface ColumnsGroupType<T> extends Omit<ColumnsType<T>, 'dataIndex'> {
+  children: ColumnsType<T>[];
+}
+
+export interface ColumnsWithType<T> extends ColumnsType<T> {
+  type: string;
+}
+
+export interface ColumnsGroupWithType<T> extends ColumnsGroupType<T> {
+  type: string;
 }
 
 export interface BaseExpandableType<T> {

@@ -1,14 +1,14 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { omitRowsProps } from '../utils/util';
 import type { TableProps } from '../Table';
-import type { CellProps, ColumnsType } from '../interface';
+import type { CellProps, ColumnsWithType } from '../interface';
 import Tr from '../Tr';
 import classnames from 'classnames';
 import Radio from '../Radio';
 import Checkbox from '../Checkbox';
 
 interface TbodyProps<T> extends TableProps<T> {
-  columns: (ColumnsType<T> & { type: string })[];
+  columns: ColumnsWithType<T>[];
   startRowIndex: number;
   onBodyRender: (cells: HTMLElement[]) => void;
 }

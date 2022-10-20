@@ -1,14 +1,18 @@
 import React, { useMemo, useRef, useState } from 'react';
 import classnames from 'classnames';
+import Thead from '../Thead';
 import Tbody from '../Tbody';
 import Colgroup from '../Colgroup';
 import type {
   RowSelectionType,
   ColumnsType,
+  ColumnsGroupType,
   ExpandableType,
   TreeExpandableType,
   KeysRefType,
   ScrollType,
+  ColumnsWithType,
+  ColumnsGroupWithType,
 } from '../interface';
 import '../style/index.less';
 import { toPoint } from '../utils/util';
@@ -24,7 +28,7 @@ export interface TableProps<T> {
   /** 表格展示的数据源 */
   dataSource: T[];
   /** 表格列的配置 */
-  columns: ColumnsType<T>[];
+  columns: ColumnsType<T>[] | ColumnsGroupType<T>[];
   /** 表格行 key */
   rowKey: string | ((row: T) => string | number);
   /** 是否显示交错斑马底纹 */
@@ -33,15 +37,15 @@ export interface TableProps<T> {
   bordered?: boolean;
   /** 页面是否加载中 */
   loading?: boolean;
-  /** 是否显示表头 */
+  /** 是否显示表头  todo header */
   showHeader?: boolean;
   /** 表格大小 */
   size?: 'default' | 'small';
   /** 表格行的类名 */
   rowClassName?: (record: T, index: number) => string;
-  /** 设置头部行属性 */
+  /** 设置头部行属性 todo 和 onRow 用法一样是事件集合器 需要确定是不是需要 header */
   onHeaderRow?: (columns: ColumnsType<T>[], index: number) => any;
-  /** 设置行事件监听器集合属性 */
+  /** 设置行事件监听器集合属性 todo columns 发生了改变 */
   onRowEvents?: (columns: any, index: number) => any;
   // todo
   pagination?: any;
@@ -59,7 +63,7 @@ export interface TableProps<T> {
   onScroll?: (x: number, y: number) => void;
   /** 列宽伸缩后的回调 */
   onColumnResize?: (newColumns: any) => void;
-  /** 表格行是否可选择配置项 */
+  /** 表格行是否可选择配置项 todo header 需要表头空一行 */
   rowSelection?: RowSelectionType<T>;
   /** 支持的排序方式 */
   sortDirections?: ['ascend', 'descend'];
@@ -67,11 +71,12 @@ export interface TableProps<T> {
   onSortCancel?: (cancelName: string, order: 'ascend' | 'descend') => void;
   /** 排序事件 todo 防止向服务端请求时候需要带上相应的字段 */
   onSort: (column: any, order: 'ascend' | 'descend') => void;
-  /** 配置展开属性 */
+  /** 配置展开属性 todo header 需要表头空一行 */
   expandable?: ExpandableType<T>;
   /** 配置树形数据属性 */
   treeProps?: TreeExpandableType<T>;
 }
+// todo 还未测试列宽设为百分比的情况
 // todo scroll: { width, height } 设置滚动时候表格的宽度 高度
 // 设置colgroup 列的宽度  然后获取每个单元格最后渲染的宽度 重新设置 colgroup 的宽度
 function Table<
@@ -86,6 +91,8 @@ function Table<
     className = '',
     style = {},
     size = 'default',
+    scroll = {},
+    showHeader = true,
     bordered,
     rowKey,
     dataSource,
@@ -100,7 +107,6 @@ function Table<
   const tbodyTableRef = useRef<any>(null);
 
   const [colWidths, setColWidths] = useState<number[]>([]);
-  console.log(colWidths);
 
   const [startRowIndex, setStartRowIndex] = useState<number>(0);
 
@@ -112,7 +118,7 @@ function Table<
       key = rowKey(rowData);
     }
 
-    if (key) {
+    if (key || key === 0) {
       if (!(typeof key === 'string' || typeof key === 'number')) {
         console.error(new Error(`expect Tr has a string or a number key, get '${typeof key}'`));
       }
@@ -169,8 +175,9 @@ function Table<
     let insertIndex = 0;
     const cols = columns.map((column, index: number) => {
       const { title } = column;
+      // todo 待测试 insertBeforeColumnName 在嵌套表头 只能放在最外层的columns中
       if (expandable?.insertBeforeColumnName === title) insertIndex = index;
-      const cell: ColumnsType<T> & { type: string } = {
+      const cell: ColumnsWithType<T> | ColumnsGroupWithType<T> = {
         type: '',
         ...column,
       };
@@ -203,6 +210,22 @@ function Table<
     return cols;
   }, [columns, expandable, rowSelection]);
 
+  const getFlatColumns = (cols: (ColumnsWithType<T> | ColumnsGroupWithType<T>)[]) => {
+    const temp: ColumnsWithType<T>[] = [];
+    cols.map((column: any) => {
+      if (column?.children) {
+        temp.push(...getFlatColumns(column.children));
+      } else {
+        temp.push(column);
+      }
+    });
+    return temp;
+  };
+
+  const flatColumns = useMemo(() => {
+    return getFlatColumns(formatColumns);
+  }, [getFlatColumns, formatColumns]);
+
   const converToPixel = (val: string | number | undefined) => {
     if (typeof val === 'number' || val === undefined) return val;
     const res = toPoint(val);
@@ -224,7 +247,7 @@ function Table<
         let sum = 0;
         const colWidth: any = [];
         for (let j = 0; j < colSpan; j++) {
-          const w = converToPixel(columns[i + j].width);
+          const w = converToPixel(flatColumns[i + j].width);
           // todo 待测试列宽设为0
           if (w) {
             count++;
@@ -244,18 +267,28 @@ function Table<
   };
 
   const renderBody = () => {
-    const { dataSource, columns, scroll = {}, ...others } = props;
     return (
       <div className="table-tbody">
         <table style={{ width: scroll.width }}>
-          <Colgroup colWidths={colWidths} columns={formatColumns} />
+          <Colgroup colWidths={colWidths} columns={flatColumns} />
           <Tbody
-            startRowIndex={startRowIndex}
             {...props}
+            startRowIndex={startRowIndex}
             dataSource={formatData}
-            columns={formatColumns}
+            columns={flatColumns}
             onBodyRender={handleBodyRender}
           />
+        </table>
+      </div>
+    );
+  };
+
+  const renderHeader = () => {
+    return (
+      <div className="table-thead">
+        <table style={{ width: scroll.width }}>
+          <Colgroup colWidths={colWidths} columns={flatColumns} />
+          <Thead columns={formatColumns} />
         </table>
       </div>
     );
@@ -270,6 +303,7 @@ function Table<
   });
   return (
     <div style={style} className={tableWrapClass}>
+      {showHeader ? renderHeader() : null}
       {renderBody()}
     </div>
   );
