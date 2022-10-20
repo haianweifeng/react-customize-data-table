@@ -109,8 +109,6 @@ function Table<
 
   const [colWidths, setColWidths] = useState<number[]>([]);
 
-  const [checked, setChecked] = useState<boolean | 'indeterminate'>(false);
-
   const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
     return rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
   });
@@ -287,6 +285,7 @@ function Table<
     const { width } = tbodyTableRef.current.getBoundingClientRect();
     return width * res;
   };
+
   // todo 不同例子之间切换时候头部和body 之间没有对齐
   const handleBodyRender = (tds: HTMLElement[]) => {
     const widths = [];
@@ -321,11 +320,10 @@ function Table<
     setColWidths(widths);
   };
 
-  const handleSelect = (keys: (number | string)[], selectAll: boolean) => {
+  const handleSelect = (keys: (number | string)[]) => {
     if (!rowSelection?.selectedRowKeys) {
       setSelectedKeys(keys);
     }
-    setChecked(selectAll ? true : keys.length ? 'indeterminate' : false);
   };
 
   const handleTreeExpand = (treeExpanded: boolean, record: T) => {
@@ -350,6 +348,13 @@ function Table<
     }
   }, [treeProps]);
 
+  const checked = useMemo(() => {
+    const res = list.every((l) => {
+      return selectedKeys.indexOf(l.rowKey) >= 0;
+    });
+    return res ? true : selectedKeys.length ? 'indeterminate' : false;
+  }, [list, selectedKeys]);
+
   const renderBody = () => {
     return (
       <div className="table-tbody">
@@ -358,7 +363,6 @@ function Table<
           <Tbody
             {...props}
             startRowIndex={startRowIndex}
-            // dataSource={formatData}
             dataSource={list}
             columns={flatColumns}
             treeExpandKeys={treeExpandKeys}

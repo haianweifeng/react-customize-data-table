@@ -12,7 +12,7 @@ interface TbodyProps<T> extends TableProps<T> {
   startRowIndex: number;
   treeExpandKeys: (number | string)[];
   selectedKeys: (number | string)[];
-  onSelect: (selectedKeys: (number | string)[], selectAll: boolean) => void;
+  onSelect: (selectedKeys: (number | string)[]) => void;
   onTreeExpand: (treeExpanded: boolean, record: T) => void;
   onBodyRender: (cells: HTMLElement[]) => void;
 }
@@ -43,27 +43,6 @@ function Tbody<
   const tbodyRef = useRef<any>(null);
   const cacheSelectedRows = useRef<T[]>([]);
 
-  // const getAllTreeKeys = (data: T[]) => {
-  //   const keys: (string | number)[] = [];
-  //   data.forEach((d) => {
-  //     keys.push(d.rowKey);
-  //     if (d?.children && d.children.length) {
-  //       keys.push(...getAllTreeKeys(d.children));
-  //     }
-  //   });
-  //   return keys;
-  // };
-  // // todo dataSource
-  // const [treeExpandKeys, setTreeExpandKeys] = useState<(string | number)[]>(() => {
-  //   if (
-  //     treeProps?.defaultExpandAllRows &&
-  //     !(treeProps?.defaultExpandedRowKeys || treeProps?.expandedRowKeys)
-  //   ) {
-  //     return getAllTreeKeys(dataSource);
-  //   }
-  //   return treeProps?.expandedRowKeys || treeProps?.defaultExpandedRowKeys || [];
-  // });
-
   const getTreeChildrenKeys = (parent: T) => {
     const keys: (string | number)[] = [];
     const data = parent?.children;
@@ -88,7 +67,7 @@ function Tbody<
     });
     return keys;
   };
-  // todo dataSource
+
   const [expandedRowKeys, setExpandedRowKeys] = useState<(string | number)[]>(() => {
     if (
       expandable?.defaultExpandAllRows &&
@@ -111,20 +90,6 @@ function Tbody<
     }
     return arr;
   };
-  // // todo dataSource
-  // const list = useMemo(() => {
-  //   if (!treeExpandKeys.length) return dataSource;
-  //
-  //   const arr: T[] = [];
-  //
-  //   dataSource.forEach((d) => {
-  //     arr.push(d);
-  //     const childrenData = getTreeChildrenData(d);
-  //     arr.push(...childrenData);
-  //   });
-  //
-  //   return arr;
-  // }, [dataSource, getTreeChildrenData]);
 
   const getChildrenKeys = (data: T[] = [], all = true) => {
     const keys: (number | string)[] = [];
@@ -207,15 +172,6 @@ function Tbody<
     return arr;
   };
 
-  const isSelectAll = (keys: (number | string)[]) => {
-    if (dataSource.length < keys.length) {
-      return dataSource.every((l) => {
-        return keys.indexOf(l.rowKey) >= 0;
-      });
-    }
-    return keys.length === dataSource.length;
-  };
-
   const handleSelect = (isRadio: boolean, record: T, selected: boolean, event: Event) => {
     const key = record.rowKey;
     const isExist = selectedKeys.indexOf(key) >= 0;
@@ -264,7 +220,7 @@ function Tbody<
       rowSelection?.onChange(keys, selectedRows);
     }
 
-    onSelect(keys, isSelectAll(keys));
+    onSelect(keys);
   };
 
   const handleExpand = (expanded: boolean, record: T) => {
@@ -279,13 +235,6 @@ function Tbody<
   };
 
   const handleTreeExpand = (treeExpanded: boolean, record: T) => {
-    // if (!treeProps?.expandedRowKeys) {
-    //   setTreeExpandKeys((prev) => {
-    //     const isExist = prev.indexOf(record.rowKey) >= 0;
-    //     return isExist ? prev.filter((p) => p !== record.rowKey) : [...prev, record.rowKey];
-    //   });
-    // }
-    // treeProps?.onExpand && treeProps.onExpand(treeExpanded, omitRowsProps(record)[0]);
     onTreeExpand(treeExpanded, record);
   };
 
@@ -304,12 +253,6 @@ function Tbody<
     }
   }, [expandable]);
 
-  // useEffect(() => {
-  //   if (treeProps?.expandedRowKeys) {
-  //     setTreeExpandKeys(treeProps.expandedRowKeys);
-  //   }
-  // }, [treeProps]);
-  // todo dataSource
   const isTree = useMemo(() => {
     const data = dataSource.filter((d) => d?.children && d.children.length);
     return data.length > 0;
@@ -345,7 +288,7 @@ function Tbody<
       />
     );
     // todo fixed
-    const cellProps = {
+    return {
       type,
       // fixed: rowSelection?.fixed,
       colSpan: 1,
@@ -355,8 +298,6 @@ function Tbody<
           ? rowSelection.renderCell(!!checked, record, rowIndex, defaultContent)
           : defaultContent,
     };
-
-    return cellProps;
   };
 
   const renderExpandColumn = (rowData: T, expanded: boolean) => {
@@ -405,7 +346,7 @@ function Tbody<
       const record = omitRowsProps(rowData)[0];
       const startIndex = columns.findIndex((c) => !c.type);
 
-      const cols = columns.map((column, index: number) => {
+      return columns.map((column, index: number) => {
         const { render, dataIndex, onCell, align, className, fixed, title, type } = column;
 
         switch (type) {
@@ -485,8 +426,6 @@ function Tbody<
           }
         }
       });
-
-      return cols;
     },
     [treeProps, columns, expandable, renderSelectionColumn, renderExpandColumn],
   );
