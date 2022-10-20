@@ -59,7 +59,6 @@ function Thead<T>(props: TheadProps<T>) {
 
   const handleChange = (selected: boolean, event: Event) => {
     console.log(selected);
-    console.log(event);
   };
 
   const renderSelection = (key: string) => {
