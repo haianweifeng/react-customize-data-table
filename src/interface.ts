@@ -32,11 +32,11 @@ export interface RowSelectionType<T> {
   selections?: boolean | SelectionType[];
   /** 多选/单选 */
   type: 'radio' | 'checkbox';
-  /** 选中项发生变化时的回调 */
+  /** 选中项发生变化时的回调  todo 表头也需要触发*/
   onChange?: (selectedRowKeys: (string | number)[], selectedRows: T[]) => void;
   /** 用户手动选择/取消选择某行的回调 */
   onSelect?: (record: T, selected: boolean, selectedRows: T[], nativeEvent: Event) => void;
-  /** 用户手动选择/取消选择所有行的回调 */
+  /** 用户手动选择/取消选择所有行的回调 todo 针对表头的全选或者取消 */
   onSelectAll?: (selected: boolean, selectedRows: T[], changeRows: T[]) => void;
   /** 用户手动选择反选的回调 */
   onSelectInvert?: (selectedRowKeys: string[] | number[]) => void;

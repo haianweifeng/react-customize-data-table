@@ -10,6 +10,8 @@ import Checkbox from '../Checkbox';
 interface TbodyProps<T> extends TableProps<T> {
   columns: ColumnsWithType<T>[];
   startRowIndex: number;
+  selectedKeys: (number | string)[];
+  onSelect: (selectedKeys: (number | string)[], selectAll: boolean) => void;
   onBodyRender: (cells: HTMLElement[]) => void;
 }
 
@@ -26,18 +28,16 @@ function Tbody<
     columns,
     startRowIndex,
     rowKey,
+    selectedKeys,
     rowSelection,
     expandable,
     treeProps,
+    onSelect,
     onBodyRender,
   } = props;
 
   const tbodyRef = useRef<any>(null);
   const cacheSelectedRows = useRef<T[]>([]);
-
-  const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
-    return rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
-  });
 
   const getAllTreeKeys = (data: T[]) => {
     const keys: (string | number)[] = [];
@@ -202,6 +202,15 @@ function Tbody<
     return arr;
   };
 
+  const isSelectAll = (keys: (number | string)[]) => {
+    if (list.length < keys.length) {
+      return list.every((l) => {
+        return keys.indexOf(l.rowKey) >= 0;
+      });
+    }
+    return keys.length === list.length;
+  };
+
   const handleSelect = (isRadio: boolean, record: T, selected: boolean, event: Event) => {
     const key = record.rowKey;
     const isExist = selectedKeys.indexOf(key) >= 0;
@@ -250,9 +259,7 @@ function Tbody<
       rowSelection?.onChange(keys, selectedRows);
     }
 
-    if (!rowSelection?.selectedRowKeys) {
-      setSelectedKeys(keys);
-    }
+    onSelect(keys, isSelectAll(keys));
   };
 
   const handleExpand = (expanded: boolean, record: T) => {
@@ -290,12 +297,6 @@ function Tbody<
       setExpandedRowKeys(expandable.expandedRowKeys);
     }
   }, [expandable]);
-
-  useEffect(() => {
-    if (rowSelection?.selectedRowKeys) {
-      setSelectedKeys(rowSelection.selectedRowKeys);
-    }
-  }, [rowSelection]);
 
   useEffect(() => {
     if (treeProps?.expandedRowKeys) {

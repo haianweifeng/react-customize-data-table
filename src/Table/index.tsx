@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import classnames from 'classnames';
 import Thead from '../Thead';
 import Tbody from '../Tbody';
@@ -107,6 +107,12 @@ function Table<
   const tbodyTableRef = useRef<any>(null);
 
   const [colWidths, setColWidths] = useState<number[]>([]);
+
+  const [checked, setChecked] = useState<boolean | 'indeterminate'>(false);
+
+  const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
+    return rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
+  });
 
   const [startRowIndex, setStartRowIndex] = useState<number>(0);
 
@@ -232,7 +238,7 @@ function Table<
     const { width } = tbodyTableRef.current.getBoundingClientRect();
     return width * res;
   };
-
+  // todo 不同例子之间切换时候头部和body 之间没有对齐
   const handleBodyRender = (tds: HTMLElement[]) => {
     const widths = [];
     for (let i = 0; i < tds.length; i++) {
@@ -266,6 +272,19 @@ function Table<
     setColWidths(widths);
   };
 
+  const handleSelect = (keys: (number | string)[], selectAll: boolean) => {
+    if (!rowSelection?.selectedRowKeys) {
+      setSelectedKeys(keys);
+    }
+    setChecked(selectAll ? true : keys.length ? 'indeterminate' : false);
+  };
+
+  useEffect(() => {
+    if (rowSelection?.selectedRowKeys) {
+      setSelectedKeys(rowSelection.selectedRowKeys);
+    }
+  }, [rowSelection]);
+
   const renderBody = () => {
     return (
       <div className="table-tbody">
@@ -276,6 +295,8 @@ function Table<
             startRowIndex={startRowIndex}
             dataSource={formatData}
             columns={flatColumns}
+            selectedKeys={selectedKeys}
+            onSelect={handleSelect}
             onBodyRender={handleBodyRender}
           />
         </table>
@@ -284,11 +305,17 @@ function Table<
   };
 
   const renderHeader = () => {
+    // selectedKeys={selectedKeys}
     return (
       <div className="table-thead">
         <table style={{ width: scroll.width }}>
           <Colgroup colWidths={colWidths} columns={flatColumns} />
-          <Thead columns={formatColumns} />
+          <Thead
+            checked={checked}
+            columns={formatColumns}
+            expandable={expandable}
+            rowSelection={rowSelection}
+          />
         </table>
       </div>
     );

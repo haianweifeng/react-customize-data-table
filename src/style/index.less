@@ -85,10 +85,11 @@ td.align-left {
   text-align: left;
 }
 
-td.selection-expand-column {
-  // todo 把这个宽度设置到colgroup 中
-  // width: 48px;
-  text-align: center;
+td,
+th {
+  &.selection-expand-column {
+    text-align: center;
+  }
 }
 
 .expand-icon {

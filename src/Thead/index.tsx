@@ -1,12 +1,21 @@
 import React, { useMemo } from 'react';
-import { ColumnsWithType, ColumnsGroupWithType } from '../interface';
+import {
+  ColumnsWithType,
+  ColumnsGroupWithType,
+  ExpandableType,
+  RowSelectionType,
+} from '../interface';
+import Checkbox from '../Checkbox';
 
 interface TheadProps<T> {
+  checked: boolean | 'indeterminate';
+  expandable?: ExpandableType<T>;
+  rowSelection?: RowSelectionType<T>;
   columns: (ColumnsWithType<T> | ColumnsGroupWithType<T>)[];
 }
 
 function Thead<T>(props: TheadProps<T>) {
-  const { columns } = props;
+  const { checked, columns, expandable, rowSelection } = props;
 
   const isColumnGroup = (col: ColumnsWithType<T> | ColumnsGroupWithType<T>) => {
     if (typeof (col as ColumnsGroupWithType<T>).children !== 'undefined') {
@@ -48,6 +57,32 @@ function Thead<T>(props: TheadProps<T>) {
     }
   };
 
+  const renderExpand = (key: string) => {
+    if (expandable?.columnTitle) {
+      return <th key={key}>{expandable.columnTitle}</th>;
+    }
+    return <th key={key} />;
+  };
+
+  const renderSelection = (key: string) => {
+    if (rowSelection?.columnTitle) {
+      return <th key={key}>{rowSelection.columnTitle}</th>;
+    }
+    if (rowSelection?.type === 'radio') {
+      return <th key={key} />;
+    }
+    return (
+      <th key={key} className="selection-expand-column">
+        <Checkbox
+          checked={checked}
+          onChange={(selected: boolean, event: Event) => {
+            // handleSelect(isRadio, rowData, selected, event);
+          }}
+        />
+      </th>
+    );
+  };
+
   const renderTh = (
     col: ColumnsWithType<T> | ColumnsGroupWithType<T>,
     trs: React.ReactNode[][],
@@ -58,9 +93,9 @@ function Thead<T>(props: TheadProps<T>) {
     switch (col.type) {
       case 'checkbox':
       case 'radio':
-        return '';
+        return trs[level].push(renderSelection(index));
       case 'expanded':
-        return '';
+        return trs[level].push(renderExpand(index));
       default: {
         if (isColumnGroup(col)) {
           trs[level].push(
