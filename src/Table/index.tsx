@@ -15,7 +15,7 @@ import type {
   ColumnsGroupWithType,
 } from '../interface';
 import '../style/index.less';
-import { toPoint } from '../utils/util';
+import { omitRowsProps, toPoint } from '../utils/util';
 // import styles from './index.less';
 
 export interface TableProps<T> {
@@ -99,6 +99,7 @@ function Table<
     columns,
     expandable,
     rowSelection,
+    treeProps,
   } = props;
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 48;
@@ -176,6 +177,54 @@ function Table<
     });
     return arr;
   }, [dataSource, getRowKey, formatChildrenData]);
+
+  const getAllTreeKeys = (data: T[]) => {
+    const keys: (string | number)[] = [];
+    data.forEach((d) => {
+      keys.push(d.rowKey);
+      if (d?.children && d.children.length) {
+        keys.push(...getAllTreeKeys(d.children));
+      }
+    });
+    return keys;
+  };
+
+  const [treeExpandKeys, setTreeExpandKeys] = useState<(string | number)[]>(() => {
+    if (
+      treeProps?.defaultExpandAllRows &&
+      !(treeProps?.defaultExpandedRowKeys || treeProps?.expandedRowKeys)
+    ) {
+      return getAllTreeKeys(formatData);
+    }
+    return treeProps?.expandedRowKeys || treeProps?.defaultExpandedRowKeys || [];
+  });
+
+  const getTreeChildrenData = (parent: T) => {
+    const arr: T[] = [];
+    const data = parent?.children;
+    if (data && data.length && treeExpandKeys && treeExpandKeys.indexOf(parent.rowKey) >= 0) {
+      data.forEach((item) => {
+        arr.push(item);
+        const records = getTreeChildrenData(item);
+        arr.push(...records);
+      });
+    }
+    return arr;
+  };
+
+  const list = useMemo(() => {
+    if (!treeExpandKeys.length) return formatData;
+
+    const arr: T[] = [];
+
+    formatData.forEach((d) => {
+      arr.push(d);
+      const childrenData = getTreeChildrenData(d);
+      arr.push(...childrenData);
+    });
+
+    return arr;
+  }, [formatData, getTreeChildrenData]);
 
   const formatColumns = useMemo(() => {
     let insertIndex = 0;
@@ -279,11 +328,27 @@ function Table<
     setChecked(selectAll ? true : keys.length ? 'indeterminate' : false);
   };
 
+  const handleTreeExpand = (treeExpanded: boolean, record: T) => {
+    if (!treeProps?.expandedRowKeys) {
+      setTreeExpandKeys((prev) => {
+        const isExist = prev.indexOf(record.rowKey) >= 0;
+        return isExist ? prev.filter((p) => p !== record.rowKey) : [...prev, record.rowKey];
+      });
+    }
+    treeProps?.onExpand && treeProps.onExpand(treeExpanded, omitRowsProps(record)[0]);
+  };
+
   useEffect(() => {
     if (rowSelection?.selectedRowKeys) {
       setSelectedKeys(rowSelection.selectedRowKeys);
     }
   }, [rowSelection]);
+
+  useEffect(() => {
+    if (treeProps?.expandedRowKeys) {
+      setTreeExpandKeys(treeProps.expandedRowKeys);
+    }
+  }, [treeProps]);
 
   const renderBody = () => {
     return (
@@ -293,10 +358,13 @@ function Table<
           <Tbody
             {...props}
             startRowIndex={startRowIndex}
-            dataSource={formatData}
+            // dataSource={formatData}
+            dataSource={list}
             columns={flatColumns}
+            treeExpandKeys={treeExpandKeys}
             selectedKeys={selectedKeys}
             onSelect={handleSelect}
+            onTreeExpand={handleTreeExpand}
             onBodyRender={handleBodyRender}
           />
         </table>
@@ -305,7 +373,6 @@ function Table<
   };
 
   const renderHeader = () => {
-    // selectedKeys={selectedKeys}
     return (
       <div className="table-thead">
         <table style={{ width: scroll.width }}>

@@ -10,8 +10,10 @@ import Checkbox from '../Checkbox';
 interface TbodyProps<T> extends TableProps<T> {
   columns: ColumnsWithType<T>[];
   startRowIndex: number;
+  treeExpandKeys: (number | string)[];
   selectedKeys: (number | string)[];
   onSelect: (selectedKeys: (number | string)[], selectAll: boolean) => void;
+  onTreeExpand: (treeExpanded: boolean, record: T) => void;
   onBodyRender: (cells: HTMLElement[]) => void;
 }
 
@@ -28,37 +30,39 @@ function Tbody<
     columns,
     startRowIndex,
     rowKey,
+    treeExpandKeys,
     selectedKeys,
     rowSelection,
     expandable,
     treeProps,
     onSelect,
+    onTreeExpand,
     onBodyRender,
   } = props;
 
   const tbodyRef = useRef<any>(null);
   const cacheSelectedRows = useRef<T[]>([]);
 
-  const getAllTreeKeys = (data: T[]) => {
-    const keys: (string | number)[] = [];
-    data.forEach((d) => {
-      keys.push(d.rowKey);
-      if (d?.children && d.children.length) {
-        keys.push(...getAllTreeKeys(d.children));
-      }
-    });
-    return keys;
-  };
-
-  const [treeExpandKeys, setTreeExpandKeys] = useState<(string | number)[]>(() => {
-    if (
-      treeProps?.defaultExpandAllRows &&
-      !(treeProps?.defaultExpandedRowKeys || treeProps?.expandedRowKeys)
-    ) {
-      return getAllTreeKeys(dataSource);
-    }
-    return treeProps?.expandedRowKeys || treeProps?.defaultExpandedRowKeys || [];
-  });
+  // const getAllTreeKeys = (data: T[]) => {
+  //   const keys: (string | number)[] = [];
+  //   data.forEach((d) => {
+  //     keys.push(d.rowKey);
+  //     if (d?.children && d.children.length) {
+  //       keys.push(...getAllTreeKeys(d.children));
+  //     }
+  //   });
+  //   return keys;
+  // };
+  // // todo dataSource
+  // const [treeExpandKeys, setTreeExpandKeys] = useState<(string | number)[]>(() => {
+  //   if (
+  //     treeProps?.defaultExpandAllRows &&
+  //     !(treeProps?.defaultExpandedRowKeys || treeProps?.expandedRowKeys)
+  //   ) {
+  //     return getAllTreeKeys(dataSource);
+  //   }
+  //   return treeProps?.expandedRowKeys || treeProps?.defaultExpandedRowKeys || [];
+  // });
 
   const getTreeChildrenKeys = (parent: T) => {
     const keys: (string | number)[] = [];
@@ -84,7 +88,7 @@ function Tbody<
     });
     return keys;
   };
-
+  // todo dataSource
   const [expandedRowKeys, setExpandedRowKeys] = useState<(string | number)[]>(() => {
     if (
       expandable?.defaultExpandAllRows &&
@@ -107,20 +111,20 @@ function Tbody<
     }
     return arr;
   };
-
-  const list = useMemo(() => {
-    if (!treeExpandKeys.length) return dataSource;
-
-    const arr: T[] = [];
-
-    dataSource.forEach((d) => {
-      arr.push(d);
-      const childrenData = getTreeChildrenData(d);
-      arr.push(...childrenData);
-    });
-
-    return arr;
-  }, [dataSource, getTreeChildrenData]);
+  // // todo dataSource
+  // const list = useMemo(() => {
+  //   if (!treeExpandKeys.length) return dataSource;
+  //
+  //   const arr: T[] = [];
+  //
+  //   dataSource.forEach((d) => {
+  //     arr.push(d);
+  //     const childrenData = getTreeChildrenData(d);
+  //     arr.push(...childrenData);
+  //   });
+  //
+  //   return arr;
+  // }, [dataSource, getTreeChildrenData]);
 
   const getChildrenKeys = (data: T[] = [], all = true) => {
     const keys: (number | string)[] = [];
@@ -158,7 +162,8 @@ function Tbody<
     currSelectedKey: number | string,
   ) => {
     const arr: T[] = [];
-    const parent = findParentByKey(list, parentKey);
+    const parent = findParentByKey(dataSource, parentKey);
+    // const parent = findParentByKey(list, parentKey);
     if (!parent) return arr;
     const childKeys = getChildrenKeys(parent?.children, false);
     const exist = childKeys.filter((cKey) => selectKeys.indexOf(cKey) >= 0);
@@ -203,12 +208,12 @@ function Tbody<
   };
 
   const isSelectAll = (keys: (number | string)[]) => {
-    if (list.length < keys.length) {
-      return list.every((l) => {
+    if (dataSource.length < keys.length) {
+      return dataSource.every((l) => {
         return keys.indexOf(l.rowKey) >= 0;
       });
     }
-    return keys.length === list.length;
+    return keys.length === dataSource.length;
   };
 
   const handleSelect = (isRadio: boolean, record: T, selected: boolean, event: Event) => {
@@ -219,7 +224,7 @@ function Tbody<
     let selectedRows;
 
     if (!isExist) {
-      const selectedItems = getSelectedItems(list, key);
+      const selectedItems = getSelectedItems(dataSource, key);
 
       const selectedItemKeys = selectedItems.map((s) => {
         return s.rowKey;
@@ -233,7 +238,7 @@ function Tbody<
       let parentKey = record?.parentKey;
       while (parentKey) {
         keys.push(parentKey);
-        const parent = findParentByKey(list, parentKey);
+        const parent = findParentByKey(dataSource, parentKey);
         parentKey = parent?.parentKey;
       }
 
@@ -274,13 +279,14 @@ function Tbody<
   };
 
   const handleTreeExpand = (treeExpanded: boolean, record: T) => {
-    if (!treeProps?.expandedRowKeys) {
-      setTreeExpandKeys((prev) => {
-        const isExist = prev.indexOf(record.rowKey) >= 0;
-        return isExist ? prev.filter((p) => p !== record.rowKey) : [...prev, record.rowKey];
-      });
-    }
-    treeProps?.onExpand && treeProps.onExpand(treeExpanded, omitRowsProps(record)[0]);
+    // if (!treeProps?.expandedRowKeys) {
+    //   setTreeExpandKeys((prev) => {
+    //     const isExist = prev.indexOf(record.rowKey) >= 0;
+    //     return isExist ? prev.filter((p) => p !== record.rowKey) : [...prev, record.rowKey];
+    //   });
+    // }
+    // treeProps?.onExpand && treeProps.onExpand(treeExpanded, omitRowsProps(record)[0]);
+    onTreeExpand(treeExpanded, record);
   };
 
   useEffect(() => {
@@ -298,12 +304,12 @@ function Tbody<
     }
   }, [expandable]);
 
-  useEffect(() => {
-    if (treeProps?.expandedRowKeys) {
-      setTreeExpandKeys(treeProps.expandedRowKeys);
-    }
-  }, [treeProps]);
-
+  // useEffect(() => {
+  //   if (treeProps?.expandedRowKeys) {
+  //     setTreeExpandKeys(treeProps.expandedRowKeys);
+  //   }
+  // }, [treeProps]);
+  // todo dataSource
   const isTree = useMemo(() => {
     const data = dataSource.filter((d) => d?.children && d.children.length);
     return data.length > 0;
@@ -524,6 +530,6 @@ function Tbody<
     );
   };
 
-  return <tbody ref={tbodyRef}>{list.map((d, i: number) => renderTr(d, i))}</tbody>;
+  return <tbody ref={tbodyRef}>{dataSource.map((d, i: number) => renderTr(d, i))}</tbody>;
 }
 export default Tbody;

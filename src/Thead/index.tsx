@@ -57,11 +57,8 @@ function Thead<T>(props: TheadProps<T>) {
     }
   };
 
-  const renderExpand = (key: string) => {
-    if (expandable?.columnTitle) {
-      return <th key={key}>{expandable.columnTitle}</th>;
-    }
-    return <th key={key} />;
+  const handleChange = (selected: boolean, event: Event) => {
+    console.log(selected);
   };
 
   const renderSelection = (key: string) => {
@@ -73,14 +70,16 @@ function Thead<T>(props: TheadProps<T>) {
     }
     return (
       <th key={key} className="selection-expand-column">
-        <Checkbox
-          checked={checked}
-          onChange={(selected: boolean, event: Event) => {
-            // handleSelect(isRadio, rowData, selected, event);
-          }}
-        />
+        <Checkbox checked={checked} onChange={handleChange} />
       </th>
     );
+  };
+
+  const renderExpand = (key: string) => {
+    if (expandable?.columnTitle) {
+      return <th key={key}>{expandable.columnTitle}</th>;
+    }
+    return <th key={key} />;
   };
 
   const renderTh = (
