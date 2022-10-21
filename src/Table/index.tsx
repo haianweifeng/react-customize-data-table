@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import classnames from 'classnames';
 import Thead from '../Thead';
 import Tbody from '../Tbody';
@@ -90,7 +90,7 @@ function Table<
   const {
     className = '',
     style = {},
-    size = 'default',
+    // size = 'default',
     scroll = {},
     showHeader = true,
     bordered,
@@ -113,52 +113,58 @@ function Table<
     return rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
   });
 
-  const [startRowIndex, setStartRowIndex] = useState<number>(0);
+  // const [startRowIndex, setStartRowIndex] = useState<number>(0);
 
-  const getRowKey = (rowData: T, i: number | string) => {
-    let key;
-    if (typeof rowKey === 'string') {
-      key = rowData[rowKey as keyof T] as string;
-    } else if (typeof rowKey === 'function') {
-      key = rowKey(rowData);
-    }
-
-    if (key || key === 0) {
-      if (!(typeof key === 'string' || typeof key === 'number')) {
-        console.error(new Error(`expect Tr has a string or a number key, get '${typeof key}'`));
+  const getRowKey = useCallback(
+    (rowData: T, i: number | string) => {
+      let key;
+      if (typeof rowKey === 'string') {
+        key = rowData[rowKey as keyof T] as string;
+      } else if (typeof rowKey === 'function') {
+        key = rowKey(rowData);
       }
-    } else {
-      key = i;
-      console.warn(
-        `Tr has no set unique key.Already converted with ${i},Please sure Tr has unique key.`,
-      );
-    }
 
-    if (keysRef.current[key]) {
-      const converted = `converted_key_${i}`;
-      let tips = `Tr has same key:(${key}).Already converted with (${converted}), Please sure Tr has unique key.`;
-      console.warn(tips);
-      key = converted;
-    }
-    keysRef.current[key] = true;
-
-    return key;
-  };
-
-  const formatChildrenData = (parent: T, parentIndex: string | number, level: number = 0) => {
-    const arr: T[] = [];
-    const data = parent?.children || [];
-    data.map((d, i) => {
-      const key = getRowKey(d, `${parentIndex}_${i}`);
-      const obj = { ...d, parentKey: parent.rowKey, rowKey: key, treeLevel: level + 1 };
-      const res = formatChildrenData(obj, `${parentIndex}_${i}`, level + 1);
-      if (res && res.length) {
-        obj.children = res;
+      if (key || key === 0) {
+        if (!(typeof key === 'string' || typeof key === 'number')) {
+          console.error(new Error(`expect Tr has a string or a number key, get '${typeof key}'`));
+        }
+      } else {
+        key = i;
+        console.warn(
+          `Tr has no set unique key.Already converted with ${i},Please sure Tr has unique key.`,
+        );
       }
-      arr.push(obj);
-    });
-    return arr;
-  };
+
+      if (keysRef.current[key]) {
+        const converted = `converted_key_${i}`;
+        const tips = `Tr has same key:(${key}).Already converted with (${converted}), Please sure Tr has unique key.`;
+        console.warn(tips);
+        key = converted;
+      }
+      keysRef.current[key] = true;
+
+      return key;
+    },
+    [rowKey],
+  );
+
+  const formatChildrenData = useCallback(
+    (parent: T, parentIndex: string | number, level: number = 0) => {
+      const arr: T[] = [];
+      const data = parent?.children || [];
+      data.map((d, i) => {
+        const key = getRowKey(d, `${parentIndex}_${i}`);
+        const obj = { ...d, parentKey: parent.rowKey, rowKey: key, treeLevel: level + 1 };
+        const res = formatChildrenData(obj, `${parentIndex}_${i}`, level + 1);
+        if (res && res.length) {
+          obj.children = res;
+        }
+        arr.push(obj);
+      });
+      return arr;
+    },
+    [getRowKey],
+  );
 
   const formatData = useMemo(() => {
     const arr: T[] = [];
@@ -222,7 +228,7 @@ function Table<
     });
 
     return arr;
-  }, [formatData, getTreeChildrenData]);
+  }, [formatData, treeExpandKeys, getTreeChildrenData]);
 
   const formatColumns = useMemo(() => {
     let insertIndex = 0;
@@ -263,7 +269,7 @@ function Table<
     return cols;
   }, [columns, expandable, rowSelection]);
 
-  const getFlatColumns = (cols: (ColumnsWithType<T> | ColumnsGroupWithType<T>)[]) => {
+  const getFlatColumns = useCallback((cols: (ColumnsWithType<T> | ColumnsGroupWithType<T>)[]) => {
     const temp: ColumnsWithType<T>[] = [];
     cols.map((column: any) => {
       if (column?.children) {
@@ -273,52 +279,55 @@ function Table<
       }
     });
     return temp;
-  };
+  }, []);
 
   const flatColumns = useMemo(() => {
     return getFlatColumns(formatColumns);
   }, [getFlatColumns, formatColumns]);
 
-  const converToPixel = (val: string | number | undefined) => {
+  const converToPixel = useCallback((val: string | number | undefined) => {
     if (typeof val === 'number' || val === undefined) return val;
     const res = toPoint(val);
     const { width } = tbodyTableRef.current.getBoundingClientRect();
     return width * res;
-  };
+  }, []);
 
   // todo 不同例子之间切换时候头部和body 之间没有对齐
-  const handleBodyRender = (tds: HTMLElement[]) => {
-    const widths = [];
-    for (let i = 0; i < tds.length; i++) {
-      const td = tds[i];
-      const { width } = td.getBoundingClientRect();
-      const colSpan = Number(td.getAttribute('colspan'));
+  const handleBodyRender = useCallback(
+    (tds: HTMLElement[]) => {
+      const widths = [];
+      for (let i = 0; i < tds.length; i++) {
+        const td = tds[i];
+        const { width } = td.getBoundingClientRect();
+        const colSpan = Number(td.getAttribute('colspan'));
 
-      if (colSpan === 1) {
-        widths.push(width);
-      } else {
-        let count = 0;
-        let sum = 0;
-        const colWidth: any = [];
-        for (let j = 0; j < colSpan; j++) {
-          const w = converToPixel(flatColumns[i + j].width);
-          // todo 待测试列宽设为0
-          if (w) {
-            count++;
-            sum += w;
+        if (colSpan === 1) {
+          widths.push(width);
+        } else {
+          let count = 0;
+          let sum = 0;
+          const colWidth: any = [];
+          for (let j = 0; j < colSpan; j++) {
+            const w = converToPixel(flatColumns[i + j].width);
+            // todo 待测试列宽设为0
+            if (w) {
+              count++;
+              sum += w;
+            }
+            colWidth.push(w);
           }
-          colWidth.push(w);
+          const remain = width - sum;
+          const averageWidth = remain / (colSpan - count);
+          const formatColWidth = colWidth.map((c: number | undefined) => {
+            return c || averageWidth;
+          });
+          widths.push(...formatColWidth);
         }
-        const remain = width - sum;
-        const averageWidth = remain / (colSpan - count);
-        const formatColWidth = colWidth.map((c: number | undefined) => {
-          return c || averageWidth;
-        });
-        widths.push(...formatColWidth);
       }
-    }
-    setColWidths(widths);
-  };
+      setColWidths(widths);
+    },
+    [converToPixel, flatColumns],
+  );
 
   const handleSelect = (keys: (number | string)[]) => {
     if (!rowSelection?.selectedRowKeys) {
@@ -333,7 +342,9 @@ function Table<
         return isExist ? prev.filter((p) => p !== record.rowKey) : [...prev, record.rowKey];
       });
     }
-    treeProps?.onExpand && treeProps.onExpand(treeExpanded, omitRowsProps(record)[0]);
+    if (treeProps?.onExpand) {
+      treeProps.onExpand(treeExpanded, omitRowsProps(record)[0]);
+    }
   };
 
   useEffect(() => {
@@ -362,7 +373,8 @@ function Table<
           <Colgroup colWidths={colWidths} columns={flatColumns} />
           <Tbody
             {...props}
-            startRowIndex={startRowIndex}
+            // startRowIndex={startRowIndex}
+            startRowIndex={0}
             dataSource={list}
             columns={flatColumns}
             treeExpandKeys={treeExpandKeys}

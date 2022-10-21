@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 export interface SelectionType {
   key: string;
@@ -174,4 +174,4 @@ export interface ScrollType {
   height?: number;
 }
 
-export type KeysRefType = { [key: string]: boolean };
+export type KeysRefType = Record<string, boolean>;

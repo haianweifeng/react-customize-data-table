@@ -26,8 +26,8 @@ const Checkbox = (props: CheckboxProps) => {
   });
 
   const handleChange = (event: any) => {
-    const { checked } = event.target;
-    onChange(checked, event.nativeEvent);
+    const { checked: value } = event.target;
+    onChange(value, event.nativeEvent);
   };
 
   return (

@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import {
+import React, { useMemo, useCallback } from 'react';
+import type {
   ColumnsWithType,
   ColumnsGroupWithType,
   ExpandableType,
@@ -17,35 +17,38 @@ interface TheadProps<T> {
 function Thead<T>(props: TheadProps<T>) {
   const { checked, columns, expandable, rowSelection } = props;
 
-  const isColumnGroup = (col: ColumnsWithType<T> | ColumnsGroupWithType<T>) => {
+  const isColumnGroup = useCallback((col: ColumnsWithType<T> | ColumnsGroupWithType<T>) => {
     if (typeof (col as ColumnsGroupWithType<T>).children !== 'undefined') {
       return true;
     }
     return false;
-  };
+  }, []);
 
-  const getFormatColumns = (
-    cols: (ColumnsWithType<T> | ColumnsGroupWithType<T>)[],
-    target?: (ColumnsWithType<T> | ColumnsGroupWithType<T>) & { colSpan: number },
-  ) => {
-    return cols.map((col) => {
-      if (isColumnGroup(col)) {
-        const obj = { ...col, colSpan: 0 };
-        (obj as any).children = getFormatColumns((col as any).children, obj);
-        if (target) {
-          target.colSpan += obj.colSpan;
+  const getFormatColumns = useCallback(
+    (
+      cols: (ColumnsWithType<T> | ColumnsGroupWithType<T>)[],
+      target?: (ColumnsWithType<T> | ColumnsGroupWithType<T>) & { colSpan: number },
+    ) => {
+      return cols.map((col) => {
+        if (isColumnGroup(col)) {
+          const obj = { ...col, colSpan: 0 };
+          (obj as any).children = getFormatColumns((col as any).children, obj);
+          if (target) {
+            target.colSpan += obj.colSpan;
+          }
+          return obj;
+        } else {
+          if (target) {
+            target.colSpan += 1;
+          }
+          return { colSpan: 1, ...col };
         }
-        return obj;
-      } else {
-        if (target) {
-          target.colSpan += 1;
-        }
-        return { colSpan: 1, ...col };
-      }
-    });
-  };
+      });
+    },
+    [isColumnGroup],
+  );
 
-  const computeTrs = (cols: any, level = 0, trs: React.ReactNode[][]) => {
+  const computeTrs = useCallback((cols: any, level = 0, trs: React.ReactNode[][]) => {
     for (let i = 0; i < cols.length; i++) {
       const col = cols[i];
       if (!Array.isArray(trs[level])) {
@@ -55,71 +58,80 @@ function Thead<T>(props: TheadProps<T>) {
         computeTrs(col.children, level + 1, trs);
       }
     }
-  };
+  }, []);
 
-  const handleChange = (selected: boolean, event: Event) => {
+  const handleChange = useCallback((selected: boolean) => {
     console.log(selected);
-  };
+  }, []);
 
-  const renderSelection = (key: string) => {
-    if (rowSelection?.columnTitle) {
-      return <th key={key}>{rowSelection.columnTitle}</th>;
-    }
-    if (rowSelection?.type === 'radio') {
+  const renderSelection = useCallback(
+    (key: string) => {
+      if (rowSelection?.columnTitle) {
+        return <th key={key}>{rowSelection.columnTitle}</th>;
+      }
+      if (rowSelection?.type === 'radio') {
+        return <th key={key} />;
+      }
+      return (
+        <th key={key} className="selection-expand-column">
+          <Checkbox checked={checked} onChange={handleChange} />
+        </th>
+      );
+    },
+    [checked, rowSelection, handleChange],
+  );
+
+  const renderExpand = useCallback(
+    (key: string) => {
+      if (expandable?.columnTitle) {
+        return <th key={key}>{expandable.columnTitle}</th>;
+      }
       return <th key={key} />;
-    }
-    return (
-      <th key={key} className="selection-expand-column">
-        <Checkbox checked={checked} onChange={handleChange} />
-      </th>
-    );
-  };
+    },
+    [expandable],
+  );
 
-  const renderExpand = (key: string) => {
-    if (expandable?.columnTitle) {
-      return <th key={key}>{expandable.columnTitle}</th>;
-    }
-    return <th key={key} />;
-  };
-
-  const renderTh = (
-    col: ColumnsWithType<T> | ColumnsGroupWithType<T>,
-    trs: React.ReactNode[][],
-    level: number,
-    index: string,
-  ) => {
-    const totalLevel = trs.length;
-    switch (col.type) {
-      case 'checkbox':
-      case 'radio':
-        return trs[level].push(renderSelection(index));
-      case 'expanded':
-        return trs[level].push(renderExpand(index));
-      default: {
-        if (isColumnGroup(col)) {
-          trs[level].push(
-            <th key={index} colSpan={col.colSpan}>
-              <div>
-                <span>{col.title}</span>
-              </div>
-            </th>,
-          );
-          (col as any).children.forEach((c: any, i: number) => {
-            renderTh(c, trs, level + 1, `${index}_${i}`);
-          });
-        } else {
-          trs[level].push(
-            // todo column.headerColSpan  头部列数
-            <th colSpan={1} rowSpan={totalLevel - level} key={index}>
-              <div>
-                <span>{col.title}</span>
-              </div>
-            </th>,
-          );
+  const renderTh = useCallback(
+    (
+      col: ColumnsWithType<T> | ColumnsGroupWithType<T>,
+      trs: React.ReactNode[][],
+      level: number,
+      index: string,
+    ) => {
+      const totalLevel = trs.length;
+      switch (col.type) {
+        case 'checkbox':
+        case 'radio':
+          return trs[level].push(renderSelection(index));
+        case 'expanded':
+          return trs[level].push(renderExpand(index));
+        default: {
+          if (isColumnGroup(col)) {
+            trs[level].push(
+              <th key={index} colSpan={col.colSpan}>
+                <div>
+                  <span>{col.title}</span>
+                </div>
+              </th>,
+            );
+            (col as any).children.forEach((c: any, i: number) => {
+              renderTh(c, trs, level + 1, `${index}_${i}`);
+            });
+          } else {
+            trs[level].push(
+              // todo column.headerColSpan  头部列数
+              <th colSpan={1} rowSpan={totalLevel - level} key={index}>
+                <div>
+                  <span>{col.title}</span>
+                </div>
+              </th>,
+            );
+          }
         }
       }
-    }
-  };
+    },
+    [renderSelection, renderExpand, isColumnGroup],
+  );
 
   const headerTrs = useMemo(() => {
     const trs: React.ReactNode[][] = [];
@@ -127,7 +139,7 @@ function Thead<T>(props: TheadProps<T>) {
     const formatColumns = getFormatColumns(columns);
     formatColumns.forEach((col, i: number) => renderTh(col, trs, 0, `${i}`));
     return trs;
-  }, [columns, renderTh]);
+  }, [columns, computeTrs, getFormatColumns, renderTh]);
 
   return (
     <thead>

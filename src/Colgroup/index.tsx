@@ -1,5 +1,5 @@
 import React from 'react';
-import { ColumnsWithType } from '../interface';
+import type { ColumnsWithType } from '../interface';
 
 interface ColgroupProps<T> {
   colWidths: number[];

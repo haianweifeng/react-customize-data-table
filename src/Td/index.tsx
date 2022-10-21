@@ -3,9 +3,9 @@ import classnames from 'classnames';
 import '../style/index.less';
 import type { CellProps } from '../interface';
 
-interface TdProps<T> extends CellProps {}
+type TdProps = CellProps;
 
-function Td<T>(props: TdProps<T>) {
+function Td(props: TdProps) {
   const { colSpan, rowSpan, align, className = '', fixed, content, type } = props;
 
   // todo 选择框的fixed  固定列的样式还没写
