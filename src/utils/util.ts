@@ -6,8 +6,29 @@ export function generateUUID() {
   random = random.substring(2, random.length);
   return `${random}${time}`;
 }
+// todo 待测试如果用的数据不存在的字段 record.desc  desc 不存在
+export function getRowKey<T>(
+  rowKey: string | ((row: T) => string | number),
+  rowData: T,
+  i: number | string,
+) {
+  let key;
+  if (typeof rowKey === 'string') {
+    key = rowData[rowKey as keyof T];
+  } else if (typeof rowKey === 'function') {
+    key = rowKey(rowData);
+  }
 
-export function omitRowsProps(data: any = []) {
+  if (!(typeof key === 'string' || typeof key === 'number')) {
+    key = i;
+    console.error(
+      `Each record should have a unique "key" prop,or set "rowKey" to an unique primary key.Already converted with ${i}`,
+    );
+  }
+  return key;
+}
+
+export function omitRowsProps<T>(data: T[] | T = []) {
   const arr: any = [];
   data = Array.isArray(data) ? data : [data];
   data.forEach((d: any) => {
@@ -25,3 +46,83 @@ export function toPoint(value: string | number) {
   const val = value.replace('%', '');
   return Number(val) / 100;
 }
+
+// const getChildrenKeys = (data: T[] = [], all = true) => {
+//   const keys: (number | string)[] = [];
+//   data.map((c) => {
+//     keys.push(c.rowKey);
+//     if (c?.children && c.children.length && all) {
+//       keys.push(...getChildrenKeys(c.children));
+//     }
+//   });
+//   return keys;
+// };
+//
+// const findParentByKey = (data: T[] = [], key: string | number) => {
+//   let item: undefined | T;
+//   for (let i = 0; i < data.length; i++) {
+//     const curr = data[i];
+//     if (curr.rowKey === key) {
+//       item = curr;
+//       break;
+//     }
+//     if (curr?.children && curr.children.length) {
+//       const res = findParentByKey(curr.children, key);
+//       if (res) {
+//         item = res;
+//         break;
+//       }
+//     }
+//   }
+//   return item;
+// };
+//
+// const getSelectParent = (
+//   parentKey: string | number,
+//   selectKeys: (string | number)[],
+//   currSelectedKey: number | string,
+// ) => {
+//   const arr: T[] = [];
+//   const parent = findParentByKey(dataSource, parentKey);
+//   if (!parent) return arr;
+//   const childKeys = getChildrenKeys(parent?.children, false);
+//   const exist = childKeys.filter((cKey) => selectKeys.indexOf(cKey) >= 0);
+//   if (exist.length + 1 === childKeys.length || (childKeys.length === 1 && !exist.length)) {
+//     arr.push(parent);
+//     if (parent?.parentKey) {
+//       arr.push(
+//         ...getSelectParent(parent.parentKey, [...selectKeys, currSelectedKey], parent.rowKey),
+//       );
+//     }
+//   }
+//   return arr;
+// };
+//
+// export function getSelectedItems(data: T[] = [], currSelectedKey?: number | string) {
+//   const arr: T[] = [];
+//
+//   for (let i = 0; i < data.length; i++) {
+//     const d = data[i];
+//     const key = d.rowKey;
+//     if (currSelectedKey) {
+//       if (currSelectedKey === key) {
+//         arr.push(d);
+//         const childrenData = getSelectedItems(d?.children);
+//         if (childrenData.length) {
+//           arr.push(...childrenData);
+//         }
+//         if (d?.parentKey) {
+//           arr.push(...getSelectParent(d.parentKey, selectedKeys, currSelectedKey));
+//         }
+//       }
+//     } else {
+//       arr.push(d);
+//       const childrenData = getSelectedItems(d?.children);
+//       if (childrenData.length) {
+//         arr.push(...childrenData);
+//       }
+//     }
+//   }
+//
+//   return arr;
+// }

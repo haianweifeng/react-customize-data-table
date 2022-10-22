@@ -37,7 +37,7 @@ const Checkbox = (props: CheckboxProps) => {
         disabled={disabled}
         type="checkbox"
         onChange={handleChange}
-        checked={!!checked}
+        checked={checked === true}
         className={styles.checkboxInput}
       />
       <span className={styles.checkboxInner} />

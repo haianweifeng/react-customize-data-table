@@ -12,10 +12,11 @@ interface TheadProps<T> {
   expandable?: ExpandableType<T>;
   rowSelection?: RowSelectionType<T>;
   columns: (ColumnsWithType<T> | ColumnsGroupWithType<T>)[];
+  onSelectAll: (selected: boolean) => void;
 }
 
 function Thead<T>(props: TheadProps<T>) {
-  const { checked, columns, expandable, rowSelection } = props;
+  const { checked, columns, expandable, rowSelection, onSelectAll } = props;
 
   const isColumnGroup = useCallback((col: ColumnsWithType<T> | ColumnsGroupWithType<T>) => {
     if (typeof (col as ColumnsGroupWithType<T>).children !== 'undefined') {
@@ -61,7 +62,7 @@ function Thead<T>(props: TheadProps<T>) {
   }, []);
 
   const handleChange = useCallback((selected: boolean) => {
-    console.log(selected);
+    onSelectAll(selected);
   }, []);
 
   const renderSelection = useCallback(

@@ -56,8 +56,13 @@ const data: DataType[] = [
 ];
 
 const rowSelection = {
+  onSelectAll: (selected, selectedRows, changeRows) => {
+    console.log(`selected: ${selected}`);
+    console.log('selectedRows:', selectedRows);
+    console.log('changeRows:', changeRows);
+  },
   onChange: (selectedRowKeys, selectedRows) => {
-    console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+    console.log('selectedRowKeys:', selectedRowKeys, 'selectedRows: ', selectedRows);
   },
   onSelect: (record, selected, selectedRows, nativeEvent) => {
     console.log(
