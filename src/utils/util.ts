@@ -1,4 +1,5 @@
 import omit from 'omit.js';
+import type { RowKeyType } from '../interface';
 
 export function generateUUID() {
   const time = new Date().getTime().toString(36);
@@ -7,25 +8,42 @@ export function generateUUID() {
   return `${random}${time}`;
 }
 // todo 待测试如果用的数据不存在的字段 record.desc  desc 不存在
-export function getRowKey<T>(
-  rowKey: string | ((row: T) => string | number),
-  rowData: T,
-  i: number | string,
-) {
+export function getRowKey<T>(rowKey: RowKeyType<T>, rowData: T) {
   let key;
   if (typeof rowKey === 'string') {
-    key = rowData[rowKey as keyof T];
+    key = rowData[rowKey as keyof T] as string;
   } else if (typeof rowKey === 'function') {
     key = rowKey(rowData);
   }
 
-  if (!(typeof key === 'string' || typeof key === 'number')) {
-    key = i;
+  if (key === undefined) {
+    // key = i;
+    // console.error(
+    //   `Each record should have a unique "key" prop,or set "rowKey" to an unique primary key.Already converted with ${i}`,
+    // );
     console.error(
-      `Each record should have a unique "key" prop,or set "rowKey" to an unique primary key.Already converted with ${i}`,
+      `Each record should have a unique "key" prop,or set "rowKey" to an unique primary key.`,
     );
   }
   return key;
+}
+
+export function findParentByKey<T extends { key?: number | string; children?: T[] }>(
+  data: T[] = [],
+  currKey: string | number,
+  rowKey: RowKeyType<T>,
+  parent?: T,
+): T | undefined {
+  for (let i = 0; i < data.length; i++) {
+    const curr = data[i];
+    const key = getRowKey(rowKey, curr) as string;
+    if (key === currKey) return parent;
+    if (curr?.children && curr.children.length) {
+      const res = findParentByKey(curr.children, currKey, rowKey, curr);
+      if (res) return res;
+    }
+    return undefined;
+  }
 }
 
 export function omitRowsProps<T>(data: T[] | T = []) {

@@ -1,12 +1,12 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
-import { getRowKey } from '../utils/util';
+import classnames from 'classnames';
+import { getRowKey, findParentByKey } from '../utils/util';
 import type { TableProps } from '../Table';
 import type { CellProps, ColumnsWithType, SelectedInfo, TreeLevelType } from '../interface';
 import Tr from '../Tr';
-import classnames from 'classnames';
 import Radio from '../Radio';
 import Checkbox from '../Checkbox';
-
+// todo bug 如果设置了默认值是选了子项的话 取消勾选第一项这时候数据错误
 interface TbodyProps<T> extends TableProps<T> {
   columns: ColumnsWithType<T>[];
   originDataSource: T[];
@@ -20,20 +20,13 @@ interface TbodyProps<T> extends TableProps<T> {
   onBodyRender: (cells: HTMLElement[]) => void;
 }
 
-function Tbody<
-  T extends {
-    children?: T[];
-    // rowKey: number | string;
-    // parentKey?: number | string;
-    // treeLevel: number;
-  },
->(props: TbodyProps<T>) {
+function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
   const {
     dataSource = [],
     originDataSource,
     columns,
     // startRowIndex,
-    rowKey,
+    rowKey = 'key',
     treeLevelMap,
     treeExpandKeys,
     selectedKeys,
@@ -47,32 +40,12 @@ function Tbody<
   } = props;
 
   const tbodyRef = useRef<any>(null);
-  // const cacheSelectedRows = useRef<T[]>([]);
-
-  // const getTreeChildrenKeys = (parent: T) => {
-  //   const keys: (string | number)[] = [];
-  //   const data = parent?.children;
-  //   if (data && data.length && treeExpandKeys && treeExpandKeys.indexOf(parent.rowKey) >= 0) {
-  //     data.forEach((item) => {
-  //       keys.push(item.rowKey);
-  //       const treeKeys = getTreeChildrenKeys(item);
-  //       keys.push(...treeKeys);
-  //     });
-  //   }
-  //   return keys;
-  // };
 
   const getAllExpandKeys = (data: T[]) => {
     const keys: (string | number)[] = [];
-    data.forEach((d, i) => {
-      const key = getRowKey(rowKey, d, i);
+    data.forEach((d) => {
+      const key = getRowKey(rowKey, d) as string;
       keys.push(key);
-      // if (d?.children && d.children.length) {
-      //   const treeChildrenData = getTreeChildrenKeys(d);
-      //   if (treeChildrenData.length) {
-      //     keys.push(...treeChildrenData);
-      //   }
-      // }
     });
     return keys;
   };
@@ -86,159 +59,89 @@ function Tbody<
     }
     return expandable?.expandedRowKeys || expandable?.defaultExpandedRowKeys || [];
   });
-  // todo
-  const getChildrenKeys = (data: T[] = [], parentIndex: number, all = true) => {
+
+  const getChildrenKeys = (data: T[] = [], all = true) => {
     const keys: (number | string)[] = [];
     data.map((c, i) => {
-      const key = getRowKey(rowKey, c, parentIndex + i);
+      const key = getRowKey(rowKey, c) as string;
       keys.push(key);
-      // keys.push(c.rowKey);
       if (c?.children && c.children.length && all) {
-        keys.push(...getChildrenKeys(c.children, parentIndex + i + 1));
+        keys.push(...getChildrenKeys(c.children));
       }
     });
     return keys;
   };
 
-  // const findParentByKey = (data: T[] = [], key: string | number) => {
-  //   let item: undefined | T;
+  // const findParentByKey = (
+  //   data: T[] = [],
+  //   currKey: string | number,
+  //   level: number
+  // ) => {
+  //   const info: { parent: T; parentKey: number | string } = {} as { parent: T; parentKey: number | string; };
   //   for (let i = 0; i < data.length; i++) {
   //     const curr = data[i];
-  //     if (curr.rowKey === key) {
-  //       item = curr;
+  //     const key = getRowKey(rowKey, curr) as string;
+  //     if (key === currKey) {
+  //       if (level > 0) {
+  //         info.parent = curr;
+  //         info.parentKey = key;
+  //       }
   //       break;
   //     }
   //     if (curr?.children && curr.children.length) {
-  //       const res = findParentByKey(curr.children, key);
-  //       if (res) {
-  //         item = res;
+  //       const res = findParentByKey(curr.children, currKey, level + 1);
+  //       if (res.parent) {
+  //         info.parent = curr;
+  //         info.parentKey = key;
   //         break;
   //       }
   //     }
   //   }
-  //   return item;
+  //   return info;
   // };
-
-  // const getSelectParent = (
-  //   parentKey: string | number,
-  //   selectKeys: (string | number)[],
-  //   currSelectedKey: number | string,
-  // ) => {
-  //   const arr: T[] = [];
-  //   // const parent = findParentByKey(dataSource, parentKey);
-  //   const parent = findParentByKey(originDataSource, parentKey);
-  //   if (!parent) return arr;
-  //   const childKeys = getChildrenKeys(parent?.children, false);
-  //   const exist = childKeys.filter((cKey) => selectKeys.indexOf(cKey) >= 0);
-  //   if (exist.length + 1 === childKeys.length || (childKeys.length === 1 && !exist.length)) {
-  //     arr.push(parent);
-  //     if (parent?.parentKey) {
-  //       arr.push(
-  //         ...getSelectParent(parent.parentKey, [...selectKeys, currSelectedKey], parent.rowKey),
-  //       );
-  //     }
-  //   }
-  //   return arr;
-  // };
-
-  const findParentByKey = (
-    data: T[] = [],
-    currKey: string | number,
-    level: number,
-    startIndex: number = 0,
-  ) => {
-    // let item: undefined | T;
-    const info: { parentIndex: number; parent: T; parentKey: number | string } = {} as {
-      parentIndex: number;
-      parent: T;
-      parentKey: number | string;
-    };
-    for (let i = 0; i < data.length; i++) {
-      const curr = data[i];
-      const key = getRowKey(rowKey, curr, startIndex + i);
-      if (key === currKey) {
-        if (level > 0) {
-          // item = curr;
-          info.parent = curr;
-          info.parentKey = key;
-          info.parentIndex = startIndex + i;
-        }
-        break;
-      }
-      if (curr?.children && curr.children.length) {
-        const res = findParentByKey(curr.children, key, level + 1, startIndex + i + 1);
-        if (res.parent) {
-          info.parent = curr;
-          info.parentKey = key;
-          info.parentIndex = startIndex + i;
-          // item = res;
-          break;
-        }
-      }
-    }
-    return info;
-    // return item;
-  };
 
   const getSelectParent = (selectKeys: (string | number)[], currSelectedKey: number | string) => {
     const parentInfos: SelectedInfo<T>[] = [];
-    // const arr: { selectRow: T, selectRowKey: string | number }[] = [];
-    // const parent = findParentByKey(dataSource, parentKey);
-    // const parent = findParentByKey(originDataSource, currSelectedKey, 0);
-    const { parent, parentIndex, parentKey } = findParentByKey(
-      originDataSource,
-      currSelectedKey,
-      0,
-    );
+
+    // const { parent, parentKey } = findParentByKey(
+    //   originDataSource,
+    //   currSelectedKey,
+    //   0,
+    // );
+    const parent = findParentByKey(originDataSource, currSelectedKey, rowKey);
     if (!parent) return parentInfos;
-    // if (!(parent && (parentIndex || parentIndex === 0) && (parentKey || parentKey === 0))) return arr;
-    const childKeys = getChildrenKeys(parent?.children, parentIndex + 1, false);
+    const parentKey = getRowKey(rowKey, parent) as string;
+
+    const childKeys = getChildrenKeys(parent?.children, false);
     const exist = childKeys.filter((cKey) => selectKeys.indexOf(cKey) >= 0);
     if (exist.length + 1 === childKeys.length || (childKeys.length === 1 && !exist.length)) {
-      // arr.push(parent);
-      parentInfos.push({ record: parent, key: parentKey });
-      // arr.push({ selectRow: parent, selectRowKey: parentKey });
-      // if (parent?.parentKey) {
-      //   arr.push(
-      //     ...getSelectParent(parent.parentKey, [...selectKeys, currSelectedKey], parent.rowKey),
-      //   );
-      // }
+      // parentInfos.push({ record: parent, key: parentKey });
+      parentInfos.push({ [parentKey]: parent });
       parentInfos.push(...getSelectParent([...selectKeys, currSelectedKey], parentKey));
     }
     return parentInfos;
   };
 
-  const getSelectedItems = (
-    data: T[] = [],
-    startIndex: number = 0,
-    currSelectedKey?: number | string,
-  ) => {
-    // const arr: { selectRow: T, selectRowKey: string | number }[] = [];
+  const getSelectedItems = (data: T[] = [], currSelectedKey?: number | string) => {
     const selectItems: SelectedInfo<T>[] = [];
 
     for (let i = 0; i < data.length; i++) {
       const d = data[i];
-      // const key = d.rowKey;
-      const key = getRowKey(rowKey, d, startIndex + i);
+      const key = getRowKey(rowKey, d) as string;
       if (currSelectedKey !== undefined) {
         if (currSelectedKey === key) {
-          // arr.push(d);
-          // arr.push({ selectRow: d, selectRowKey: key });
-          selectItems.push({ record: d, key });
-          const selectedChildrenItems = getSelectedItems(d?.children, startIndex + i + 1);
+          // selectItems.push({ record: d, key });
+          selectItems.push({ [key]: d });
+          const selectedChildrenItems = getSelectedItems(d?.children);
           if (selectedChildrenItems.length) {
             selectItems.push(...selectedChildrenItems);
           }
           selectItems.push(...getSelectParent(selectedKeys, currSelectedKey));
-          // if (d?.parentKey) {
-          //   arr.push(...getSelectParent(d.parentKey, selectedKeys, currSelectedKey));
-          // }
         }
       } else {
-        // arr.push(d);
-        // arr.push({ selectRow: d, selectRowKey: key });
-        selectItems.push({ record: d, key });
-        const selectedChildrenItems = getSelectedItems(d?.children, startIndex + i + 1);
+        // selectItems.push({ record: d, key });
+        selectItems.push({ [key]: d });
+        const selectedChildrenItems = getSelectedItems(d?.children);
         if (selectedChildrenItems.length) {
           selectItems.push(...selectedChildrenItems);
         }
@@ -248,120 +151,88 @@ function Tbody<
     return selectItems;
   };
 
-  // todo 到这都需要优化  handleSelect 需要优化
   const handleSelect = (
     isRadio: boolean,
+    checked: boolean,
     record: T,
     rowIndex: number,
     selected: boolean,
     event: Event,
   ) => {
-    const key = getRowKey(rowKey, record, rowIndex);
-    // const key = record.rowKey;
-    const isExist = selectedKeys.indexOf(key) >= 0;
+    const key = getRowKey(rowKey, record) as string;
 
     let keys: (string | number)[] = [];
     let selectedRows: T[] = [];
     let selectedInfoMaps: SelectedInfo<T>[] = [];
 
-    if (!isExist) {
-      const selectedItems = getSelectedItems(dataSource, rowIndex, key);
-
-      // const selectedItemKeys = selectedItems.map((s) => {
-      //   return s.rowKey;
-      // });
-      const selectedItemKeys: (string | number)[] = [];
-      const selectedItemRows: T[] = [];
-
-      selectedInfoMaps = [...selectedInfos, ...selectedItems];
-
-      selectedInfoMaps.map((s) => {
-        selectedItemKeys.push(s.key);
-        selectedItemRows.push(s.record);
-      });
-
-      // selectedItems.map((s) => {
-      //   selectedItemKeys.push(s.selectRowKey);
-      //   selectedItemRows.push(s.selectRow);
-      //   // return s.selectRowKey;
-      // });
-      // selectedMaps.map((s) => {
-      //   selectedItemRows.unshift(s.record);
-      // });
-      selectedRows = isRadio ? [record] : selectedItemRows;
-      keys = isRadio ? [key] : selectedItemKeys;
-      // selectedRows = isRadio ? [record] : [...cacheSelectedRows.current, ...selectedItemRows];
-      // selectedRows = isRadio ? [record] : [...cacheSelectedRows.current, ...selectedItems];
-      // keys = isRadio ? [key] : [...selectedKeys, ...selectedItemKeys];
+    if (!checked) {
+      if (isRadio) {
+        keys = [key];
+        selectedRows = [record];
+      } else {
+        const selectedItems = getSelectedItems(dataSource, key);
+        console.log(selectedItems);
+        selectedInfoMaps = [...selectedInfos, ...selectedItems];
+        selectedInfoMaps.map((s) => {
+          const currKey = Object.keys(s)[0];
+          // keys.push(s.key);
+          keys.push(currKey);
+          selectedRows.push(s[currKey]);
+          // selectedRows.push(s.record);
+        });
+      }
     } else {
-      const childrenKeys = getChildrenKeys(record?.children, rowIndex + 1);
-      // keys = [record.rowKey, ...childrenKeys];
+      const childrenKeys = getChildrenKeys(record?.children);
       keys = [key, ...childrenKeys];
 
-      const parentInfo = findParentByKey(originDataSource, key, 0);
+      let parent = findParentByKey(originDataSource, key, rowKey);
 
-      let parentKey = parentInfo?.parentKey;
-      while (parentKey) {
+      // const parentInfo = findParentByKey(originDataSource, key, 0);
+
+      // let parentKey = parentInfo?.parentKey;
+      while (parent) {
+        const parentKey = getRowKey(rowKey, parent) as string;
         keys.push(parentKey);
-        const ancestorInfo = findParentByKey(originDataSource, parentKey, 0);
-        parentKey = ancestorInfo?.parentKey;
+        parent = findParentByKey(originDataSource, parentKey, rowKey);
       }
-
-      // let parentKey = record?.parentKey;
-      // while (parentKey) {
-      //   keys.push(parentKey);
-      //   const parent = findParentByKey(dataSource, parentKey);
-      //   parentKey = parent?.parentKey;
+      // if (parent) {
+      //   let parentKey = getRowKey(rowKey, parent) as string;
+      //   while (parentKey) {
+      //     keys.push(parentKey);
+      //     const ancestorInfo = findParentByKey(originDataSource, parentKey, rowKey);
+      //     parentKey = ancestorInfo?.parentKey;
+      //   }
       // }
 
       const selectedItemKeys: (string | number)[] = [];
       const selectedItemRows: T[] = [];
 
       selectedInfoMaps = selectedInfos.filter((s) => {
-        return keys.indexOf(s.key) < 0;
+        return keys.indexOf(Object.keys(s)[0]) < 0;
       });
       selectedInfoMaps.map((s) => {
-        selectedItemKeys.push(s.key);
-        selectedItemRows.push(s.record);
+        const currKey = Object.keys(s)[0];
+        keys.push(currKey);
+        selectedRows.push(s[currKey]);
+        // selectedItemKeys.push(s.key);
+        // selectedItemRows.push(s.record);
       });
 
       selectedRows = selectedItemRows;
       keys = selectedItemKeys;
-
-      // keys = selectedKeys.filter((p: string | number) => {
-      //   return keys.indexOf(p) < 0;
-      // });
-      // todo 怎么过滤 lodash isEqual
-      // selectedRows = cacheSelectedRows.current.filter((c: T) => {
-      //   return keys.indexOf(c.rowKey) >= 0;
-      // });
-      // selectedRows = selectedMaps.filter((s) => {
-      //   return keys.indexOf(s.key) >= 0;
-      // }).map((s) => s.record);
     }
-
-    // cacheSelectedRows.current = selectedRows;
-
-    // if (selectedRows && selectedRows.length) {
-    //   selectedRows = omitRowsProps(selectedRows);
-    // }
-
     if (typeof rowSelection?.onSelect === 'function') {
       rowSelection.onSelect(record, selected, selectedRows, event);
-      // rowSelection.onSelect(omitRowsProps(record)[0], selected, selectedRows, event);
     }
 
     if (typeof rowSelection?.onChange === 'function') {
       rowSelection?.onChange(keys, selectedRows);
     }
 
-    // onSelect(keys);
     onSelect(keys, selectedInfoMaps);
   };
 
   const handleExpand = (expanded: boolean, record: T, recordKey: number | string) => {
-    // const key = record.rowKey;
-    // const key = getRowKey(rowKey, record, rowIndex);
     if (!expandable?.expandedRowKeys) {
       setExpandedRowKeys((prev) => {
         const isExist = prev.indexOf(recordKey) >= 0;
@@ -374,7 +245,6 @@ function Tbody<
   };
 
   const handleTreeExpand = (treeExpanded: boolean, record: T, recordKey: number | string) => {
-    // const key = getRowKey(rowKey, record, rowIndex);
     onTreeExpand(treeExpanded, record, recordKey);
   };
 
@@ -405,7 +275,6 @@ function Tbody<
     checked: boolean | 'indeterminate',
     rowIndex: number,
   ) => {
-    // const record = omitRowsProps(rowData)[0];
     const checkboxProps =
       typeof rowSelection?.getCheckboxProps === 'function'
         ? rowSelection.getCheckboxProps(rowData)
@@ -416,7 +285,7 @@ function Tbody<
         {...checkboxProps}
         checked={checked}
         onChange={(selected: boolean, event: Event) => {
-          handleSelect(isRadio, rowData, rowIndex, selected, event);
+          handleSelect(isRadio, !!checked, rowData, rowIndex, selected, event);
         }}
       />
     ) : (
@@ -424,7 +293,7 @@ function Tbody<
         {...checkboxProps}
         checked={checked}
         onChange={(selected: boolean, event: Event) => {
-          handleSelect(isRadio, rowData, rowIndex, selected, event);
+          handleSelect(isRadio, !!checked, rowData, rowIndex, selected, event);
         }}
       />
     );
@@ -479,12 +348,11 @@ function Tbody<
     checked: boolean | 'indeterminate',
     expanded: boolean,
   ) => {
-    // const treeLevel = rowData.treeLevel;
     const treeLevel = treeLevelMap[recordKey];
     const treeExpanded = treeExpandKeys.indexOf(recordKey) >= 0;
     const treeIndent = treeProps?.indentSize || 15;
     const hasChildren = rowData?.children && rowData.children.length > 0;
-    // const record = omitRowsProps(rowData)[0];
+
     const startIndex = columns.findIndex((c) => !c.type);
 
     return columns.map((column, index: number) => {
@@ -568,19 +436,16 @@ function Tbody<
       }
     });
   };
-
+  // todo 判断是否选中的方法中如果只选中了最底层的 就会出现上层没有勾选
   const renderTr = (rowData: T, i: number) => {
-    // const key = rowData.rowKey;
-    const key = getRowKey(rowKey, rowData, i);
+    const key = getRowKey(rowKey, rowData) as string;
     let checked: boolean | 'indeterminate' = false;
-    // const record = omitRowsProps(rowData)[0];
-
     const hasChildren = rowData?.children && rowData.children.length;
 
     if (rowSelection?.type === 'radio' || !hasChildren) {
       checked = selectedKeys.indexOf(key) >= 0;
     } else {
-      const childrenKeys = getChildrenKeys(rowData?.children, i + 1);
+      const childrenKeys = getChildrenKeys(rowData?.children, false);
       const allChildrenSelected = childrenKeys.every((cKey) => {
         return selectedKeys.indexOf(cKey) >= 0;
       });

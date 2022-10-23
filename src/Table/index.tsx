@@ -14,9 +14,11 @@ import type {
   ColumnsGroupWithType,
   SelectedInfo,
   TreeLevelType,
+  LevelRecordType,
+  RowKeyType,
 } from '../interface';
 import '../style/index.less';
-import { getRowKey, toPoint } from '../utils/util';
+import { getRowKey, toPoint, findParentByKey } from '../utils/util';
 // import styles from './index.less';
 
 export interface TableProps<T> {
@@ -31,7 +33,7 @@ export interface TableProps<T> {
   /** 表格列的配置 */
   columns: ColumnsType<T>[] | ColumnsGroupType<T>[];
   /** 表格行 key 默认取值key */
-  rowKey: string | ((row: T) => string | number);
+  rowKey: RowKeyType<T>;
   /** 是否显示交错斑马底纹 */
   striped?: boolean;
   /** 是否展示外边框和列边框 */
@@ -102,108 +104,166 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
 
   const tbodyTableRef = useRef<any>(null);
+  const maxTreeLevel = useRef<number>(0);
   const treeLevelRef = useRef<TreeLevelType>({} as TreeLevelType);
+  const levelRecord = useRef<LevelRecordType<T>>({} as LevelRecordType<T>);
 
   const [colWidths, setColWidths] = useState<number[]>([]);
 
-  // todo 待测试 selectInfoMaps
+  // const findParentByKey = (
+  //   data: T[] = [],
+  //   currKey: string | number,
+  //   parent?: T
+  // ): T | undefined => {
+  //   for (let i = 0; i < data.length; i++) {
+  //     const curr = data[i];
+  //     const key = getRowKey(rowKey, curr) as string;
+  //     if (key === currKey) return parent;
+  //     if (curr?.children && curr.children.length) {
+  //       const res = findParentByKey(curr.children, currKey, curr);
+  //       if (res) return res;
+  //     }
+  //     return undefined;
+  //   }
+  // };
+
+  const fillMissSelectedKeys = useCallback(() => {
+    const checkedInfos: SelectedInfo<T> = {} as SelectedInfo<T>;
+    // let checkedInfos: SelectedInfo<T>;
+    const checkedKeys = new Set<number | string>(initSelectedKeys);
+
+    // from top to bottom
+    for (let i = 0; i <= maxTreeLevel.current; i++) {
+      const records = levelRecord.current[i];
+      records.forEach((r) => {
+        const key = getRowKey(rowKey, r) as string;
+        if (checkedKeys.has(key)) {
+          if (!checkedInfos[key]) {
+            checkedInfos[key] = r;
+          }
+          (r?.children || []).forEach((c) => {
+            const key = getRowKey(rowKey, c) as string;
+            checkedKeys.add(key);
+            checkedInfos[key] = c;
+          });
+        }
+      });
+    }
+
+    // from bottom to top
+    const existKeys = new Set<number | string>();
+    for (let i = maxTreeLevel.current; i >= 0; i--) {
+      const records = levelRecord.current[i];
+
+      records.forEach((r) => {
+        const key = getRowKey(rowKey, r) as string;
+        const parent = findParentByKey<T>(dataSource, key, rowKey);
+        if (!parent) return;
+
+        const parentKey = getRowKey(rowKey, parent) as string;
+
+        if (existKeys.has(parentKey)) return;
+
+        let allChecked = true;
+        (parent.children || []).forEach((c) => {
+          const key = getRowKey(rowKey, c) as string;
+          // if (!checkedInfos[key]) {
+          //   checkedInfos[key] = c;
+          // }
+          if (allChecked && !checkedKeys.has(key)) {
+            allChecked = false;
+          }
+          if (allChecked) {
+            checkedKeys.add(parentKey);
+            if (!checkedInfos[parentKey]) {
+              checkedInfos[parentKey] = parent;
+            }
+          }
+          existKeys.add(parentKey);
+        });
+      });
+    }
+    return {
+      checkedInfos,
+      checkedKeys: Array.from(checkedKeys),
+    };
+  }, [initSelectedKeys, getRowKey]);
+
+  // todo 待测试 selectInfoMaps records 好像没有用
   const getInfosFromData = useCallback(
-    (data: T[], startIndex: number = 0, level: number = 0) => {
+    (data: T[], level: number = 0) => {
       const records: T[] = [];
       const keys: (string | number)[] = [];
-      const selectInfos: SelectedInfo<T>[] = [];
 
-      data.forEach((d, i) => {
-        const key = getRowKey(rowKey, d, startIndex + i);
+      maxTreeLevel.current = level;
+
+      data.forEach((d) => {
+        const key = getRowKey(rowKey, d) as string;
         keys.push(key);
         records.push(d);
         treeLevelRef.current[key] = level;
-        if (initSelectedKeys.indexOf(key) >= 0) {
-          selectInfos.push({ key, record: d });
+        if (!Array.isArray(levelRecord.current[level])) {
+          levelRecord.current[level] = [];
         }
+        levelRecord.current[level].push(d);
+        // if (initSelectedKeys.indexOf(key) >= 0) {
+        //   selectInfos.push({ key, record: d });
+        // }
         if (d?.children && d.children.length) {
-          const infos = getInfosFromData(d.children, startIndex + i + 1, level + 1);
-          startIndex = infos.records.length + i;
+          const infos = getInfosFromData(d.children, level + 1);
           records.push(...infos.records);
           keys.push(...infos.keys);
         }
       });
 
-      return { records, keys, selectInfos };
+      const { checkedKeys, checkedInfos } = fillMissSelectedKeys();
+
+      return { records, keys, checkedKeys, checkedInfos };
     },
-    [rowKey, getRowKey, initSelectedKeys],
+    [rowKey, getRowKey, initSelectedKeys, fillMissSelectedKeys],
   );
 
   const infosFromData = useMemo(() => {
     return getInfosFromData(dataSource);
   }, [dataSource, getInfosFromData]);
+  console.log(infosFromData);
 
   // const [startRowIndex, setStartRowIndex] = useState<number>(0);
 
   // todo 考虑选择了树形中的子项
   const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
-    return rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
+    // return rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
+    return infosFromData.checkedKeys;
   });
-
-  // const getSelectedMaps = (data: T[], startIndex: number = 0) => {
-  //   const selectMaps: SelectedMap<T>[] = [];
-  //   const keys: (number | string)[] = rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
-  //   data.forEach((d, i) => {
-  //     const key = getRowKey(rowKey, d, startIndex + i);
-  //     if (keys.indexOf(key) >= 0) {
-  //       selectMaps.push({ key, record: d });
-  //       if (d?.children && d.children.length) {
-  //         const res = getSelectedMaps(d.children, startIndex + i + 1);
-  //         startIndex = res.length + i;
-  //         selectMaps.push(...selectMaps);
-  //       }
-  //     }
-  //   });
-  //   return selectMaps;
-  // };
+  console.log(selectedKeys);
 
   const [selectedInfos, setSelectedInfos] = useState<SelectedInfo<T>[]>(() => {
-    return infosFromData.selectInfos;
+    if (initSelectedKeys.length) {
+      return [infosFromData.checkedInfos];
+    }
+    return [];
   });
-  // console.log(selectedInfos);
 
-  // 优化过
-  // const getAllTreeKeys = (data: T[], startIndex: number = 0) => {
-  //   const keys: (string | number)[] = [];
-  //   data.forEach((d, i) => {
-  //     const key = getRowKey(rowKey, d, startIndex + i);
-  //     keys.push(key);
-  //     if (d?.children && d.children.length) {
-  //       const treeKeys = getAllTreeKeys(d.children, startIndex + i + 1);
-  //       startIndex = treeKeys.length + i;
-  //       keys.push(...treeKeys);
-  //     }
-  //   });
-  //   return keys;
-  // };
-
-  // 优化过
   const [treeExpandKeys, setTreeExpandKeys] = useState<(string | number)[]>(() => {
     if (
       treeProps?.defaultExpandAllRows &&
       !(treeProps?.defaultExpandedRowKeys || treeProps?.expandedRowKeys)
     ) {
       return infosFromData.keys;
-      // return getAllTreeKeys(dataSource);
     }
     return treeProps?.expandedRowKeys || treeProps?.defaultExpandedRowKeys || [];
   });
 
-  // todo 优化过 待测试 rowKey 为undefined 情况
+  // todo 待测试 rowKey 为undefined 情况
   const getTreeChildrenData = useCallback(
-    (parent: T, parentIndex: number) => {
+    (parent: T) => {
       const records: T[] = [];
       const data = parent?.children;
-      const parentKey = getRowKey(rowKey, parent, parentIndex);
+      const parentKey = getRowKey(rowKey, parent) as string;
       if (data && data.length && treeExpandKeys && treeExpandKeys.indexOf(parentKey) >= 0) {
-        data.forEach((item, i) => {
+        data.forEach((item) => {
           records.push(item);
-          const childrenRecords = getTreeChildrenData(item, parentIndex + 1 + i);
+          const childrenRecords = getTreeChildrenData(item);
           records.push(...childrenRecords);
         });
       }
@@ -212,14 +272,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     [rowKey, getRowKey, treeExpandKeys],
   );
 
-  // 优化过
   const list = useMemo(() => {
     const records: T[] = [];
-    const startIndex: number = 0;
 
-    dataSource.forEach((d, i) => {
+    dataSource.forEach((d) => {
       records.push(d);
-      const childrenRecords = getTreeChildrenData(d, startIndex + i);
+      const childrenRecords = getTreeChildrenData(d);
       records.push(...childrenRecords);
     });
 
@@ -340,15 +398,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     },
     [converToPixel, flatColumns],
   );
-  // todo
+
   const handleSelect = (keys: (number | string)[], selectInfos: SelectedInfo<T>[]) => {
-    // console.log(keys);
-    // console.log(selectInfos);
     if (!rowSelection?.selectedRowKeys) {
       setSelectedKeys(keys);
     }
     setSelectedInfos(selectInfos);
-    // setSelectedMaps(selectedInfos);
   };
 
   const handleSelectAll = (selected: boolean) => {
@@ -380,6 +435,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   };
 
+  // todo 待测试如果是延迟更改了选项值 是否需要填充 是否不用在手动勾选时候手动添加 能不能直接用fillMiss 这个函数
   useEffect(() => {
     if (rowSelection?.selectedRowKeys) {
       setSelectedKeys(rowSelection.selectedRowKeys);
@@ -391,12 +447,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       setTreeExpandKeys(treeProps.expandedRowKeys);
     }
   }, [treeProps]);
-  // console.log(selectedKeys);
-  // console.log(list);
+
   // todo list bug 数据不全
   const checked = useMemo(() => {
-    const res = list.every((l, i) => {
-      const key = getRowKey(rowKey, l, i);
+    const res = list.every((l) => {
+      const key = getRowKey(rowKey, l) as string;
       return selectedKeys.indexOf(key) >= 0;
     });
     return res ? true : selectedKeys.length ? 'indeterminate' : false;
