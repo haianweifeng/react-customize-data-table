@@ -44,7 +44,8 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
   const getAllExpandKeys = (data: T[]) => {
     const keys: (string | number)[] = [];
     data.forEach((d) => {
-      const key = getRowKey(rowKey, d) as string;
+      const key = getRowKey(rowKey, d);
+      if (key === undefined) return;
       keys.push(key);
     });
     return keys;
@@ -63,7 +64,8 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
   const getChildrenKeys = (data: T[] = [], all = true) => {
     const keys: (number | string)[] = [];
     data.map((c, i) => {
-      const key = getRowKey(rowKey, c) as string;
+      const key = getRowKey(rowKey, c);
+      if (key === undefined) return;
       keys.push(key);
       if (c?.children && c.children.length && all) {
         keys.push(...getChildrenKeys(c.children));
@@ -110,7 +112,8 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     // );
     const parent = findParentByKey(originDataSource, currSelectedKey, rowKey);
     if (!parent) return parentInfos;
-    const parentKey = getRowKey(rowKey, parent) as string;
+    const parentKey = getRowKey(rowKey, parent);
+    if (parentKey === undefined) return parentInfos;
 
     const childKeys = getChildrenKeys(parent?.children, false);
     const exist = childKeys.filter((cKey) => selectKeys.indexOf(cKey) >= 0);
@@ -127,7 +130,8 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
 
     for (let i = 0; i < data.length; i++) {
       const d = data[i];
-      const key = getRowKey(rowKey, d) as string;
+      const key = getRowKey(rowKey, d);
+      if (key === undefined) return selectItems;
       if (currSelectedKey !== undefined) {
         if (currSelectedKey === key) {
           // selectItems.push({ record: d, key });
@@ -159,7 +163,9 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     selected: boolean,
     event: Event,
   ) => {
-    const key = getRowKey(rowKey, record) as string;
+    const key = getRowKey(rowKey, record);
+    // todo 这里即使找不到key 但是也要触发onChange 待确定
+    if (key === undefined) return;
 
     let keys: (string | number)[] = [];
     let selectedRows: T[] = [];
@@ -171,15 +177,20 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
         selectedRows = [record];
       } else {
         const selectedItems = getSelectedItems(dataSource, key);
-        console.log(selectedItems);
+        // console.log(selectedItems);
         selectedInfoMaps = [...selectedInfos, ...selectedItems];
+        // todo 类型错误
         selectedInfoMaps.map((s) => {
-          const currKey = Object.keys(s)[0];
-          // keys.push(s.key);
-          keys.push(currKey);
-          selectedRows.push(s[currKey]);
-          // selectedRows.push(s.record);
+          for (let prop in s) {
+            // console.log(typeof prop);
+            keys.push(Number(prop));
+            selectedRows.push(s[prop]);
+          }
+          // const currKey = Object.keys(s)[0];
+          // keys.push(currKey);
+          // selectedRows.push(s[currKey]);
         });
+        console.log(keys);
       }
     } else {
       const childrenKeys = getChildrenKeys(record?.children);
@@ -191,7 +202,8 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
 
       // let parentKey = parentInfo?.parentKey;
       while (parent) {
-        const parentKey = getRowKey(rowKey, parent) as string;
+        const parentKey = getRowKey(rowKey, parent);
+        if (parentKey === undefined) return;
         keys.push(parentKey);
         parent = findParentByKey(originDataSource, parentKey, rowKey);
       }
@@ -232,8 +244,8 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     onSelect(keys, selectedInfoMaps);
   };
 
-  const handleExpand = (expanded: boolean, record: T, recordKey: number | string) => {
-    if (!expandable?.expandedRowKeys) {
+  const handleExpand = (expanded: boolean, record: T, recordKey?: number | string) => {
+    if (!expandable?.expandedRowKeys && recordKey !== undefined) {
       setExpandedRowKeys((prev) => {
         const isExist = prev.indexOf(recordKey) >= 0;
         return isExist ? prev.filter((p) => p !== recordKey) : [...prev, recordKey];
@@ -244,8 +256,10 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     }
   };
 
-  const handleTreeExpand = (treeExpanded: boolean, record: T, recordKey: number | string) => {
-    onTreeExpand(treeExpanded, record, recordKey);
+  const handleTreeExpand = (treeExpanded: boolean, record: T, recordKey?: number | string) => {
+    if (recordKey !== undefined) {
+      onTreeExpand(treeExpanded, record, recordKey);
+    }
   };
 
   useEffect(() => {
@@ -310,7 +324,7 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     };
   };
 
-  const renderExpandColumn = (rowData: T, recordKey: number | string, expanded: boolean) => {
+  const renderExpandColumn = (rowData: T, expanded: boolean, recordKey?: number | string) => {
     let ableExpand = true;
 
     if (expandable?.rowExpandable && !expandable?.rowExpandable(rowData)) {
@@ -343,13 +357,13 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
 
   const getColumns = (
     rowData: T,
-    recordKey: number | string,
     rowIndex: number,
     checked: boolean | 'indeterminate',
     expanded: boolean,
+    recordKey?: number | string,
   ) => {
-    const treeLevel = treeLevelMap[recordKey];
-    const treeExpanded = treeExpandKeys.indexOf(recordKey) >= 0;
+    const treeLevel = treeLevelMap[recordKey as string] || 0;
+    const treeExpanded = recordKey !== undefined && treeExpandKeys.indexOf(recordKey) >= 0;
     const treeIndent = treeProps?.indentSize || 15;
     const hasChildren = rowData?.children && rowData.children.length > 0;
 
@@ -363,7 +377,7 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
         case 'radio':
           return renderSelectionColumn(type, rowData, checked, rowIndex);
         case 'expanded':
-          return renderExpandColumn(rowData, recordKey, expanded);
+          return renderExpandColumn(rowData, expanded, recordKey);
         default: {
           const cell: CellProps = {
             type,
@@ -438,28 +452,30 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
   };
   // todo 判断是否选中的方法中如果只选中了最底层的 就会出现上层没有勾选
   const renderTr = (rowData: T, i: number) => {
-    const key = getRowKey(rowKey, rowData) as string;
+    const key = getRowKey(rowKey, rowData);
     let checked: boolean | 'indeterminate' = false;
     const hasChildren = rowData?.children && rowData.children.length;
 
-    if (rowSelection?.type === 'radio' || !hasChildren) {
-      checked = selectedKeys.indexOf(key) >= 0;
-    } else {
-      const childrenKeys = getChildrenKeys(rowData?.children, false);
-      const allChildrenSelected = childrenKeys.every((cKey) => {
-        return selectedKeys.indexOf(cKey) >= 0;
-      });
-      const childrenSelected = childrenKeys.some((cKey) => {
-        return selectedKeys.indexOf(cKey) >= 0;
-      });
-      if (childrenKeys.length) {
-        checked = allChildrenSelected ? true : childrenSelected ? 'indeterminate' : false;
+    if (key !== undefined) {
+      if (rowSelection?.type === 'radio' || !hasChildren) {
+        checked = selectedKeys.indexOf(key) >= 0;
+      } else {
+        const childrenKeys = getChildrenKeys(rowData?.children, false);
+        const allChildrenSelected = childrenKeys.every((cKey) => {
+          return selectedKeys.indexOf(cKey) >= 0;
+        });
+        const childrenSelected = childrenKeys.some((cKey) => {
+          return selectedKeys.indexOf(cKey) >= 0;
+        });
+        if (childrenKeys.length) {
+          checked = allChildrenSelected ? true : childrenSelected ? 'indeterminate' : false;
+        }
       }
     }
 
-    const expanded = expandedRowKeys.indexOf(key) >= 0;
+    const expanded = key !== undefined && expandedRowKeys.indexOf(key) >= 0;
 
-    const cols = getColumns(rowData, key, i, checked, expanded);
+    const cols = getColumns(rowData, i, checked, expanded, key);
 
     return (
       <Tr

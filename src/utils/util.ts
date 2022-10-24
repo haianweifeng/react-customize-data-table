@@ -36,7 +36,7 @@ export function findParentByKey<T extends { key?: number | string; children?: T[
 ): T | undefined {
   for (let i = 0; i < data.length; i++) {
     const curr = data[i];
-    const key = getRowKey(rowKey, curr) as string;
+    const key = getRowKey(rowKey, curr);
     if (key === currKey) return parent;
     if (curr?.children && curr.children.length) {
       const res = findParentByKey(curr.children, currKey, rowKey, curr);

@@ -110,39 +110,23 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const [colWidths, setColWidths] = useState<number[]>([]);
 
-  // const findParentByKey = (
-  //   data: T[] = [],
-  //   currKey: string | number,
-  //   parent?: T
-  // ): T | undefined => {
-  //   for (let i = 0; i < data.length; i++) {
-  //     const curr = data[i];
-  //     const key = getRowKey(rowKey, curr) as string;
-  //     if (key === currKey) return parent;
-  //     if (curr?.children && curr.children.length) {
-  //       const res = findParentByKey(curr.children, currKey, curr);
-  //       if (res) return res;
-  //     }
-  //     return undefined;
-  //   }
-  // };
-
   const fillMissSelectedKeys = useCallback(() => {
     const checkedInfos: SelectedInfo<T> = {} as SelectedInfo<T>;
-    // let checkedInfos: SelectedInfo<T>;
     const checkedKeys = new Set<number | string>(initSelectedKeys);
 
     // from top to bottom
     for (let i = 0; i <= maxTreeLevel.current; i++) {
       const records = levelRecord.current[i];
       records.forEach((r) => {
-        const key = getRowKey(rowKey, r) as string;
+        const key = getRowKey(rowKey, r);
+        if (key === undefined) return;
         if (checkedKeys.has(key)) {
           if (!checkedInfos[key]) {
             checkedInfos[key] = r;
           }
           (r?.children || []).forEach((c) => {
-            const key = getRowKey(rowKey, c) as string;
+            const key = getRowKey(rowKey, c);
+            if (key === undefined) return;
             checkedKeys.add(key);
             checkedInfos[key] = c;
           });
@@ -156,20 +140,18 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       const records = levelRecord.current[i];
 
       records.forEach((r) => {
-        const key = getRowKey(rowKey, r) as string;
+        const key = getRowKey(rowKey, r);
+        if (key === undefined) return;
         const parent = findParentByKey<T>(dataSource, key, rowKey);
         if (!parent) return;
-
-        const parentKey = getRowKey(rowKey, parent) as string;
-
+        const parentKey = getRowKey(rowKey, parent);
+        if (parentKey === undefined) return;
         if (existKeys.has(parentKey)) return;
 
         let allChecked = true;
         (parent.children || []).forEach((c) => {
-          const key = getRowKey(rowKey, c) as string;
-          // if (!checkedInfos[key]) {
-          //   checkedInfos[key] = c;
-          // }
+          const key = getRowKey(rowKey, c);
+          if (key === undefined) return;
           if (allChecked && !checkedKeys.has(key)) {
             allChecked = false;
           }
@@ -198,17 +180,16 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       maxTreeLevel.current = level;
 
       data.forEach((d) => {
-        const key = getRowKey(rowKey, d) as string;
-        keys.push(key);
+        const key = getRowKey(rowKey, d);
+        if (key !== undefined) {
+          keys.push(key);
+          treeLevelRef.current[key] = level;
+        }
         records.push(d);
-        treeLevelRef.current[key] = level;
         if (!Array.isArray(levelRecord.current[level])) {
           levelRecord.current[level] = [];
         }
         levelRecord.current[level].push(d);
-        // if (initSelectedKeys.indexOf(key) >= 0) {
-        //   selectInfos.push({ key, record: d });
-        // }
         if (d?.children && d.children.length) {
           const infos = getInfosFromData(d.children, level + 1);
           records.push(...infos.records);
@@ -226,7 +207,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const infosFromData = useMemo(() => {
     return getInfosFromData(dataSource);
   }, [dataSource, getInfosFromData]);
-  console.log(infosFromData);
+  // console.log(infosFromData);
 
   // const [startRowIndex, setStartRowIndex] = useState<number>(0);
 
@@ -259,8 +240,14 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     (parent: T) => {
       const records: T[] = [];
       const data = parent?.children;
-      const parentKey = getRowKey(rowKey, parent) as string;
-      if (data && data.length && treeExpandKeys && treeExpandKeys.indexOf(parentKey) >= 0) {
+      const parentKey = getRowKey(rowKey, parent);
+      if (
+        parentKey !== undefined &&
+        data &&
+        data.length &&
+        treeExpandKeys &&
+        treeExpandKeys.indexOf(parentKey) >= 0
+      ) {
         data.forEach((item) => {
           records.push(item);
           const childrenRecords = getTreeChildrenData(item);
@@ -400,6 +387,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   );
 
   const handleSelect = (keys: (number | string)[], selectInfos: SelectedInfo<T>[]) => {
+    console.log(keys);
     if (!rowSelection?.selectedRowKeys) {
       setSelectedKeys(keys);
     }
