@@ -103,7 +103,7 @@ const data: DataType[] = [
 ];
 
 const App = () => {
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([11, 1311, 1312, 121]);
   const [expandedRowKeys, setExpandedRowKeys] = useState<number[]>([]);
 
   const rowSelection = {
@@ -121,6 +121,15 @@ const App = () => {
         selectedRows,
         'nativeEvent:',
         nativeEvent,
+      );
+    },
+    onSelectAll: (selected, selectedRows, changeRows) => {
+      console.log(
+        `selected: ${selected}`,
+        'selectedRows: ',
+        selectedRows,
+        'changeRows: ',
+        changeRows,
       );
     },
     getCheckboxProps: (record) => ({

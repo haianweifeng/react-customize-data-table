@@ -189,6 +189,11 @@ export interface SelectedInfo<T> {
   [key: number | string]: T;
 }
 
+export interface SelectedRowWithKey<T> {
+  key: number | string;
+  record: T;
+}
+
 export interface LevelRecordType<T> {
   [level: number]: T[];
 }

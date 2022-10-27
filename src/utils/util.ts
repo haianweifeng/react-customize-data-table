@@ -42,7 +42,6 @@ export function findParentByKey<T extends { key?: number | string; children?: T[
       const res = findParentByKey(curr.children, currKey, rowKey, curr);
       if (res) return res;
     }
-    return undefined;
   }
 }
 
