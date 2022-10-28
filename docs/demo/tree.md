@@ -103,7 +103,7 @@ const data: DataType[] = [
 ];
 
 const App = () => {
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([11, 1311, 1312, 121]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [expandedRowKeys, setExpandedRowKeys] = useState<number[]>([]);
 
   const rowSelection = {
@@ -133,7 +133,7 @@ const App = () => {
       );
     },
     getCheckboxProps: (record) => ({
-      disabled: record.name === 'Jim Green jr', // Column configuration not to be checked
+      disabled: record.name === 'Jim Green jr.', // Column configuration not to be checked
       name: record.name,
     }),
   };

@@ -185,14 +185,14 @@ export interface ScrollType {
 //   record: T;
 // }
 
-export interface SelectedInfo<T> {
+export interface SelectedRowWithKey<T> {
   [key: number | string]: T;
 }
 
-export interface SelectedRowWithKey<T> {
-  key: number | string;
-  record: T;
-}
+// export interface SelectedRowWithKey<T> {
+//   key: number | string;
+//   record: T;
+// }
 
 export interface LevelRecordType<T> {
   [level: number]: T[];
@@ -206,4 +206,4 @@ export type RowKeyType<T> = string | ((row: T) => string | number);
 
 // export type TreeLevelType = Record<string | number, number>;
 
-export type KeysRefType = Record<string, boolean>;
+// export type KeysRefType = Record<string, boolean>;

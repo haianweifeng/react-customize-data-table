@@ -12,7 +12,8 @@ import type {
   ScrollType,
   ColumnsWithType,
   ColumnsGroupWithType,
-  SelectedInfo,
+  SelectedRowWithKey,
+  // SelectedInfo,
   TreeLevelType,
   LevelRecordType,
   RowKeyType,
@@ -102,28 +103,28 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const tbodyTableRef = useRef<any>(null);
   const maxTreeLevel = useRef<number>(0);
-  const treeLevelRef = useRef<TreeLevelType>({} as TreeLevelType);
+  const treeLevel = useRef<TreeLevelType>({} as TreeLevelType);
   const levelRecord = useRef<LevelRecordType<T>>({} as LevelRecordType<T>);
 
   const isRadio = rowSelection?.type === 'radio';
 
   const [colWidths, setColWidths] = useState<number[]>([]);
-
-  const removerUselessKeys = useCallback(
+  // todo bug 最上层的取消勾选
+  const removeUselessKeys = useCallback(
     (keys: (string | number)[], halfSelectKeys: (string | number)[]) => {
-      const checkedInfos: SelectedInfo<T> = {} as SelectedInfo<T>;
+      const checkedRowWidthKey: SelectedRowWithKey<T> = {} as SelectedRowWithKey<T>;
       const checkedKeys = new Set<number | string>(keys);
       let halfCheckedKeys = new Set<number | string>(halfSelectKeys);
 
       if (isRadio) {
         return {
-          checkedInfos,
+          checkedRowWidthKey,
           checkedKeys: Array.from(checkedKeys),
           halfCheckedKeys: Array.from(halfCheckedKeys),
         };
       }
 
-      // from top to bottom  一般用于删除最顶层 [11, 1312, 12]  halfCheckedKeys: [131, 1, 13]
+      // from top to bottom
       for (let i = 0; i <= maxTreeLevel.current; i++) {
         const records = levelRecord.current[i];
         records.forEach((r) => {
@@ -135,6 +136,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
               const key = getRowKey(rowKey, c);
               if (key === undefined) return;
               checkedKeys.delete(key);
+              halfCheckedKeys.delete(key);
             });
           }
         });
@@ -148,8 +150,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         records.forEach((r) => {
           const key = getRowKey(rowKey, r);
           if (key === undefined) return;
+
           if (checkedKeys.has(key)) {
-            checkedInfos[key] = r;
+            checkedRowWidthKey[key] = r;
           }
           const parent = findParentByKey<T>(dataSource, key, rowKey);
           if (!parent) return;
@@ -159,12 +162,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
           let allChecked = true;
           let isHalfChecked = false;
+
           (parent.children || []).forEach((c) => {
             const key = getRowKey(rowKey, c);
             if (key === undefined) return;
-            // if (checkedKeys.has(key)) {
-            //   checkedInfos[key] = c;
-            // }
+
             if ((checkedKeys.has(key) || halfCheckedKeys.has(key)) && !isHalfChecked) {
               isHalfChecked = true;
             }
@@ -172,6 +174,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
               allChecked = false;
             }
           });
+
           if (!allChecked) {
             checkedKeys.delete(parentKey);
           }
@@ -183,26 +186,23 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       }
 
       return {
-        checkedInfos,
+        checkedRowWidthKey,
         checkedKeys: Array.from(checkedKeys),
         halfCheckedKeys: Array.from(halfCheckedKeys),
       };
     },
     [getRowKey, findParentByKey],
   );
-
+  // todo 待测试单选
   const fillMissSelectedKeys = useCallback(
     (keys: (string | number)[]) => {
-      // const initSelectedKeys: (number | string)[] =
-      //   rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
-      const checkedInfos: SelectedInfo<T> = {} as SelectedInfo<T>;
-      // const checkedKeys = new Set<number | string>(initSelectedKeys);
+      const checkedRowWidthKey: SelectedRowWithKey<T> = {} as SelectedRowWithKey<T>;
       const checkedKeys = new Set<number | string>(keys);
       const halfCheckedKeys = new Set<number | string>();
 
       if (isRadio) {
         return {
-          checkedInfos,
+          checkedRowWidthKey,
           checkedKeys: Array.from(checkedKeys),
           halfCheckedKeys: Array.from(halfCheckedKeys),
         };
@@ -215,24 +215,16 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           const key = getRowKey(rowKey, r);
           if (key === undefined) return;
           if (checkedKeys.has(key)) {
-            checkedInfos[key] = r;
-            // if (isRadio) return;
+            checkedRowWidthKey[key] = r;
             (r?.children || []).forEach((c) => {
               const key = getRowKey(rowKey, c);
               if (key === undefined) return;
               checkedKeys.add(key);
-              checkedInfos[key] = c;
+              checkedRowWidthKey[key] = c;
             });
           }
         });
       }
-      // todo 待测试单选
-      // if (isRadio) {
-      //   return {
-      //     checkedInfos,
-      //     checkedKeys: Array.from(checkedKeys),
-      //   };
-      // }
 
       // from bottom to top
       const existKeys = new Set<number | string>();
@@ -264,8 +256,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
           if (allChecked) {
             checkedKeys.add(parentKey);
-            if (!checkedInfos[parentKey]) {
-              checkedInfos[parentKey] = parent;
+            if (!checkedRowWidthKey[parentKey]) {
+              checkedRowWidthKey[parentKey] = parent;
             }
           }
           if (isHalfChecked) {
@@ -275,7 +267,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         });
       }
       return {
-        checkedInfos,
+        checkedRowWidthKey,
         checkedKeys: Array.from(checkedKeys),
         halfCheckedKeys: Array.from(halfCheckedKeys),
       };
@@ -283,8 +275,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     [getRowKey, findParentByKey],
   );
 
-  // todo 待测试 selectInfoMaps records 好像没有用
-  const getInfosFromData = useCallback(
+  const flatData = useCallback(
     (data: T[], level: number = 0) => {
       const records: T[] = [];
       const keys: (string | number)[] = [];
@@ -295,7 +286,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         const key = getRowKey(rowKey, d);
         if (key !== undefined) {
           keys.push(key);
-          treeLevelRef.current[key] = level;
+          treeLevel.current[key] = level;
         }
         records.push(d);
         if (!Array.isArray(levelRecord.current[level])) {
@@ -303,24 +294,20 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         }
         levelRecord.current[level].push(d);
         if (d?.children && d.children.length) {
-          const infos = getInfosFromData(d.children, level + 1);
+          const infos = flatData(d.children, level + 1);
           records.push(...infos.records);
           keys.push(...infos.keys);
         }
       });
 
-      // const { checkedKeys, checkedInfos } = fillMissSelectedKeys();
-
-      // return { records, keys, checkedKeys, checkedInfos };
       return { records, keys };
     },
     [rowKey, getRowKey],
   );
 
-  const infosFromData = useMemo(() => {
-    return getInfosFromData(dataSource);
-  }, [dataSource, getInfosFromData]);
-  // console.log(infosFromData);
+  const { records: allRecords, keys: allKeys } = useMemo(() => {
+    return flatData(dataSource);
+  }, [dataSource, flatData]);
 
   // const [startRowIndex, setStartRowIndex] = useState<number>(0);
 
@@ -332,11 +319,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       return fillMissSelectedKeys(initSelectedKeys).checkedKeys;
     }
     return initSelectedKeys;
-    // return infosFromData.checkedKeys;
   });
-  // console.log(selectedKeys);
-  // console.log('-----');
-  // todo 半选状态
+
   const [halfSelectedKeys, setHalfSelectedKeys] = useState(() => {
     const initSelectedKeys =
       rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
@@ -345,25 +329,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
     return initSelectedKeys;
   });
-  // console.log(halfSelectedKeys);
-
-  const [selectedInfos, setSelectedInfos] = useState<SelectedInfo<T>[]>(() => {
-    const initSelectedKeys =
-      rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
-    if (initSelectedKeys.length) {
-      const { checkedInfos } = fillMissSelectedKeys(initSelectedKeys);
-      return [checkedInfos];
-      // return [infosFromData.checkedInfos];
-    }
-    return [];
-  });
 
   const [treeExpandKeys, setTreeExpandKeys] = useState<(string | number)[]>(() => {
     if (
       treeProps?.defaultExpandAllRows &&
       !(treeProps?.defaultExpandedRowKeys || treeProps?.expandedRowKeys)
     ) {
-      return infosFromData.keys;
+      return allKeys;
     }
     return treeProps?.expandedRowKeys || treeProps?.defaultExpandedRowKeys || [];
   });
@@ -404,7 +376,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return records;
   }, [dataSource, getTreeChildrenData]);
 
-  // 优化过
+  // 是否可以把getFloatColumns 移到formatColumns
   const formatColumns = useMemo(() => {
     let insertIndex = 0;
     const cols = columns.map((column, index: number) => {
@@ -503,7 +475,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     },
     [converToPixel, flatColumns],
   );
-
+  // todo 待测试可控与不可控
   const handleSelect = (
     keys: (number | string)[],
     halfKeys: (number | string)[],
@@ -511,40 +483,25 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     selected: boolean,
     event: Event,
   ) => {
-    // console.log(keys);
-    // todo checkedInfo 结构更改
-
     let selectedRows: T[];
     let selectKeys: (number | string)[];
     if (selected) {
-      const { checkedKeys, checkedInfos, halfCheckedKeys } = fillMissSelectedKeys(keys);
+      const { checkedKeys, checkedRowWidthKey, halfCheckedKeys } = fillMissSelectedKeys(keys);
       selectKeys = isRadio ? keys : checkedKeys;
-      selectedRows = isRadio ? [record] : Object.values(checkedInfos);
+      selectedRows = isRadio ? [record] : Object.values(checkedRowWidthKey);
       setHalfSelectedKeys(halfCheckedKeys);
     } else {
-      const { checkedKeys, checkedInfos, halfCheckedKeys } = removerUselessKeys(keys, halfKeys);
+      const { checkedKeys, checkedRowWidthKey, halfCheckedKeys } = removeUselessKeys(
+        keys,
+        halfKeys,
+      );
       selectKeys = isRadio ? [] : checkedKeys;
-      selectedRows = isRadio ? [] : Object.values(checkedInfos);
-      // todo checkedInfos 有问题
-      // selectedRows = isRadio ? [] : Object.values(selectedInfos[0]).filter((s) => {
-      //   const key = getRowKey(rowKey, s) as string;
-      //   return keys.indexOf(key) >= 0;
-      // });
+      selectedRows = isRadio ? [] : Object.values(checkedRowWidthKey);
       setHalfSelectedKeys(halfCheckedKeys);
     }
     if (!rowSelection?.selectedRowKeys) {
-      // setSelectedKeys(keys);
       setSelectedKeys(selectKeys);
     }
-    // if (selected) {
-    //   setSelectedInfos([checkedInfos]);
-    // } else {
-    //   const filterInfos = selectedInfos.filter((s) => {
-    //     const key = getRowKey(rowKey, Object.values(s)[0]) as string;
-    //     return keys.indexOf(key) >= 0;
-    //   });
-    //   setSelectedInfos(filterInfos);
-    // }
 
     if (typeof rowSelection?.onSelect === 'function') {
       rowSelection.onSelect(record, selected, selectedRows, event);
@@ -559,11 +516,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     let selectedRows: T[];
     let selectKeys: (number | string)[];
     if (selected) {
-      const { checkedKeys, checkedInfos, halfCheckedKeys } = fillMissSelectedKeys(
-        infosFromData.keys,
-      );
+      const { checkedKeys, checkedRowWidthKey, halfCheckedKeys } = fillMissSelectedKeys(allKeys);
       selectKeys = checkedKeys;
-      selectedRows = Object.values(checkedInfos);
+      selectedRows = Object.values(checkedRowWidthKey);
       setHalfSelectedKeys(halfCheckedKeys);
     } else {
       selectKeys = [];
@@ -572,12 +527,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
 
     if (rowSelection?.onSelectAll) {
-      rowSelection.onSelectAll(selected, selectedRows, infosFromData.records);
+      rowSelection.onSelectAll(selected, selectedRows, allRecords);
     }
     if (rowSelection?.onChange) {
       rowSelection.onChange(selectKeys, selectedRows);
     }
-    //
+
     if (!rowSelection?.selectedRowKeys) {
       setSelectedKeys(selectKeys);
     }
@@ -599,14 +554,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // todo 缓存
   useEffect(() => {
     if (rowSelection?.selectedRowKeys) {
-      // todo 把selectedInfos 改成对象
-      const { checkedKeys, checkedInfos, halfCheckedKeys } = fillMissSelectedKeys(
-        rowSelection.selectedRowKeys,
-      );
-      // setSelectedKeys(rowSelection.selectedRowKeys);
+      const { checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(rowSelection.selectedRowKeys);
       setSelectedKeys(checkedKeys);
       setHalfSelectedKeys(halfCheckedKeys);
-      // setSelectedInfos([checkedInfos]);
     }
   }, [rowSelection]);
 
@@ -616,17 +566,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   }, [treeProps]);
 
-  // todo list bug 数据不全
   const checked = useMemo(() => {
     if (!selectedKeys.length) {
       return false;
     }
-    return selectedKeys.length === infosFromData.keys.length ? true : 'indeterminate';
-    // const res = list.every((l) => {
-    //   const key = getRowKey(rowKey, l) as string;
-    //   return selectedKeys.indexOf(key) >= 0;
-    // });
-    // return res ? true : selectedKeys.length ? 'indeterminate' : false;
+    return selectedKeys.length === allKeys.length ? true : 'indeterminate';
   }, [selectedKeys]);
 
   const renderBody = () => {
@@ -639,13 +583,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             // startRowIndex={startRowIndex}
             startRowIndex={0}
             dataSource={list}
-            originDataSource={dataSource}
             columns={flatColumns}
-            treeLevelMap={treeLevelRef.current}
+            treeLevelMap={treeLevel.current}
             treeExpandKeys={treeExpandKeys}
             selectedKeys={selectedKeys}
             halfSelectedKeys={halfSelectedKeys}
-            selectedInfos={selectedInfos}
             onSelect={handleSelect}
             onTreeExpand={handleTreeExpand}
             onBodyRender={handleBodyRender}

@@ -113,7 +113,7 @@ const App = () => {
     // selectedRowKeys,
     onChange: (selectedRowKeys, selectedRows) => {
       console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-      setSelectedRowKeys(selectedRowKeys);
+      // setSelectedRowKeys(selectedRowKeys);
     },
     onSelect: (record, selected, selectedRows, nativeEvent) => {
       console.log(
@@ -124,6 +124,15 @@ const App = () => {
         selectedRows,
         'nativeEvent:',
         nativeEvent,
+      );
+    },
+    onSelectAll: (selected, selectedRows, changeRows) => {
+      console.log(
+        `selected: ${selected}`,
+        'selectedRows: ',
+        selectedRows,
+        'changeRows: ',
+        changeRows,
       );
     },
     getCheckboxProps: (record) => ({
