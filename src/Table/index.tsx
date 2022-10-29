@@ -1,6 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import classnames from 'classnames';
-import { isEqual } from 'lodash';
 import Thead from '../Thead';
 import Tbody from '../Tbody';
 import Colgroup from '../Colgroup';
@@ -110,16 +109,16 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const isRadio = rowSelection?.type === 'radio';
 
   const [colWidths, setColWidths] = useState<number[]>([]);
-  // todo bug 最上层的取消勾选
+
   const removeUselessKeys = useCallback(
     (keys: (string | number)[], halfSelectKeys: (string | number)[]) => {
-      const checkedRowWidthKey: SelectedRowWithKey<T> = {} as SelectedRowWithKey<T>;
+      const checkedRowWithKey: SelectedRowWithKey<T> = {} as SelectedRowWithKey<T>;
       const checkedKeys = new Set<number | string>(keys);
       let halfCheckedKeys = new Set<number | string>(halfSelectKeys);
 
       if (isRadio) {
         return {
-          checkedRowWidthKey,
+          checkedRowWithKey,
           checkedKeys: Array.from(checkedKeys),
           halfCheckedKeys: Array.from(halfCheckedKeys),
         };
@@ -134,10 +133,10 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           const checked = checkedKeys.has(key);
           if (!checked && !halfCheckedKeys.has(key)) {
             (r?.children || []).forEach((c) => {
-              const key = getRowKey(rowKey, c);
-              if (key === undefined) return;
-              checkedKeys.delete(key);
-              halfCheckedKeys.delete(key);
+              const cKey = getRowKey(rowKey, c);
+              if (cKey === undefined) return;
+              checkedKeys.delete(cKey);
+              halfCheckedKeys.delete(cKey);
             });
           }
         });
@@ -153,7 +152,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           if (key === undefined) return;
 
           if (checkedKeys.has(key)) {
-            checkedRowWidthKey[key] = r;
+            checkedRowWithKey[key] = r;
           }
           const parent = findParentByKey<T>(dataSource, key, rowKey);
           if (!parent) return;
@@ -165,13 +164,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           let isHalfChecked = false;
 
           (parent.children || []).forEach((c) => {
-            const key = getRowKey(rowKey, c);
-            if (key === undefined) return;
+            const cKey = getRowKey(rowKey, c);
+            if (cKey === undefined) return;
 
-            if ((checkedKeys.has(key) || halfCheckedKeys.has(key)) && !isHalfChecked) {
+            if ((checkedKeys.has(cKey) || halfCheckedKeys.has(cKey)) && !isHalfChecked) {
               isHalfChecked = true;
             }
-            if (allChecked && !checkedKeys.has(key)) {
+            if (allChecked && !checkedKeys.has(cKey)) {
               allChecked = false;
             }
           });
@@ -187,23 +186,23 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       }
 
       return {
-        checkedRowWidthKey,
+        checkedRowWithKey,
         checkedKeys: Array.from(checkedKeys),
         halfCheckedKeys: Array.from(halfCheckedKeys),
       };
     },
-    [getRowKey, findParentByKey],
+    [isRadio, rowKey, dataSource],
   );
-  // todo 待测试单选
+
   const fillMissSelectedKeys = useCallback(
     (keys: (string | number)[]) => {
-      const checkedRowWidthKey: SelectedRowWithKey<T> = {} as SelectedRowWithKey<T>;
+      const checkedRowWithKey: SelectedRowWithKey<T> = {} as SelectedRowWithKey<T>;
       const checkedKeys = new Set<number | string>(keys);
       const halfCheckedKeys = new Set<number | string>();
 
       if (isRadio) {
         return {
-          checkedRowWidthKey,
+          checkedRowWithKey,
           checkedKeys: Array.from(checkedKeys),
           halfCheckedKeys: Array.from(halfCheckedKeys),
         };
@@ -216,12 +215,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           const key = getRowKey(rowKey, r);
           if (key === undefined) return;
           if (checkedKeys.has(key)) {
-            checkedRowWidthKey[key] = r;
+            checkedRowWithKey[key] = r;
             (r?.children || []).forEach((c) => {
-              const key = getRowKey(rowKey, c);
-              if (key === undefined) return;
-              checkedKeys.add(key);
-              checkedRowWidthKey[key] = c;
+              const cKey = getRowKey(rowKey, c);
+              if (cKey === undefined) return;
+              checkedKeys.add(cKey);
+              checkedRowWithKey[cKey] = c;
             });
           }
         });
@@ -244,10 +243,10 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           let allChecked = true;
           let isHalfChecked = false;
           (parent.children || []).forEach((c) => {
-            const key = getRowKey(rowKey, c);
-            if (key === undefined) return;
-            const exist = checkedKeys.has(key);
-            if ((exist || halfCheckedKeys.has(key)) && !isHalfChecked) {
+            const cKey = getRowKey(rowKey, c);
+            if (cKey === undefined) return;
+            const exist = checkedKeys.has(cKey);
+            if ((exist || halfCheckedKeys.has(cKey)) && !isHalfChecked) {
               isHalfChecked = true;
             }
             if (allChecked && !exist) {
@@ -257,8 +256,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
           if (allChecked) {
             checkedKeys.add(parentKey);
-            if (!checkedRowWidthKey[parentKey]) {
-              checkedRowWidthKey[parentKey] = parent;
+            if (!checkedRowWithKey[parentKey]) {
+              checkedRowWithKey[parentKey] = parent;
             }
           }
           if (isHalfChecked) {
@@ -267,13 +266,14 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           existKeys.add(parentKey);
         });
       }
+
       return {
-        checkedRowWidthKey,
+        checkedRowWithKey,
         checkedKeys: Array.from(checkedKeys),
         halfCheckedKeys: Array.from(halfCheckedKeys),
       };
     },
-    [getRowKey, findParentByKey],
+    [dataSource, isRadio, rowKey],
   );
 
   const flatData = useCallback(
@@ -303,7 +303,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
       return { records, keys };
     },
-    [rowKey, getRowKey],
+    [rowKey],
   );
 
   const { records: allRecords, keys: allKeys } = useMemo(() => {
@@ -312,7 +312,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   // const [startRowIndex, setStartRowIndex] = useState<number>(0);
 
-  // todo 考虑选择了树形中的子项
   const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
     const initSelectedKeys =
       rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
@@ -341,7 +340,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return treeProps?.expandedRowKeys || treeProps?.defaultExpandedRowKeys || [];
   });
 
-  // todo 待测试 rowKey 为undefined 情况
   const getTreeChildrenData = useCallback(
     (parent: T) => {
       const records: T[] = [];
@@ -362,7 +360,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       }
       return records;
     },
-    [rowKey, getRowKey, treeExpandKeys],
+    [rowKey, treeExpandKeys],
   );
 
   const list = useMemo(() => {
@@ -476,7 +474,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     },
     [converToPixel, flatColumns],
   );
-  // todo 待测试可控与不可控
+
   const handleSelect = (
     keys: (number | string)[],
     halfKeys: (number | string)[],
@@ -487,17 +485,14 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     let selectedRows: T[];
     let selectKeys: (number | string)[];
     if (selected) {
-      const { checkedKeys, checkedRowWidthKey, halfCheckedKeys } = fillMissSelectedKeys(keys);
+      const { checkedKeys, checkedRowWithKey, halfCheckedKeys } = fillMissSelectedKeys(keys);
       selectKeys = isRadio ? keys : checkedKeys;
-      selectedRows = isRadio ? [record] : Object.values(checkedRowWidthKey);
+      selectedRows = isRadio ? [record] : Object.values(checkedRowWithKey);
       setHalfSelectedKeys(halfCheckedKeys);
     } else {
-      const { checkedKeys, checkedRowWidthKey, halfCheckedKeys } = removeUselessKeys(
-        keys,
-        halfKeys,
-      );
+      const { checkedKeys, checkedRowWithKey, halfCheckedKeys } = removeUselessKeys(keys, halfKeys);
       selectKeys = isRadio ? [] : checkedKeys;
-      selectedRows = isRadio ? [] : Object.values(checkedRowWidthKey);
+      selectedRows = isRadio ? [] : Object.values(checkedRowWithKey);
       setHalfSelectedKeys(halfCheckedKeys);
     }
     if (!rowSelection?.selectedRowKeys) {
@@ -517,9 +512,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     let selectedRows: T[];
     let selectKeys: (number | string)[];
     if (selected) {
-      const { checkedKeys, checkedRowWidthKey, halfCheckedKeys } = fillMissSelectedKeys(allKeys);
+      const { checkedKeys, checkedRowWithKey, halfCheckedKeys } = fillMissSelectedKeys(allKeys);
       selectKeys = checkedKeys;
-      selectedRows = Object.values(checkedRowWidthKey);
+      selectedRows = Object.values(checkedRowWithKey);
       setHalfSelectedKeys(halfCheckedKeys);
     } else {
       selectKeys = [];
@@ -553,13 +548,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   useEffect(() => {
     if (rowSelection?.selectedRowKeys) {
-      if (!isEqual(rowSelection?.selectedRowKeys, selectedKeys)) {
-        const { checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(rowSelection.selectedRowKeys);
-        setSelectedKeys(checkedKeys);
-        setHalfSelectedKeys(halfCheckedKeys);
-      }
+      const { checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(rowSelection.selectedRowKeys);
+      setSelectedKeys(checkedKeys);
+      setHalfSelectedKeys(halfCheckedKeys);
     }
-  }, [rowSelection]);
+  }, [rowSelection, fillMissSelectedKeys]);
 
   useEffect(() => {
     if (treeProps?.expandedRowKeys) {
@@ -572,7 +565,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       return false;
     }
     return selectedKeys.length === allKeys.length ? true : 'indeterminate';
-  }, [selectedKeys]);
+  }, [selectedKeys, allKeys]);
 
   const renderBody = () => {
     return (

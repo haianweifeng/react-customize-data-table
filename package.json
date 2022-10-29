@@ -33,6 +33,8 @@
     "pre-commit": "lint-staged"
   },
   "lint-staged": {
+    "**/*.less": "stylelint --syntax less",
+    "**/*.{js,jsx,ts,tsx}": "npm run lint",
     "*.{js,jsx,less,md,json}": [
       "prettier --write"
     ],

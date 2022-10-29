@@ -1,12 +1,12 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import classnames from 'classnames';
-import { getRowKey, findParentByKey } from '../utils/util';
+import { getRowKey } from '../utils/util';
 import type { TableProps } from '../Table';
 import type { CellProps, ColumnsWithType, TreeLevelType } from '../interface';
 import Tr from '../Tr';
 import Radio from '../Radio';
 import Checkbox from '../Checkbox';
-// todo bug 如果设置了默认值是选了子项的话 取消勾选第一项这时候数据错误
+
 interface TbodyProps<T> extends TableProps<T> {
   columns: ColumnsWithType<T>[];
   startRowIndex: number;
@@ -74,8 +74,17 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     event: Event,
   ) => {
     const key = getRowKey(rowKey, record);
-    // todo 这里即使找不到key 但是也要触发onChange 待确定
-    if (key === undefined) return;
+
+    if (key === undefined) {
+      if (typeof rowSelection?.onSelect === 'function') {
+        rowSelection.onSelect(record, selected, [record], event);
+      }
+
+      if (typeof rowSelection?.onChange === 'function') {
+        rowSelection?.onChange([key as any], [record]);
+      }
+      return;
+    }
 
     if (!checked) {
       onSelect(isRadio ? [key] : [...selectedKeys, key], halfSelectedKeys, record, selected, event);
@@ -292,7 +301,7 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
       }
     });
   };
-  // todo 判断是否选中的方法中如果只选中了最底层的 就会出现上层没有勾选
+
   const renderTr = (rowData: T, i: number) => {
     const key = getRowKey(rowKey, rowData);
     let checked: boolean | 'indeterminate' = false;

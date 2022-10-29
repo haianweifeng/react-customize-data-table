@@ -103,7 +103,7 @@ const data: DataType[] = [
 ];
 
 const App = () => {
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([1312]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [expandedRowKeys, setExpandedRowKeys] = useState<number[]>([]);
 
   useEffect(() => {
@@ -115,7 +115,7 @@ const App = () => {
   const rowSelection = {
     selectedRowKeys,
     onChange: (selectedRowKeys, selectedRows) => {
-      console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+      console.log('selectedRowKeys:', selectedRowKeys, 'selectedRows: ', selectedRows);
       setSelectedRowKeys(selectedRowKeys);
     },
     onSelect: (record, selected, selectedRows, nativeEvent) => {
@@ -159,7 +159,8 @@ const App = () => {
       dataSource={data}
       columns={columns}
       bordered
-      // rowKey="key"
+      rowKey="key"
+      // rowKey={(record) => record}
     />
   );
 };

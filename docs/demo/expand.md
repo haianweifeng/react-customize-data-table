@@ -64,7 +64,7 @@ const App = () => {
 
   const rowSelection = {
     onChange: (selectedRowKeys, selectedRows) => {
-      console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+      console.log('selectedRowKeys:', selectedRowKeys, 'selectedRows: ', selectedRows);
     },
     onSelect: (record, selected, selectedRows, nativeEvent) => {
       console.log(
@@ -89,7 +89,7 @@ const App = () => {
       dataSource={data}
       columns={columns}
       bordered
-      rowKey="key"
+      // rowKey="key"
       rowClassName={(record) => {
         if (record.name === 'John Brown') {
           return 'custom-row';

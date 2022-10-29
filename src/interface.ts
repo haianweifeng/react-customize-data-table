@@ -174,36 +174,10 @@ export interface ScrollType {
   height?: number;
 }
 
-// type RecordType<T> = {
-//   rowKey: number | string;
-//   parentKey?: number | string;
-//   treeLevel: number;
-// } & T;
+export type SelectedRowWithKey<T> = Record<number | string, T>;
 
-// export interface SelectedInfo<T> {
-//   key: number | string;
-//   record: T;
-// }
+export type LevelRecordType<T> = Record<number, T[]>;
 
-export interface SelectedRowWithKey<T> {
-  [key: number | string]: T;
-}
-
-// export interface SelectedRowWithKey<T> {
-//   key: number | string;
-//   record: T;
-// }
-
-export interface LevelRecordType<T> {
-  [level: number]: T[];
-}
-
-export interface TreeLevelType {
-  [key: string | number]: number;
-}
+export type TreeLevelType = Record<string | number, number>;
 
 export type RowKeyType<T> = string | ((row: T) => string | number);
-
-// export type TreeLevelType = Record<string | number, number>;
-
-// export type KeysRefType = Record<string, boolean>;

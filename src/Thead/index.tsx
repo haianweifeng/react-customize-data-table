@@ -61,9 +61,12 @@ function Thead<T>(props: TheadProps<T>) {
     }
   }, []);
 
-  const handleChange = useCallback((selected: boolean) => {
-    onSelectAll(selected);
-  }, []);
+  const handleChange = useCallback(
+    (selected: boolean) => {
+      onSelectAll(selected);
+    },
+    [onSelectAll],
+  );
 
   const renderSelection = useCallback(
     (key: string) => {
