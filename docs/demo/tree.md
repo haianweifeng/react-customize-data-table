@@ -5,7 +5,7 @@
 Demo:
 
 ```tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { ColumnsType } from 'react-data-table';
 import { Table } from 'react-data-table';
 
@@ -103,8 +103,14 @@ const data: DataType[] = [
 ];
 
 const App = () => {
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([1312]);
   const [expandedRowKeys, setExpandedRowKeys] = useState<number[]>([]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      // setSelectedRowKeys([131]);
+    }, 1000);
+  }, []);
 
   const rowSelection = {
     selectedRowKeys,

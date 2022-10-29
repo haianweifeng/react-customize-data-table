@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import classnames from 'classnames';
+import { isEqual } from 'lodash';
 import Thead from '../Thead';
 import Tbody from '../Tbody';
 import Colgroup from '../Colgroup';
@@ -550,13 +551,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   };
 
-  // todo 待测试如果是延迟更改了选项值 是否需要填充 是否不用在手动勾选时候手动添加 能不能直接用fillMiss 这个函数
-  // todo 缓存
   useEffect(() => {
     if (rowSelection?.selectedRowKeys) {
-      const { checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(rowSelection.selectedRowKeys);
-      setSelectedKeys(checkedKeys);
-      setHalfSelectedKeys(halfCheckedKeys);
+      if (!isEqual(rowSelection?.selectedRowKeys, selectedKeys)) {
+        const { checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(rowSelection.selectedRowKeys);
+        setSelectedKeys(checkedKeys);
+        setHalfSelectedKeys(halfCheckedKeys);
+      }
     }
   }, [rowSelection]);
 

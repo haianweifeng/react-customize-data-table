@@ -136,7 +136,7 @@ const App = () => {
       );
     },
     getCheckboxProps: (record) => ({
-      // disabled: record.name === 'Jim Green jr.', // Column configuration not to be checked
+      disabled: record.name === 'Jim Green jr.', // Column configuration not to be checked
       name: record.name,
     }),
   };
