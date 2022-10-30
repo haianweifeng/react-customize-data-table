@@ -13,7 +13,6 @@ import type {
   ColumnsWithType,
   ColumnsGroupWithType,
   SelectedRowWithKey,
-  // SelectedInfo,
   TreeLevelType,
   LevelRecordType,
   RowKeyType,
@@ -107,8 +106,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const levelRecord = useRef<LevelRecordType<T>>({} as LevelRecordType<T>);
 
   const isRadio = rowSelection?.type === 'radio';
-
-  const [colWidths, setColWidths] = useState<number[]>([]);
 
   const removeUselessKeys = useCallback(
     (keys: (string | number)[], halfSelectKeys: (string | number)[]) => {
@@ -310,6 +307,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return flatData(dataSource);
   }, [dataSource, flatData]);
 
+  const [colWidths, setColWidths] = useState<number[]>([]);
+
   // const [startRowIndex, setStartRowIndex] = useState<number>(0);
 
   const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
@@ -508,6 +507,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   };
 
+  // todo 如果存在分页的话只勾选当页的数据  handleChangeAll 才是勾选所有数据
   const handleSelectAll = (selected: boolean) => {
     let selectedRows: T[];
     let selectKeys: (number | string)[];
@@ -532,6 +532,38 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     if (!rowSelection?.selectedRowKeys) {
       setSelectedKeys(selectKeys);
     }
+  };
+
+  const handleChangeAll = () => {
+    const { checkedKeys, checkedRowWithKey, halfCheckedKeys } = fillMissSelectedKeys(allKeys);
+    if (rowSelection?.onChange) {
+      rowSelection.onChange(checkedKeys, Object.values(checkedRowWithKey));
+    }
+
+    if (!rowSelection?.selectedRowKeys) {
+      setSelectedKeys(checkedKeys);
+    }
+    setHalfSelectedKeys(halfCheckedKeys);
+  };
+
+  // todo 存在分页的话，只反转当前正在展示的这个页面数据 现在拿的是全部的数据
+  const handleInvert = () => {
+    // selectedKeys
+    const existKeys = allKeys.filter((key) => selectedKeys.indexOf(key) < 0);
+    const { checkedKeys, checkedRowWithKey, halfCheckedKeys } = fillMissSelectedKeys(allKeys);
+  };
+
+  const handleClearAll = () => {
+    // if (rowSelection?.onSelectNone) {
+    //   rowSelection.onSelectNone();
+    // }
+    if (rowSelection?.onChange) {
+      rowSelection.onChange([], []);
+    }
+    if (!rowSelection?.selectedRowKeys) {
+      setSelectedKeys([]);
+    }
+    setHalfSelectedKeys([]);
   };
 
   const handleTreeExpand = (treeExpanded: boolean, record: T, recordKey: number | string) => {
@@ -602,6 +634,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             expandable={expandable}
             rowSelection={rowSelection}
             onSelectAll={handleSelectAll}
+            onClearAll={handleClearAll}
+            onChangeAll={handleChangeAll}
+            onInvert={handleInvert}
           />
         </table>
       </div>

@@ -147,3 +147,70 @@ th {
 .icon-tree {
   margin-right: 8px;
 }
+
+.table-selection {
+  position: relative;
+}
+
+.selection-extra {
+  position: absolute;
+  top: 50%;
+  right: -8px;
+  z-index: 1;
+  transform: translateY(-1px);
+  cursor: pointer;
+}
+
+.arrow-down {
+  position: relative;
+  width: 10px;
+  height: 10px;
+
+  &:before {
+    position: absolute;
+    top: 3px;
+    left: 0px;
+    display: block;
+    width: 7px;
+    height: 1px;
+    background-color: #ccc;
+    transform: rotate(50deg);
+    content: '';
+  }
+
+  &:after {
+    position: absolute;
+    top: 0;
+    right: 2px;
+    display: block;
+    width: 1px;
+    height: 7px;
+    background-color: #ccc;
+    transform: rotate(40deg);
+    content: '';
+  }
+}
+
+.selection-dropdown {
+  position: absolute;
+  z-index: 1;
+  display: inline-block;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  background-color: #fff;
+  border-radius: 2px;
+  box-shadow: 0 3px 6px -4px #0000001f, 0 6px 16px #00000014, 0 9px 28px 8px #0000000d;
+}
+
+.selection-item {
+  padding: 5px 12px;
+  color: #000000d9;
+  font-weight: normal;
+  line-height: 22px;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+}

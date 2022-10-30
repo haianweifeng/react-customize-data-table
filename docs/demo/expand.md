@@ -63,6 +63,7 @@ const App = () => {
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
 
   const rowSelection = {
+    selections: true,
     onChange: (selectedRowKeys, selectedRows) => {
       console.log('selectedRowKeys:', selectedRowKeys, 'selectedRows: ', selectedRows);
     },
@@ -76,6 +77,9 @@ const App = () => {
         'nativeEvent:',
         nativeEvent,
       );
+    },
+    onSelectNone: () => {
+      console.log('select none');
     },
     getCheckboxProps: (record) => ({
       disabled: record.name === 'Joe1 Black', // Column configuration not to be checked

@@ -145,8 +145,6 @@ for (let i = 0; i < 100; i++) {
   });
 }
 
-const App = () => (
-  <Table columns={columns} dataSource={data} bordered nestedHeaders={nestedHeaders} rowKey="key" />
-);
+const App = () => <Table columns={columns} dataSource={data} bordered rowKey="key" />;
 export default App;
 ```

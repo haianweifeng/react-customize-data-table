@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import type {
   ColumnsWithType,
   ColumnsGroupWithType,
@@ -6,6 +6,7 @@ import type {
   RowSelectionType,
 } from '../interface';
 import Checkbox from '../Checkbox';
+import SelectionDropdown from '../SelectionDropdown';
 
 interface TheadProps<T> {
   checked: boolean | 'indeterminate';
@@ -13,10 +14,24 @@ interface TheadProps<T> {
   rowSelection?: RowSelectionType<T>;
   columns: (ColumnsWithType<T> | ColumnsGroupWithType<T>)[];
   onSelectAll: (selected: boolean) => void;
+  onClearAll: () => void;
+  onChangeAll: () => void;
+  onInvert: () => void;
 }
 
 function Thead<T>(props: TheadProps<T>) {
-  const { checked, columns, expandable, rowSelection, onSelectAll } = props;
+  const {
+    checked,
+    columns,
+    expandable,
+    rowSelection,
+    onSelectAll,
+    onClearAll,
+    onChangeAll,
+    onInvert,
+  } = props;
+
+  const [showSelection, setShowSelection] = useState<boolean>(false);
 
   const isColumnGroup = useCallback((col: ColumnsWithType<T> | ColumnsGroupWithType<T>) => {
     if (typeof (col as ColumnsGroupWithType<T>).children !== 'undefined') {
@@ -68,6 +83,29 @@ function Thead<T>(props: TheadProps<T>) {
     [onSelectAll],
   );
 
+  const handleMouseEnter = () => {
+    setShowSelection(true);
+  };
+
+  const handleMouseLeave = () => {
+    setShowSelection(false);
+  };
+
+  const handleMenuClick = (menu: string) => {
+    switch (menu) {
+      case 'all':
+        // todo 只触发change
+        onChangeAll();
+        break;
+      case 'invert':
+        onInvert();
+        break;
+      case 'clear':
+        onClearAll();
+        break;
+    }
+  };
+
   const renderSelection = useCallback(
     (key: string) => {
       if (rowSelection?.columnTitle) {
@@ -77,12 +115,22 @@ function Thead<T>(props: TheadProps<T>) {
         return <th key={key} />;
       }
       return (
-        <th key={key} className="selection-expand-column">
-          <Checkbox checked={checked} onChange={handleChange} />
+        <th key={key} className="selection-expand-column" id="selection">
+          <div className="table-selection">
+            <Checkbox checked={checked} onChange={handleChange} />
+            <div className="selection-extra">
+              <div
+                className="arrow-down"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+              />
+              <SelectionDropdown show onClick={handleMenuClick} />
+            </div>
+          </div>
         </th>
       );
     },
-    [checked, rowSelection, handleChange],
+    [checked, rowSelection, showSelection, handleChange],
   );
 
   const renderExpand = useCallback(

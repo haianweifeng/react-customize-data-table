@@ -17,7 +17,7 @@ export interface RowSelectionType<T> {
   fixed?: boolean;
   /** 选择框的默认属性配置 */
   getCheckboxProps?: (record: T) => any;
-  /** 渲染除了表头的勾选框 */
+  /** 渲染表体的勾选框 */
   renderCell?: (
     checked: boolean,
     record: T,
@@ -40,7 +40,7 @@ export interface RowSelectionType<T> {
   onSelectAll?: (selected: boolean, selectedRows: T[], changeRows: T[]) => void;
   /** 用户手动选择反选的回调 */
   onSelectInvert?: (selectedRowKeys: string[] | number[]) => void;
-  /** 用户清空选择的回调 */
+  /** 用户清空选择的回调 todo 觉得没有必要 */
   onSelectNone?: () => void;
 }
 
