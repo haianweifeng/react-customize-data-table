@@ -105,31 +105,6 @@ const columns: ColumnsType<DataType> = [
   },
 ];
 
-const nestedHeaders = [
-  { title: 'Name' },
-  {
-    title: 'Other',
-    children: [
-      { title: 'Age' },
-      {
-        title: 'Address',
-        children: [
-          { title: 'Street' },
-          {
-            title: 'Block',
-            children: [{ title: 'Building' }, { title: 'Door No.' }],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    title: 'Company',
-    children: [{ title: 'Company Address' }, { title: 'Company Name' }],
-  },
-  { title: 'Gender' },
-];
-
 const data: DataType[] = [];
 for (let i = 0; i < 100; i++) {
   data.push({

@@ -98,7 +98,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     treeProps,
   } = props;
 
-  const SELECTION_EXPAND_COLUMN_WIDTH = 48;
+  const SELECTION_EXPAND_COLUMN_WIDTH = 44;
 
   const tbodyTableRef = useRef<any>(null);
   const maxTreeLevel = useRef<number>(0);
@@ -374,7 +374,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return records;
   }, [dataSource, getTreeChildrenData]);
 
-  // 是否可以把getFloatColumns 移到formatColumns
   const formatColumns = useMemo(() => {
     let insertIndex = 0;
     const cols = columns.map((column, index: number) => {
@@ -437,13 +436,14 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return width * res;
   }, []);
 
-  // todo 不同例子之间切换时候头部和body 之间没有对齐
   const handleBodyRender = useCallback(
     (tds: HTMLElement[]) => {
       const widths = [];
+
       for (let i = 0; i < tds.length; i++) {
         const td = tds[i];
         const { width } = td.getBoundingClientRect();
+
         const colSpan = Number(td.getAttribute('colspan'));
 
         if (colSpan === 1) {
@@ -507,7 +507,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   };
 
-  // todo 如果存在分页的话只勾选当页的数据  handleChangeAll 才是勾选所有数据
+  // todo 如果存在分页的话只勾选当页的数据
   const handleSelectAll = (selected: boolean) => {
     let selectedRows: T[];
     let selectKeys: (number | string)[];
@@ -532,38 +532,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     if (!rowSelection?.selectedRowKeys) {
       setSelectedKeys(selectKeys);
     }
-  };
-
-  const handleChangeAll = () => {
-    const { checkedKeys, checkedRowWithKey, halfCheckedKeys } = fillMissSelectedKeys(allKeys);
-    if (rowSelection?.onChange) {
-      rowSelection.onChange(checkedKeys, Object.values(checkedRowWithKey));
-    }
-
-    if (!rowSelection?.selectedRowKeys) {
-      setSelectedKeys(checkedKeys);
-    }
-    setHalfSelectedKeys(halfCheckedKeys);
-  };
-
-  // todo 存在分页的话，只反转当前正在展示的这个页面数据 现在拿的是全部的数据
-  const handleInvert = () => {
-    // selectedKeys
-    const existKeys = allKeys.filter((key) => selectedKeys.indexOf(key) < 0);
-    const { checkedKeys, checkedRowWithKey, halfCheckedKeys } = fillMissSelectedKeys(allKeys);
-  };
-
-  const handleClearAll = () => {
-    // if (rowSelection?.onSelectNone) {
-    //   rowSelection.onSelectNone();
-    // }
-    if (rowSelection?.onChange) {
-      rowSelection.onChange([], []);
-    }
-    if (!rowSelection?.selectedRowKeys) {
-      setSelectedKeys([]);
-    }
-    setHalfSelectedKeys([]);
   };
 
   const handleTreeExpand = (treeExpanded: boolean, record: T, recordKey: number | string) => {
@@ -634,9 +602,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             expandable={expandable}
             rowSelection={rowSelection}
             onSelectAll={handleSelectAll}
-            onClearAll={handleClearAll}
-            onChangeAll={handleChangeAll}
-            onInvert={handleInvert}
           />
         </table>
       </div>

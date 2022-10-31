@@ -1,12 +1,12 @@
 import type React from 'react';
 
-export interface SelectionType {
-  key: string;
-  /** 选择项显示的文字 */
-  text: React.ReactNode;
-  /** 选择项点击回调 */
-  onSelect: (changeableRowKeys: React.Key[]) => void;
-}
+// export interface SelectionType {
+//   key: string;
+//   /** 选择项显示的文字 */
+//   text: React.ReactNode;
+//   /** 选择项点击回调 */
+//   onSelect: (changeableRowKeys: React.Key[]) => void;
+// }
 
 export interface RowSelectionType<T> {
   /** 自定义列表选择框标题 */
@@ -29,7 +29,7 @@ export interface RowSelectionType<T> {
   /** 默认选中项的 key 数组 */
   defaultSelectedRowKeys?: string[] | number[];
   /** 自定义选择项配置项 */
-  selections?: boolean | SelectionType[];
+  // selections?: boolean | SelectionType[];
   /** 多选/单选 */
   type: 'radio' | 'checkbox';
   /** 选中项发生变化时的回调  todo 表头也需要触发*/
@@ -39,9 +39,9 @@ export interface RowSelectionType<T> {
   /** 用户手动选择/取消选择所有行的回调 todo 针对表头的全选或者取消 */
   onSelectAll?: (selected: boolean, selectedRows: T[], changeRows: T[]) => void;
   /** 用户手动选择反选的回调 */
-  onSelectInvert?: (selectedRowKeys: string[] | number[]) => void;
+  // onSelectInvert?: (selectedRowKeys: string[] | number[]) => void;
   /** 用户清空选择的回调 todo 觉得没有必要 */
-  onSelectNone?: () => void;
+  // onSelectNone?: () => void;
 }
 
 export interface SorterType<T> {

@@ -8,6 +8,7 @@ interface ColgroupProps<T> {
 
 function Colgroup<T>(props: ColgroupProps<T>) {
   const { colWidths, columns } = props;
+
   if (colWidths && colWidths.length === columns.length) {
     return (
       <colgroup>
