@@ -1,5 +1,7 @@
 ### 合并行/列
 
+###### 表头只支持列合并，使用 column 里的 headerColSpan 进行设置。
+
 ###### 表格支持行/列合并，使用列中的 onCell 单元格属性 colSpan 或者 rowSpan 设值为 0 时，设置的表格不会渲染。
 
 Demo:
@@ -44,7 +46,7 @@ const columns: ColumnsType<DataType> = [
   },
   {
     title: 'Home phone',
-    colSpan: 2,
+    headerColSpan: 2,
     dataIndex: 'tel',
     onCell: (_, index) => {
       if (index === 2) {
@@ -63,7 +65,7 @@ const columns: ColumnsType<DataType> = [
   },
   {
     title: 'Phone',
-    colSpan: 0,
+    headerColSpan: 0,
     dataIndex: 'phone',
     onCell: sharedOnCell,
   },

@@ -46,7 +46,7 @@ export interface TableProps<T> {
   size?: 'default' | 'small';
   /** 表格行的类名 */
   rowClassName?: (record: T, index: number) => string;
-  /** 设置头部行属性 todo 和 onRow 用法一样是事件集合器 需要确定是不是需要 header */
+  /** 设置头部行属性 todo 和 onRow 用法一样是事件集合器 需要确定是不是需要 header 存在这个api */
   onHeaderRow?: (columns: ColumnsType<T>[], index: number) => any;
   /** 设置行事件监听器集合属性 todo columns 发生了改变 */
   onRowEvents?: (columns: any, index: number) => any;

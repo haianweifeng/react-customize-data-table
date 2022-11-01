@@ -72,11 +72,11 @@ export interface ColumnsType<T> {
   // minWidth?: string | number;
   /** 超过宽度将自动省略 todo */
   ellipsis?: boolean | { showTitle: boolean };
-  // todo 表头列合并 是否需要还是放到onHeaderCell 中处理
-  colSpan?: number;
+  /** 表头列合并 */
+  headerColSpan?: number;
   /** 设置单元格属性 */
   onCell?: (record: T, rowIndex: number) => CellType;
-  /** 设置头部单元格属性 todo header */
+  /** 设置头部单元格属性 todo header 存在这个api */
   onHeaderCell?: (column: T) => any;
   /** 默认排序 */
   defaultOrder?: 'asc' | 'desc';

@@ -30,21 +30,28 @@ function Thead<T>(props: TheadProps<T>) {
       cols: (ColumnsWithType<T> | ColumnsGroupWithType<T>)[],
       target?: (ColumnsWithType<T> | ColumnsGroupWithType<T>) & { colSpan: number },
     ) => {
-      return cols.map((col) => {
+      const formatColumns: ((ColumnsWithType<T> | ColumnsGroupWithType<T>) & {
+        colSpan: number;
+      })[] = [];
+
+      cols.map((col) => {
         if (isColumnGroup(col)) {
           const obj = { ...col, colSpan: 0 };
           (obj as any).children = getFormatColumns((col as any).children, obj);
           if (target) {
             target.colSpan += obj.colSpan;
           }
-          return obj;
+          formatColumns.push(obj);
         } else {
           if (target) {
             target.colSpan += 1;
           }
-          return { colSpan: 1, ...col };
+          if (col?.headerColSpan === 0) return;
+          formatColumns.push({ colSpan: col?.headerColSpan || 1, ...col });
         }
       });
+
+      return formatColumns;
     },
     [isColumnGroup],
   );
@@ -97,7 +104,7 @@ function Thead<T>(props: TheadProps<T>) {
 
   const renderTh = useCallback(
     (
-      col: ColumnsWithType<T> | ColumnsGroupWithType<T>,
+      col: (ColumnsWithType<T> | ColumnsGroupWithType<T>) & { colSpan: number },
       trs: React.ReactNode[][],
       level: number,
       index: string,
@@ -123,8 +130,7 @@ function Thead<T>(props: TheadProps<T>) {
             });
           } else {
             trs[level].push(
-              // todo column.headerColSpan  头部列数
-              <th colSpan={1} rowSpan={totalLevel - level} key={index}>
+              <th colSpan={col.colSpan} rowSpan={totalLevel - level} key={index}>
                 <div>
                   <span>{col.title}</span>
                 </div>

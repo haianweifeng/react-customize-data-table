@@ -64,15 +64,18 @@ const columns: ColumnsType<DataType> = [
             children: [
               {
                 title: 'Building',
+                // title: 'Building Door No.',
                 dataIndex: 'building',
                 key: 'building',
                 width: 100,
+                // headerColSpan: 2,
               },
               {
                 title: 'Door No.',
                 dataIndex: 'number',
                 key: 'number',
                 width: 100,
+                // headerColSpan: 0,
               },
             ],
           },

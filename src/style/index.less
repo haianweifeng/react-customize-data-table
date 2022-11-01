@@ -52,6 +52,10 @@ thead > tr > th {
   border-bottom: 1px solid @table-border-color;
 }
 
+thead > tr > th[colspan]:not([colspan='1']) {
+  text-align: center;
+}
+
 tbody > tr:hover,
 tbody > tr:hover > td {
   background-color: @table-bg-hover;
