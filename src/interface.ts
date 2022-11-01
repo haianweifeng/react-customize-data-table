@@ -76,8 +76,6 @@ export interface ColumnsType<T> {
   headerColSpan?: number;
   /** 设置单元格属性 */
   onCell?: (record: T, rowIndex: number) => CellType;
-  /** 设置头部单元格属性 todo header 存在这个api */
-  onHeaderCell?: (column: T) => any;
   /** 默认排序 */
   defaultOrder?: 'asc' | 'desc';
   /** 排序函数 */

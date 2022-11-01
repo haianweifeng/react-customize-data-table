@@ -76,15 +76,19 @@ function Thead<T>(props: TheadProps<T>) {
   );
 
   const renderSelection = useCallback(
-    (key: string) => {
+    (key: string, rowSpan: number) => {
       if (rowSelection?.columnTitle) {
-        return <th key={key}>{rowSelection.columnTitle}</th>;
+        return (
+          <th key={key} rowSpan={rowSpan}>
+            {rowSelection.columnTitle}
+          </th>
+        );
       }
       if (rowSelection?.type === 'radio') {
-        return <th key={key} />;
+        return <th key={key} rowSpan={rowSpan} />;
       }
       return (
-        <th key={key} className="selection-expand-column">
+        <th key={key} rowSpan={rowSpan} className="selection-expand-column">
           <Checkbox checked={checked} onChange={handleChange} />
         </th>
       );
@@ -93,11 +97,15 @@ function Thead<T>(props: TheadProps<T>) {
   );
 
   const renderExpand = useCallback(
-    (key: string) => {
+    (key: string, rowSpan: number) => {
       if (expandable?.columnTitle) {
-        return <th key={key}>{expandable.columnTitle}</th>;
+        return (
+          <th key={key} rowSpan={rowSpan}>
+            {expandable.columnTitle}
+          </th>
+        );
       }
-      return <th key={key} />;
+      return <th key={key} rowSpan={rowSpan} />;
     },
     [expandable],
   );
@@ -113,9 +121,9 @@ function Thead<T>(props: TheadProps<T>) {
       switch (col.type) {
         case 'checkbox':
         case 'radio':
-          return trs[level].push(renderSelection(index));
+          return trs[level].push(renderSelection(index, totalLevel));
         case 'expanded':
-          return trs[level].push(renderExpand(index));
+          return trs[level].push(renderExpand(index, totalLevel));
         default: {
           if (isColumnGroup(col)) {
             trs[level].push(

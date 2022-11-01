@@ -120,9 +120,26 @@ for (let i = 0; i < 100; i++) {
     companyAddress: 'Lake Street 42',
     companyName: 'SoftLake Co',
     gender: 'M',
+    expandContent: 'expand row content',
   });
 }
 
-const App = () => <Table columns={columns} dataSource={data} bordered rowKey="key" />;
+const App = () => {
+  return (
+    <Table
+      columns={columns}
+      dataSource={data}
+      bordered
+      rowKey="key"
+      rowSelection={{}}
+      expandable={{
+        insertBeforeColumnName: 'Gender',
+        expandedRowRender: (record) => {
+          return record.expandContent;
+        },
+      }}
+    />
+  );
+};
 export default App;
 ```
