@@ -131,13 +131,13 @@ const App = () => {
       dataSource={data}
       bordered
       rowKey="key"
-      rowSelection={{}}
-      expandable={{
-        insertBeforeColumnName: 'Gender',
-        expandedRowRender: (record) => {
-          return record.expandContent;
-        },
-      }}
+      // rowSelection={{}}
+      // expandable={{
+      // insertBeforeColumnName: 'Gender',
+      // expandedRowRender: (record) => {
+      // return record.expandContent;
+      // },
+      // }}
     />
   );
 };

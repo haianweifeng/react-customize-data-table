@@ -1,10 +1,10 @@
 @import './variables.less';
 
-//*,
-//:after,
-//:before {
-//  box-sizing: border-box;
-//}
+*,
+:after,
+:before {
+  box-sizing: border-box;
+}
 
 .table-container {
   max-width: 100%;
@@ -47,6 +47,7 @@ thead > tr > th {
   font-weight: 500;
   text-align: left;
   word-break: break-all;
+  // overflow-wrap: break-word;
   background-color: @table-head-bg;
   border-right: 1px solid @table-border-color;
   border-bottom: 1px solid @table-border-color;
@@ -73,6 +74,7 @@ td {
   position: relative;
   padding: @table-cell-padding-vertical @table-cell-padding-horizontal;
   word-break: break-all;
+  // overflow-wrap: break-word;
   border-right: 1px solid @table-border-color;
   border-bottom: 1px solid @table-border-color;
 }

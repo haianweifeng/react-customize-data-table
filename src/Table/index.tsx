@@ -81,6 +81,7 @@ export interface TableProps<T> {
 }
 // todo 还未测试列宽设为百分比的情况
 // todo scroll: { width, height } 设置滚动时候表格的宽度 高度
+// todo 表头弄好 要考虑处理border
 // 设置colgroup 列的宽度  然后获取每个单元格最后渲染的宽度 重新设置 colgroup 的宽度
 function Table<T extends { key?: number | string; children?: T[] }>(props: TableProps<T>) {
   const {
@@ -453,7 +454,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           const colWidth: (number | undefined)[] = [];
           for (let j = 0; j < colSpan; j++) {
             const w = converToPixel(flatColumns[i + j].width);
+            // console.log(w);
             // todo 待测试列宽设为0
+            // 如果表头是文字 td 是数字就可能产生不对齐 width: 0
+            // 等到做完滚动后再来考虑 是否需要设置表格的宽度
+            // ellipsis 如果设置了表格宽度后是否能生效
+            // ellipsis 是否需要设置ellipsis.maxWidth 来促使表头超出可以截断
             if (w) {
               count++;
               sum += w;
@@ -568,7 +574,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const renderBody = () => {
     return (
-      <div className="table-tbody">
+      <div className="table-tbody" ref={tbodyTableRef}>
         <table style={{ width: scroll.width }}>
           <Colgroup colWidths={colWidths} columns={flatColumns} />
           <Tbody
