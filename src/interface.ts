@@ -35,7 +35,7 @@ export interface SorterType<T> {
   weight: number;
 }
 
-export interface SorterListType<T> {
+export interface SorterStateType<T> {
   order: 'asc' | 'desc';
   sorter: (rowA: T, rowB: T) => number;
   dataIndex: string;
@@ -43,6 +43,11 @@ export interface SorterListType<T> {
 }
 
 export type CellType = { colSpan?: number; rowSpan?: number };
+
+export interface FilterMenusType {
+  label: string;
+  value: string;
+}
 
 export interface ColumnsType<T> {
   /** 设置列的对齐方式 */
@@ -80,10 +85,6 @@ export interface ColumnsType<T> {
   sorter?: (rowA: T, rowB: T) => number | SorterType<T>;
   /** 默认筛选值 */
   defaultFilteredValue?: string[];
-  /** 可以自定义筛选菜单 todo */
-  filterDropdown?: () => React.ReactNode;
-  /** 用于控制自定义筛选菜单是否可见 */
-  filterDropdownOpen?: boolean;
   /** 筛选的受控属性 */
   filteredValue?: string[];
   /** 自定义 filter 图标 */
@@ -91,7 +92,11 @@ export interface ColumnsType<T> {
   /** 筛选菜单项是否可搜索 */
   filterSearch?: boolean;
   /** 表头的筛选菜单项 */
-  filters?: any[];
+  filters?: FilterMenusType[];
+  /** 可以自定义筛选菜单 todo */
+  filterDropdown?: () => React.ReactNode;
+  /** 用于控制自定义筛选菜单是否可见 */
+  filterDropdownOpen?: boolean;
   /** 筛选函数 */
   onFilter?: () => any;
   /** 自定义筛选菜单可见变化时调用 */

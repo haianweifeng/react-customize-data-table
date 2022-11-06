@@ -4,13 +4,13 @@ import type {
   ColumnsGroupWithType,
   ExpandableType,
   RowSelectionType,
-  SorterListType,
+  SorterStateType,
 } from '../interface';
 import Checkbox from '../Checkbox';
 import Sorter from '../Sorter';
 
 interface TheadProps<T> {
-  sorterList: SorterListType<T>[];
+  sorterState: SorterStateType<T>[];
   checked: boolean | 'indeterminate';
   expandable?: ExpandableType<T>;
   rowSelection?: RowSelectionType<T>;
@@ -29,7 +29,7 @@ function Thead<T>(props: TheadProps<T>) {
   const {
     checked,
     columns,
-    sorterList,
+    sorterState,
     expandable,
     rowSelection,
     renderSorter,
@@ -137,7 +137,7 @@ function Thead<T>(props: TheadProps<T>) {
   );
 
   const renderSorterContent = (col: ColumnsWithType<T> & { colSpan: number }) => {
-    const item = sorterList.find((s) => s.dataIndex === col.dataIndex);
+    const item = sorterState.find((s) => s.dataIndex === col.dataIndex);
     return (
       <Sorter
         activeAsc={item?.order === 'asc'}

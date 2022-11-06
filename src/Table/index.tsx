@@ -17,7 +17,7 @@ import type {
   TreeLevelType,
   LevelRecordType,
   RowKeyType,
-  SorterListType,
+  SorterStateType,
   SorterType,
 } from '../interface';
 import '../style/index.less';
@@ -404,14 +404,14 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return treeProps?.expandedRowKeys || treeProps?.defaultExpandedRowKeys || [];
   });
 
-  const [sorterList, setSorterList] = useState<SorterListType<T>[]>(() => {
-    const sorter: SorterListType<T>[] = [];
+  const [sorterState, setSorterState] = useState<SorterStateType<T>[]>(() => {
+    const sorter: SorterStateType<T>[] = [];
     flatColumns.forEach((col) => {
       if (col?.sorter && col?.defaultSortOrder) {
-        const obj: SorterListType<T> = {
+        const obj: SorterStateType<T> = {
           order: col.defaultSortOrder,
           dataIndex: col.dataIndex,
-        } as SorterListType<T>;
+        } as SorterStateType<T>;
         if (typeof col.sorter === 'object') {
           obj.sorter = (col.sorter as SorterType<T>).compare;
           obj.weight = (col.sorter as SorterType<T>).weight;
@@ -573,11 +573,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     col: ColumnsWithType<T> & { colSpan: number },
     order: 'asc' | 'desc',
   ) => {
-    const index = sorterList.findIndex((s) => s.dataIndex === col.dataIndex);
-    const isCancel = index >= 0 && sorterList[index].order === order;
+    const index = sorterState.findIndex((s) => s.dataIndex === col.dataIndex);
+    const isCancel = index >= 0 && sorterState[index].order === order;
 
     if (isCancel) {
-      setSorterList((prev) => {
+      setSorterState((prev) => {
         return prev.filter((p) => p.dataIndex !== col.dataIndex);
       });
       if (typeof onSortCancel === 'function') {
@@ -587,14 +587,14 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
     if (typeof col?.sorter === 'object') {
       if (index >= 0) {
-        const copyList = [...sorterList];
-        const item = sorterList[index];
+        const copyList = [...sorterState];
+        const item = sorterState[index];
         item.order = order;
         copyList.splice(index, 1, item);
-        setSorterList(copyList);
+        setSorterState(copyList);
       } else {
         const list =
-          sorterList.length === 1 && sorterList[0]?.weight === undefined ? [] : [...sorterList];
+          sorterState.length === 1 && sorterState[0]?.weight === undefined ? [] : [...sorterState];
         list.push({
           order,
           dataIndex: col.dataIndex,
@@ -606,12 +606,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           const b1 = (b.weight || 0).toString();
           return a1.localeCompare(b1);
         });
-        setSorterList(list);
+        setSorterState(list);
       }
       return;
     }
     if (typeof col?.sorter === 'function') {
-      setSorterList([
+      setSorterState([
         {
           order,
           dataIndex: col.dataIndex,
@@ -651,7 +651,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       records.push(...childrenRecords);
     });
 
-    sorterList.forEach((s) => {
+    sorterState.forEach((s) => {
       records.sort((a, b) => {
         const compareResult = s.sorter(a, b);
         if (compareResult !== 0) {
@@ -662,7 +662,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     });
 
     return records;
-  }, [dataSource, getTreeChildrenData, sorterList]);
+  }, [dataSource, getTreeChildrenData, sorterState]);
 
   const renderBody = () => {
     return (
@@ -696,7 +696,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           <Thead
             checked={checked}
             columns={formatColumns}
-            sorterList={sorterList}
+            sorterState={sorterState}
             expandable={expandable}
             rowSelection={rowSelection}
             renderSorter={renderSorter}
