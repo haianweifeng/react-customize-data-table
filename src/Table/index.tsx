@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
+import omit from 'omit.js';
 import classnames from 'classnames';
 import Thead from '../Thead';
 import Tbody from '../Tbody';
@@ -16,6 +17,8 @@ import type {
   TreeLevelType,
   LevelRecordType,
   RowKeyType,
+  SorterListType,
+  SorterType,
 } from '../interface';
 import '../style/index.less';
 import { getRowKey, toPoint, findParentByKey } from '../utils/util';
@@ -68,12 +71,17 @@ export interface TableProps<T> {
   onColumnResize?: (newColumns: any) => void;
   /** 表格行是否可选择配置项 todo header 需要表头空一行 */
   rowSelection?: RowSelectionType<T>;
-  /** 支持的排序方式 */
-  sortDirections?: ['ascend', 'descend'];
+  /** 自定义排序图标 */
+  renderSorter: (params: {
+    activeAsc: boolean;
+    activeDesc: boolean;
+    triggerAsc: () => void;
+    triggerDesc: () => void;
+  }) => React.ReactNode;
   /** 排序取消事件 */
-  onSortCancel?: (cancelName: string, order: 'ascend' | 'descend') => void;
-  /** 排序事件 todo 防止向服务端请求时候需要带上相应的字段 */
-  onSort: (column: any, order: 'ascend' | 'descend') => void;
+  onSortCancel?: (col: ColumnsType<T>, order: 'asc' | 'desc') => void;
+  /** 排序事件 todo 防止向服务端请求时候需要带上相应的字段 还没有弄服务端的md 等分页弄好了 */
+  onSort: (column: ColumnsType<T>, order: 'ascend' | 'descend') => void;
   /** 配置展开属性 todo header 需要表头空一行 */
   expandable?: ExpandableType<T>;
   /** 配置树形数据属性 */
@@ -97,6 +105,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     expandable,
     rowSelection,
     treeProps,
+    renderSorter,
+    onSortCancel,
   } = props;
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 44;
@@ -304,77 +314,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     [rowKey],
   );
 
-  const { records: allRecords, keys: allKeys } = useMemo(() => {
-    return flatData(dataSource);
-  }, [dataSource, flatData]);
-
-  const [colWidths, setColWidths] = useState<number[]>([]);
-
-  // const [startRowIndex, setStartRowIndex] = useState<number>(0);
-
-  const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
-    const initSelectedKeys =
-      rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
-    if (initSelectedKeys.length) {
-      return fillMissSelectedKeys(initSelectedKeys).checkedKeys;
-    }
-    return initSelectedKeys;
-  });
-
-  const [halfSelectedKeys, setHalfSelectedKeys] = useState(() => {
-    const initSelectedKeys =
-      rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
-    if (initSelectedKeys.length) {
-      return fillMissSelectedKeys(initSelectedKeys).halfCheckedKeys;
-    }
-    return initSelectedKeys;
-  });
-
-  const [treeExpandKeys, setTreeExpandKeys] = useState<(string | number)[]>(() => {
-    if (
-      treeProps?.defaultExpandAllRows &&
-      !(treeProps?.defaultExpandedRowKeys || treeProps?.expandedRowKeys)
-    ) {
-      return allKeys;
-    }
-    return treeProps?.expandedRowKeys || treeProps?.defaultExpandedRowKeys || [];
-  });
-
-  const getTreeChildrenData = useCallback(
-    (parent: T) => {
-      const records: T[] = [];
-      const data = parent?.children;
-      const parentKey = getRowKey(rowKey, parent);
-      if (
-        parentKey !== undefined &&
-        data &&
-        data.length &&
-        treeExpandKeys &&
-        treeExpandKeys.indexOf(parentKey) >= 0
-      ) {
-        data.forEach((item) => {
-          records.push(item);
-          const childrenRecords = getTreeChildrenData(item);
-          records.push(...childrenRecords);
-        });
-      }
-      return records;
-    },
-    [rowKey, treeExpandKeys],
-  );
-
-  const list = useMemo(() => {
-    const records: T[] = [];
-
-    dataSource.forEach((d) => {
-      records.push(d);
-      const childrenRecords = getTreeChildrenData(d);
-      records.push(...childrenRecords);
-    });
-
-    return records;
-  }, [dataSource, getTreeChildrenData]);
-
   const formatColumns = useMemo(() => {
     let insertIndex = 0;
     const cols = columns.map((column, index: number) => {
@@ -428,6 +367,85 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const flatColumns = useMemo(() => {
     return getFlatColumns(formatColumns);
   }, [getFlatColumns, formatColumns]);
+
+  const { records: allRecords, keys: allKeys } = useMemo(() => {
+    return flatData(dataSource);
+  }, [dataSource, flatData]);
+
+  const [colWidths, setColWidths] = useState<number[]>([]);
+
+  // const [startRowIndex, setStartRowIndex] = useState<number>(0);
+
+  const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
+    const initSelectedKeys =
+      rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
+    if (initSelectedKeys.length) {
+      return fillMissSelectedKeys(initSelectedKeys).checkedKeys;
+    }
+    return initSelectedKeys;
+  });
+
+  const [halfSelectedKeys, setHalfSelectedKeys] = useState(() => {
+    const initSelectedKeys =
+      rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
+    if (initSelectedKeys.length) {
+      return fillMissSelectedKeys(initSelectedKeys).halfCheckedKeys;
+    }
+    return initSelectedKeys;
+  });
+
+  const [treeExpandKeys, setTreeExpandKeys] = useState<(string | number)[]>(() => {
+    if (
+      treeProps?.defaultExpandAllRows &&
+      !(treeProps?.defaultExpandedRowKeys || treeProps?.expandedRowKeys)
+    ) {
+      return allKeys;
+    }
+    return treeProps?.expandedRowKeys || treeProps?.defaultExpandedRowKeys || [];
+  });
+
+  const [sorterList, setSorterList] = useState<SorterListType<T>[]>(() => {
+    const sorter: SorterListType<T>[] = [];
+    flatColumns.forEach((col) => {
+      if (col?.sorter && col?.defaultSortOrder) {
+        const obj: SorterListType<T> = {
+          order: col.defaultSortOrder,
+          dataIndex: col.dataIndex,
+        } as SorterListType<T>;
+        if (typeof col.sorter === 'object') {
+          obj.sorter = (col.sorter as SorterType<T>).compare;
+          obj.weight = (col.sorter as SorterType<T>).weight;
+        } else {
+          obj.sorter = col.sorter as (rowA: T, rowB: T) => number;
+        }
+        sorter.push(obj);
+      }
+    });
+    return sorter;
+  });
+
+  const getTreeChildrenData = useCallback(
+    (parent: T) => {
+      const records: T[] = [];
+      const data = parent?.children;
+      const parentKey = getRowKey(rowKey, parent);
+      if (
+        parentKey !== undefined &&
+        data &&
+        data.length &&
+        treeExpandKeys &&
+        treeExpandKeys.indexOf(parentKey) >= 0
+      ) {
+        data.forEach((item) => {
+          records.push(item);
+          const childrenRecords = getTreeChildrenData(item);
+          records.push(...childrenRecords);
+        });
+      }
+      return records;
+    },
+    [rowKey, treeExpandKeys],
+  );
 
   const converToPixel = useCallback((val: string | number | undefined) => {
     if (typeof val === 'number' || val === undefined) return val;
@@ -551,6 +569,58 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   };
 
+  const handleSortChange = (
+    col: ColumnsWithType<T> & { colSpan: number },
+    order: 'asc' | 'desc',
+  ) => {
+    const index = sorterList.findIndex((s) => s.dataIndex === col.dataIndex);
+    const isCancel = index >= 0 && sorterList[index].order === order;
+
+    if (isCancel) {
+      setSorterList((prev) => {
+        return prev.filter((p) => p.dataIndex !== col.dataIndex);
+      });
+      if (typeof onSortCancel === 'function') {
+        onSortCancel(omit(col, ['colSpan', 'type']) as ColumnsType<T>, order);
+      }
+      return;
+    }
+    if (typeof col?.sorter === 'object') {
+      if (index >= 0) {
+        const copyList = [...sorterList];
+        const item = sorterList[index];
+        item.order = order;
+        copyList.splice(index, 1, item);
+        setSorterList(copyList);
+      } else {
+        const list =
+          sorterList.length === 1 && sorterList[0]?.weight === undefined ? [] : [...sorterList];
+        list.push({
+          order,
+          dataIndex: col.dataIndex,
+          sorter: (col.sorter as SorterType<T>).compare,
+          weight: (col.sorter as SorterType<T>).weight,
+        });
+        list.sort((a, b) => {
+          const a1 = (a.weight || 0).toString();
+          const b1 = (b.weight || 0).toString();
+          return a1.localeCompare(b1);
+        });
+        setSorterList(list);
+      }
+      return;
+    }
+    if (typeof col?.sorter === 'function') {
+      setSorterList([
+        {
+          order,
+          dataIndex: col.dataIndex,
+          sorter: col.sorter as (rowA: T, rowB: T) => number,
+        },
+      ]);
+    }
+  };
+
   useEffect(() => {
     if (rowSelection?.selectedRowKeys) {
       const { checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(rowSelection.selectedRowKeys);
@@ -571,6 +641,28 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
     return selectedKeys.length === allKeys.length ? true : 'indeterminate';
   }, [selectedKeys, allKeys]);
+
+  const list = useMemo(() => {
+    const records: T[] = [];
+
+    dataSource.forEach((d) => {
+      records.push(d);
+      const childrenRecords = getTreeChildrenData(d);
+      records.push(...childrenRecords);
+    });
+
+    sorterList.forEach((s) => {
+      records.sort((a, b) => {
+        const compareResult = s.sorter(a, b);
+        if (compareResult !== 0) {
+          return s.order === 'asc' ? compareResult : -compareResult;
+        }
+        return compareResult;
+      });
+    });
+
+    return records;
+  }, [dataSource, getTreeChildrenData, sorterList]);
 
   const renderBody = () => {
     return (
@@ -604,9 +696,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           <Thead
             checked={checked}
             columns={formatColumns}
+            sorterList={sorterList}
             expandable={expandable}
             rowSelection={rowSelection}
+            renderSorter={renderSorter}
             onSelectAll={handleSelectAll}
+            onSort={handleSortChange}
           />
         </table>
       </div>

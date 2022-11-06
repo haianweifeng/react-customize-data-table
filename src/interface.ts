@@ -31,8 +31,15 @@ export interface RowSelectionType<T> {
 }
 
 export interface SorterType<T> {
-  compare: (rowA: T, rowB: T) => any;
+  compare: (rowA: T, rowB: T) => number;
   weight: number;
+}
+
+export interface SorterListType<T> {
+  order: 'asc' | 'desc';
+  sorter: (rowA: T, rowB: T) => number;
+  dataIndex: string;
+  weight?: number;
 }
 
 export type CellType = { colSpan?: number; rowSpan?: number };
@@ -63,10 +70,14 @@ export interface ColumnsType<T> {
   headerColSpan?: number;
   /** 设置单元格属性 */
   onCell?: (record: T, rowIndex: number) => CellType;
-  /** 默认排序 */
-  defaultOrder?: 'asc' | 'desc';
+  // /** 支持的排序方式 todo 好像不需要 */
+  // sortDirections?: ['ascend', 'descend'];
+  /** 默认排序 defaultSortOrder */
+  defaultSortOrder?: 'asc' | 'desc';
+  // /** 排序的受控属性,外界可用此控制列的排序 */
+  // sortOrder?: 'ascend' | 'descend' | null;
   /** 排序函数 */
-  sorter?: (rowA: T, rowB: T) => void | SorterType<T>;
+  sorter?: (rowA: T, rowB: T) => number | SorterType<T>;
   /** 默认筛选值 */
   defaultFilteredValue?: string[];
   /** 可以自定义筛选菜单 todo */

@@ -4,19 +4,38 @@ import type {
   ColumnsGroupWithType,
   ExpandableType,
   RowSelectionType,
+  SorterListType,
 } from '../interface';
 import Checkbox from '../Checkbox';
+import Sorter from '../Sorter';
 
 interface TheadProps<T> {
+  sorterList: SorterListType<T>[];
   checked: boolean | 'indeterminate';
   expandable?: ExpandableType<T>;
   rowSelection?: RowSelectionType<T>;
   columns: (ColumnsWithType<T> | ColumnsGroupWithType<T>)[];
   onSelectAll: (selected: boolean) => void;
+  onSort: (col: ColumnsWithType<T> & { colSpan: number }, order: 'asc' | 'desc') => void;
+  renderSorter: (params: {
+    activeAsc: boolean;
+    activeDesc: boolean;
+    triggerAsc: () => void;
+    triggerDesc: () => void;
+  }) => React.ReactNode;
 }
 
 function Thead<T>(props: TheadProps<T>) {
-  const { checked, columns, expandable, rowSelection, onSelectAll } = props;
+  const {
+    checked,
+    columns,
+    sorterList,
+    expandable,
+    rowSelection,
+    renderSorter,
+    onSelectAll,
+    onSort,
+  } = props;
 
   const isColumnGroup = useCallback((col: ColumnsWithType<T> | ColumnsGroupWithType<T>) => {
     if (typeof (col as ColumnsGroupWithType<T>).children !== 'undefined') {
@@ -75,6 +94,13 @@ function Thead<T>(props: TheadProps<T>) {
     [onSelectAll],
   );
 
+  const handleSortChange = (
+    col: ColumnsWithType<T> & { colSpan: number },
+    order: 'asc' | 'desc',
+  ) => {
+    onSort(col, order);
+  };
+
   const renderSelection = useCallback(
     (key: string, rowSpan: number) => {
       if (rowSelection?.columnTitle) {
@@ -110,6 +136,21 @@ function Thead<T>(props: TheadProps<T>) {
     [expandable],
   );
 
+  const renderSorterContent = (col: ColumnsWithType<T> & { colSpan: number }) => {
+    const item = sorterList.find((s) => s.dataIndex === col.dataIndex);
+    return (
+      <Sorter
+        activeAsc={item?.order === 'asc'}
+        activeDesc={item?.order === 'desc'}
+        renderSorter={renderSorter}
+        onChange={(order) => {
+          handleSortChange(col, order);
+        }}
+      />
+    );
+  };
+
+  // todo sorter 这个一定要存在
   const renderTh = useCallback(
     (
       col: (ColumnsWithType<T> | ColumnsGroupWithType<T>) & { colSpan: number },
@@ -139,8 +180,13 @@ function Thead<T>(props: TheadProps<T>) {
           } else {
             trs[level].push(
               <th colSpan={col.colSpan} rowSpan={totalLevel - level} key={index}>
-                <div>
-                  <span>{col.title}</span>
+                <div className="has-sorter-filter">
+                  <span className="column-title">{col.title}</span>
+                  <div className="sorter-filter">
+                    {col.sorter
+                      ? renderSorterContent(col as ColumnsWithType<T> & { colSpan: number })
+                      : null}
+                  </div>
                 </div>
               </th>,
             );
