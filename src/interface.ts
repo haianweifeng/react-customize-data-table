@@ -49,6 +49,16 @@ export interface FilterMenusType {
   value: string;
 }
 
+export interface FilterStateType<T> {
+  filteredValue: string[];
+  dataIndex: string;
+  filterMethod?: (value: string, record: T) => boolean;
+}
+
+export interface FilterInfoType {
+  [key: string]: string[];
+}
+
 export interface ColumnsType<T> {
   /** 设置列的对齐方式 */
   align?: 'left' | 'center' | 'right';
@@ -87,20 +97,22 @@ export interface ColumnsType<T> {
   defaultFilteredValue?: string[];
   /** 筛选的受控属性 */
   filteredValue?: string[];
+  /** 筛选是否多选 */
+  filterMultiple?: boolean;
   /** 自定义 filter 图标 */
-  filterIcon?: () => React.ReactNode;
+  filterIcon?: (filtered: boolean) => React.ReactNode;
   /** 筛选菜单项是否可搜索 */
   filterSearch?: boolean;
   /** 表头的筛选菜单项 */
   filters?: FilterMenusType[];
-  /** 可以自定义筛选菜单 todo */
-  filterDropdown?: () => React.ReactNode;
-  /** 用于控制自定义筛选菜单是否可见 */
-  filterDropdownOpen?: boolean;
+  // /** 可以自定义筛选菜单 todo */
+  // filterDropdown?: () => React.ReactNode;
+  // /** 用于控制自定义筛选菜单是否可见 */
+  // filterDropdownOpen?: boolean;
   /** 筛选函数 */
-  onFilter?: () => any;
-  /** 自定义筛选菜单可见变化时调用 */
-  onFilterDropdownOpenChange?: (open: boolean) => any;
+  filterMethod?: (value: string, record: T) => boolean;
+  // /** 自定义筛选菜单可见变化时调用 */
+  // onFilterDropdownOpenChange?: (open: boolean) => any;
 }
 
 export interface ColumnsGroupType<T> extends Omit<ColumnsType<T>, 'dataIndex'> {

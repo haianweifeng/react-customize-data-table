@@ -5,12 +5,15 @@ import type {
   ExpandableType,
   RowSelectionType,
   SorterStateType,
+  FilterStateType,
 } from '../interface';
 import Checkbox from '../Checkbox';
 import Sorter from '../Sorter';
+import Filter from '../Filter';
 
 interface TheadProps<T> {
   sorterState: SorterStateType<T>[];
+  filterState: FilterStateType<T>[];
   checked: boolean | 'indeterminate';
   expandable?: ExpandableType<T>;
   rowSelection?: RowSelectionType<T>;
@@ -23,6 +26,7 @@ interface TheadProps<T> {
     triggerAsc: () => void;
     triggerDesc: () => void;
   }) => React.ReactNode;
+  onFilterChange: (col: ColumnsWithType<T> & { colSpan: number }, filteredValue: string[]) => void;
 }
 
 function Thead<T>(props: TheadProps<T>) {
@@ -30,11 +34,13 @@ function Thead<T>(props: TheadProps<T>) {
     checked,
     columns,
     sorterState,
+    filterState,
     expandable,
     rowSelection,
     renderSorter,
     onSelectAll,
     onSort,
+    onFilterChange,
   } = props;
 
   const isColumnGroup = useCallback((col: ColumnsWithType<T> | ColumnsGroupWithType<T>) => {
@@ -150,7 +156,24 @@ function Thead<T>(props: TheadProps<T>) {
     );
   };
 
-  // todo sorter 这个一定要存在
+  const renderFilterContent = (col: ColumnsWithType<T> & { colSpan: number }) => {
+    const curr = filterState.find((f) => f.dataIndex === col.dataIndex);
+    return (
+      <Filter
+        filters={col.filters!}
+        filterIcon={col.filterIcon}
+        filterMultiple={col.filterMultiple !== false}
+        filteredValue={curr?.filteredValue || []}
+        onReset={() => {
+          onFilterChange(col, []);
+        }}
+        onChange={(checkedValue: string[]) => {
+          onFilterChange(col, checkedValue);
+        }}
+      />
+    );
+  };
+
   const renderTh = useCallback(
     (
       col: (ColumnsWithType<T> | ColumnsGroupWithType<T>) & { colSpan: number },
@@ -185,6 +208,9 @@ function Thead<T>(props: TheadProps<T>) {
                   <div className="sorter-filter">
                     {col.sorter
                       ? renderSorterContent(col as ColumnsWithType<T> & { colSpan: number })
+                      : null}
+                    {col.filters
+                      ? renderFilterContent(col as ColumnsWithType<T> & { colSpan: number })
                       : null}
                   </div>
                 </div>

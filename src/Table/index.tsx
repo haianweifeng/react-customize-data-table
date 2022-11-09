@@ -19,6 +19,8 @@ import type {
   RowKeyType,
   SorterStateType,
   SorterType,
+  FilterStateType,
+  FilterInfoType,
 } from '../interface';
 import '../style/index.less';
 import { getRowKey, toPoint, findParentByKey } from '../utils/util';
@@ -81,7 +83,9 @@ export interface TableProps<T> {
   /** 排序取消事件 */
   onSortCancel?: (col: ColumnsType<T>, order: 'asc' | 'desc') => void;
   /** 排序事件 todo 防止向服务端请求时候需要带上相应的字段 还没有弄服务端的md 等分页弄好了 */
-  onSort: (column: ColumnsType<T>, order: 'ascend' | 'descend') => void;
+  onSort?: (column: ColumnsType<T>, order: 'ascend' | 'descend') => void;
+  /** 筛选事件 */
+  onFilter?: (filterInfo: FilterInfoType) => void;
   /** 配置展开属性 todo header 需要表头空一行 */
   expandable?: ExpandableType<T>;
   /** 配置树形数据属性 */
@@ -90,6 +94,9 @@ export interface TableProps<T> {
 // todo 还未测试列宽设为百分比的情况
 // todo scroll: { width, height } 设置滚动时候表格的宽度 高度
 // todo 表头弄好 要考虑处理border
+// todo onFilter 是不是要放到分页那时候一起处理 为了服务端处理  onSort 也是一样的
+// todo 如果没有筛选到数据时候提示文本
+// todo 增加radio 的filter
 // 设置colgroup 列的宽度  然后获取每个单元格最后渲染的宽度 重新设置 colgroup 的宽度
 function Table<T extends { key?: number | string; children?: T[] }>(props: TableProps<T>) {
   const {
@@ -107,6 +114,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     treeProps,
     renderSorter,
     onSortCancel,
+    onFilter,
   } = props;
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 44;
@@ -372,6 +380,20 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return flatData(dataSource);
   }, [dataSource, flatData]);
 
+  const filterStates = useMemo(() => {
+    const filter: FilterStateType<T>[] = [];
+    flatColumns.forEach((col) => {
+      if (col?.filters || typeof col?.filterMethod === 'function') {
+        filter.push({
+          filteredValue: col?.filteredValue || col?.defaultFilteredValue || [],
+          dataIndex: col.dataIndex,
+          filterMethod: col?.filterMethod,
+        });
+      }
+    });
+    return filter;
+  }, [flatColumns]);
+
   const [colWidths, setColWidths] = useState<number[]>([]);
 
   // const [startRowIndex, setStartRowIndex] = useState<number>(0);
@@ -423,6 +445,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     });
     return sorter;
   });
+
+  const [filterState, setFilterState] = useState<FilterStateType<T>[]>(filterStates);
 
   const getTreeChildrenData = useCallback(
     (parent: T) => {
@@ -517,7 +541,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       selectedRows = isRadio ? [] : Object.values(checkedRowWithKey);
       setHalfSelectedKeys(halfCheckedKeys);
     }
-    if (!rowSelection?.selectedRowKeys) {
+    if (!('selectedRowKeys' in rowSelection!) || rowSelection?.selectedRowKeys === undefined) {
       setSelectedKeys(selectKeys);
     }
 
@@ -552,7 +576,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       rowSelection.onChange(selectKeys, selectedRows);
     }
 
-    if (!rowSelection?.selectedRowKeys) {
+    if (!('selectedRowKeys' in rowSelection!) || rowSelection?.selectedRowKeys === undefined) {
       setSelectedKeys(selectKeys);
     }
   };
@@ -621,9 +645,34 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   };
 
+  const handleFilterChange = (
+    col: ColumnsWithType<T> & { colSpan: number },
+    checkedValue: string[],
+  ) => {
+    const index = filterState.findIndex((f) => f.dataIndex === col.dataIndex);
+    if (index >= 0) {
+      const copyFilterState = [...filterState];
+      const item = copyFilterState[index];
+      item.filteredValue = checkedValue;
+      copyFilterState.splice(index, 1, item);
+      if (!('filteredValue' in col)) {
+        setFilterState(copyFilterState);
+      }
+      if (typeof onFilter === 'function') {
+        const filterInfo: FilterInfoType = {};
+        copyFilterState.forEach((f) => {
+          filterInfo[f.dataIndex] = f.filteredValue;
+        });
+        onFilter(filterInfo);
+      }
+    }
+  };
+
   useEffect(() => {
-    if (rowSelection?.selectedRowKeys) {
-      const { checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(rowSelection.selectedRowKeys);
+    if (rowSelection && 'selectedRowKeys' in rowSelection) {
+      const { checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(
+        rowSelection.selectedRowKeys || [],
+      );
       setSelectedKeys(checkedKeys);
       setHalfSelectedKeys(halfCheckedKeys);
     }
@@ -635,6 +684,10 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   }, [treeProps]);
 
+  useEffect(() => {
+    setFilterState(filterStates);
+  }, [filterStates]);
+
   const checked = useMemo(() => {
     if (!selectedKeys.length) {
       return false;
@@ -643,7 +696,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   }, [selectedKeys, allKeys]);
 
   const list = useMemo(() => {
-    const records: T[] = [];
+    let records: T[] = [];
 
     dataSource.forEach((d) => {
       records.push(d);
@@ -661,8 +714,21 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       });
     });
 
+    filterState.forEach((f) => {
+      records = records.filter((r) => {
+        let result = !f.filteredValue.length;
+        for (let i = 0; i < f.filteredValue.length; i++) {
+          if (typeof f?.filterMethod === 'function') {
+            result = f.filterMethod(f.filteredValue[i], r);
+            if (result) break;
+          }
+        }
+        return result;
+      });
+    });
+
     return records;
-  }, [dataSource, getTreeChildrenData, sorterState]);
+  }, [dataSource, getTreeChildrenData, sorterState, filterState]);
 
   const renderBody = () => {
     return (
@@ -697,11 +763,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             checked={checked}
             columns={formatColumns}
             sorterState={sorterState}
+            filterState={filterState}
             expandable={expandable}
             rowSelection={rowSelection}
             renderSorter={renderSorter}
             onSelectAll={handleSelectAll}
             onSort={handleSortChange}
+            onFilterChange={handleFilterChange}
           />
         </table>
       </div>
