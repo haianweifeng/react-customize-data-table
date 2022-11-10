@@ -42,8 +42,6 @@ export interface SorterStateType<T> {
   weight?: number;
 }
 
-export type CellType = { colSpan?: number; rowSpan?: number };
-
 export interface FilterMenusType {
   label: string;
   value: string;
@@ -102,10 +100,10 @@ export interface ColumnsType<T> {
   /** 自定义 filter 图标 */
   filterIcon?: (filtered: boolean) => React.ReactNode;
   /** 筛选菜单项是否可搜索 */
-  filterSearch?: boolean;
+  filterSearch?: (value: string, record: FilterMenusType) => boolean | boolean;
   /** 表头的筛选菜单项 */
   filters?: FilterMenusType[];
-  // /** 可以自定义筛选菜单 todo */
+  // /** 可以自定义筛选菜单 */
   // filterDropdown?: () => React.ReactNode;
   // /** 用于控制自定义筛选菜单是否可见 */
   // filterDropdownOpen?: boolean;
@@ -179,6 +177,8 @@ export interface CellProps {
   /** 单元格渲染内容 */
   content: React.ReactNode;
 }
+
+export type CellType = { colSpan?: number; rowSpan?: number };
 
 export interface ScrollType {
   /** 设置横向滚动时table 的宽度 */

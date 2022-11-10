@@ -33,7 +33,7 @@
 }
 
 .filterList {
-  padding: 8px 0 0;
+  // padding: 8px 0 0;
 }
 
 .filterItem {
@@ -44,6 +44,62 @@
   &:hover {
     background: #f3f3f3;
   }
+}
+
+.emptySection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: normal;
+
+  img {
+    width: 34px;
+  }
+
+  span {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    color: #c5c8ce;
+  }
+}
+
+.filterSearch {
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+.inputWrap {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 4px 11px;
+  color: #000000d9;
+  border: 1px solid #d9d9d9;
+  border-radius: 2px;
+
+  &:hover {
+    border: 1px solid #197afa;
+  }
+
+  &.focused {
+    border: 1px solid #197afa;
+  }
+}
+
+.inputPrefix {
+  margin-right: 4px;
+  img {
+    width: 14px;
+  }
+}
+
+.searchInput {
+  display: inline-block;
+  box-sizing: border-box;
+  color: #000000d9;
+  border: none;
+  outline: none;
 }
 
 .filterFooter {

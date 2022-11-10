@@ -164,6 +164,7 @@ function Thead<T>(props: TheadProps<T>) {
         filterIcon={col.filterIcon}
         filterMultiple={col.filterMultiple !== false}
         filteredValue={curr?.filteredValue || []}
+        filterSearch={col?.filterSearch}
         onReset={() => {
           onFilterChange(col, []);
         }}

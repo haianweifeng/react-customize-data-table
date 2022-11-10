@@ -1,6 +1,6 @@
 ### 筛选
 
-###### 对某一列数据进行筛选，使用列的 filters 属性来指定需要筛选菜单的列，onFilter 用于筛选当前数据，filterMultiple 用于指定多选和单选。
+###### 对某一列数据进行筛选，使用列的 filters 属性来指定需要筛选菜单的列，filterMethod 用于筛选当前数据，filterMultiple 用于指定多选和单选。
 
 ###### 使用 defaultFilteredValue 属性，设置列的默认筛选。
 
@@ -30,30 +30,10 @@ const columns: ColumnsType<DataType> = [
       {
         label: 'Category 1',
         value: 'Category 1',
-        children: [
-          {
-            label: 'Yellow',
-            value: 'Yellow',
-          },
-          {
-            label: 'Pink',
-            value: 'Pink',
-          },
-        ],
       },
       {
-        text: 'Category 2',
+        label: 'Category 2',
         value: 'Category 2',
-        children: [
-          {
-            label: 'Green',
-            value: 'Green',
-          },
-          {
-            label: 'Black',
-            value: 'Black',
-          },
-        ],
       },
     ],
     filterSearch: true,
@@ -84,7 +64,10 @@ const columns: ColumnsType<DataType> = [
       },
     ],
     filterMethod: (value: string, record) => record.address.startsWith(value),
-    filterSearch: true,
+    // filterSearch: true,
+    filterSearch: (value, record) => {
+      return record.label.toString().toLowerCase().includes(value.trim().toLowerCase());
+    },
     width: '40%',
   },
 ];
