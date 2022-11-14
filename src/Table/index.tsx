@@ -96,7 +96,6 @@ export interface TableProps<T> {
 // todo 表头弄好 要考虑处理border
 // todo onFilter 是不是要放到分页那时候一起处理 为了服务端处理  onSort 也是一样的
 // todo 如果没有筛选到数据时候提示文本
-// todo 增加radio 的filter
 // 设置colgroup 列的宽度  然后获取每个单元格最后渲染的宽度 重新设置 colgroup 的宽度
 function Table<T extends { key?: number | string; children?: T[] }>(props: TableProps<T>) {
   const {
