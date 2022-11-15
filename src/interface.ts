@@ -53,9 +53,10 @@ export interface FilterStateType<T> {
   filterMethod?: (value: string, record: T) => boolean;
 }
 
-export interface FilterInfoType {
-  [key: string]: string[];
-}
+export type FilterInfoType = Record<string, string[]>;
+// export interface FilterInfoType {
+//   [key: string]: string[];
+// }
 
 export interface ColumnsType<T> {
   /** 设置列的对齐方式 */

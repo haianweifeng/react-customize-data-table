@@ -7,6 +7,10 @@ export { default as Radio } from './Radio';
 
 export { default as Pagination } from './Pagination';
 
+export { default as Icon } from './Icon';
+
 export type { ColumnsType } from './interface';
+
+export * from './index.less';
 
 // export * from './style/variables.less';

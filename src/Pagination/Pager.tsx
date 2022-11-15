@@ -1,6 +1,5 @@
 import React, { isValidElement } from 'react';
 import classnames from 'classnames';
-import styles from './index.less';
 
 interface PagerProps {
   page: number;
@@ -9,7 +8,7 @@ interface PagerProps {
   onClick: (page: number) => void;
   itemRender?: (
     page: number,
-    type: 'page' | 'prev' | 'next' | 'jump-prev' | 'jump-next',
+    type: 'page' | 'prev' | 'next',
     originalElement: React.ReactNode,
   ) => React.ReactNode;
 }
@@ -18,9 +17,9 @@ const Pager = (props: PagerProps) => {
   const { disabled, page, active, itemRender, onClick } = props;
 
   const cls = classnames({
-    [styles.paginationItem]: true,
-    [styles.paginationItemActive]: active,
-    [styles.pageinationItemDisabled]: disabled,
+    'pagination-item': true,
+    'pagination-item-active': active,
+    'pageination-item-disabled': disabled,
   });
 
   const handleClick = () => {
@@ -35,8 +34,21 @@ const Pager = (props: PagerProps) => {
   );
 
   if (typeof itemRender === 'function') {
-    const customNode = itemRender(page, 'page', defaultNode);
-    return isValidElement(customNode) ? customNode : defaultNode;
+    const customNode = itemRender(page, 'page', page);
+    return isValidElement(customNode) ? (
+      <div
+        className={classnames({
+          'pagination-custom-item': true,
+          'pageination-custom-item-active': active,
+          'pagination-custom-item-disabled': disabled,
+        })}
+        onClick={handleClick}
+      >
+        {customNode}
+      </div>
+    ) : (
+      defaultNode
+    );
   } else {
     return defaultNode;
   }

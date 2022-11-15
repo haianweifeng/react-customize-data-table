@@ -100,12 +100,12 @@ function Thead<T>(props: TheadProps<T>) {
     [onSelectAll],
   );
 
-  const handleSortChange = (
-    col: ColumnsWithType<T> & { colSpan: number },
-    order: 'asc' | 'desc',
-  ) => {
-    onSort(col, order);
-  };
+  const handleSortChange = useCallback(
+    (col: ColumnsWithType<T> & { colSpan: number }, order: 'asc' | 'desc') => {
+      onSort(col, order);
+    },
+    [onSort],
+  );
 
   const renderSelection = useCallback(
     (key: string, rowSpan: number) => {
@@ -142,38 +142,44 @@ function Thead<T>(props: TheadProps<T>) {
     [expandable],
   );
 
-  const renderSorterContent = (col: ColumnsWithType<T> & { colSpan: number }) => {
-    const item = sorterState.find((s) => s.dataIndex === col.dataIndex);
-    return (
-      <Sorter
-        activeAsc={item?.order === 'asc'}
-        activeDesc={item?.order === 'desc'}
-        renderSorter={renderSorter}
-        onChange={(order) => {
-          handleSortChange(col, order);
-        }}
-      />
-    );
-  };
+  const renderSorterContent = useCallback(
+    (col: ColumnsWithType<T> & { colSpan: number }) => {
+      const item = sorterState.find((s) => s.dataIndex === col.dataIndex);
+      return (
+        <Sorter
+          activeAsc={item?.order === 'asc'}
+          activeDesc={item?.order === 'desc'}
+          renderSorter={renderSorter}
+          onChange={(order) => {
+            handleSortChange(col, order);
+          }}
+        />
+      );
+    },
+    [sorterState, renderSorter, handleSortChange],
+  );
 
-  const renderFilterContent = (col: ColumnsWithType<T> & { colSpan: number }) => {
-    const curr = filterState.find((f) => f.dataIndex === col.dataIndex);
-    return (
-      <Filter
-        filters={col.filters!}
-        filterIcon={col.filterIcon}
-        filterMultiple={col.filterMultiple !== false}
-        filteredValue={curr?.filteredValue || []}
-        filterSearch={col?.filterSearch}
-        onReset={() => {
-          onFilterChange(col, []);
-        }}
-        onChange={(checkedValue: string[]) => {
-          onFilterChange(col, checkedValue);
-        }}
-      />
-    );
-  };
+  const renderFilterContent = useCallback(
+    (col: ColumnsWithType<T> & { colSpan: number }) => {
+      const curr = filterState.find((f) => f.dataIndex === col.dataIndex);
+      return (
+        <Filter
+          filters={col.filters!}
+          filterIcon={col.filterIcon}
+          filterMultiple={col.filterMultiple !== false}
+          filteredValue={curr?.filteredValue || []}
+          filterSearch={col?.filterSearch}
+          onReset={() => {
+            onFilterChange(col, []);
+          }}
+          onChange={(checkedValue: string[]) => {
+            onFilterChange(col, checkedValue);
+          }}
+        />
+      );
+    },
+    [onFilterChange, filterState],
+  );
 
   const renderTh = useCallback(
     (
@@ -221,7 +227,7 @@ function Thead<T>(props: TheadProps<T>) {
         }
       }
     },
-    [renderSelection, renderExpand, isColumnGroup],
+    [renderSelection, renderExpand, renderSorterContent, renderFilterContent, isColumnGroup],
   );
 
   const headerTrs = useMemo(() => {

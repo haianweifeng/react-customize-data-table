@@ -1,88 +1,106 @@
-.container {
-  display: flex;
-  align-items: center;
-  color: rgba(0, 0, 0, 0.85);
-  font-size: 14px;
+@import '../style/variables.less';
 
-  &.center {
+@min-width: 32px;
+@height: 32px;
+@line-height: 32px;
+
+@small-height: 24px;
+@small-min-width: 24px;
+@small-line-height: 24px;
+
+@disabled-color: rgba(0, 0, 0, 0.25);
+
+@margin-right: 8px;
+
+@border-color: #d9d9d9;
+@border-active-color: #197afa;
+
+@background-disabled-color: #f5f5f5;
+
+.pagination-container {
+  color: rgba(0, 0, 0, 0.85);
+
+  &.pagination-center {
     text-align: center;
   }
 
-  &.right {
+  &.pagination-right {
     text-align: right;
   }
 }
 
-.small {
-  font-size: 12px;
+.pagination-small {
+  font-size: @font-small-size;
 
-  .paginationItem {
-    min-width: 24px;
-    height: 24px;
-    line-height: 24px;
+  .pagination-item {
+    min-width: @small-min-width;
+    height: @small-height;
+    line-height: @small-line-height;
   }
 
-  .selector {
-    height: 24px;
+  .pagination-item-more {
+    line-height: 33px;
   }
 
-  .selectList {
+  .pagination-select-inner {
+    height: @small-height;
+  }
+
+  .pagination-pagesize-list {
     top: 32px;
   }
 
-  .jumperSection {
-    height: 24px;
-    line-height: 24px;
+  .pagination-jumper {
+    height: @small-height;
+    line-height: @small-line-height;
 
     input {
-      height: 24px;
-      line-height: 24px;
+      height: @small-height;
+      line-height: @small-line-height;
     }
+  }
+
+  .pagination-arrow-icon {
+    font-size: 24px;
   }
 }
 
-.paginationItem {
+.pagination-item {
   display: inline-block;
-  min-width: 32px;
-  height: 32px;
-  margin-right: 8px;
-  line-height: 30px;
+  min-width: @min-width;
+  height: @height;
+  margin-right: @margin-right;
+  line-height: @line-height;
   text-align: center;
   vertical-align: middle;
-  border: 1px solid #d9d9d9;
+  border: 1px solid @border-color;
   border-radius: 2px;
   outline: 0;
   cursor: pointer;
   user-select: none;
 
-  &:hover {
+  &:hover,
+  &.pagination-item-active {
     color: #197afa;
     font-weight: 500;
     background: #fff;
-    border-color: #197afa;
+    border-color: @border-active-color;
   }
 
-  &.paginationItemActive {
-    color: #197afa;
-    font-weight: 500;
-    background: #fff;
-    border-color: #197afa;
-  }
-
-  &.pageinationItemDisabled {
-    color: rgba(0, 0, 0, 0.25);
-    background: #f5f5f5;
-    border-color: #d9d9d9;
+  &.pageination-item-disabled {
+    color: @disabled-color;
+    background: @background-disabled-color;
+    border-color: @border-color;
     cursor: not-allowed;
 
-    &.paginationItemActive {
-      color: rgba(0, 0, 0, 0.25);
+    &.pagination-item-active {
+      color: @disabled-color;
       background: #e6e6e6;
     }
   }
 }
 
-.arrowItem {
+.pagination-item-more {
   position: relative;
   line-height: 40px;
   border: 0;
@@ -93,19 +111,18 @@
     top: 50%;
     left: 50%;
     display: block;
-    color: rgba(0, 0, 0, 0.25);
+    color: @disabled-color;
     transform: translate(-50%, -50%);
     content: '•••';
   }
 
-  .doubleArrow {
-    width: 18px;
-    height: 18px;
+  .pagination-double-arrow-icon {
+    font-size: 18px;
     opacity: 0;
   }
 
   &:hover {
-    .doubleArrow {
+    .pagination-double-arrow-icon {
       opacity: 1;
     }
 
@@ -115,11 +132,11 @@
   }
 }
 
-.arrowItemDisabled {
+.pagination-item-more-disabled {
   cursor: not-allowed;
 
   &:hover {
-    .doubleArrow {
+    .pagination-double-arrow-icon {
       opacity: 0;
     }
 
@@ -129,50 +146,70 @@
   }
 }
 
-.prevNextItem {
-  line-height: 34px;
+.pagination-arrow-icon {
+  font-size: 30px;
 }
 
-.selectSection {
+.pagination-custom-item {
+  display: inline-block;
+  margin-right: @margin-right;
+  cursor: pointer;
+}
+
+.pageination-custom-item-active {
+  color: #197afa;
+}
+
+.pagination-custom-item-disabled {
+  color: @disabled-color;
+  cursor: not-allowed;
+}
+
+.pagination-pagesize {
   position: relative;
   display: inline-block;
-  margin-right: 8px;
+  margin-right: @margin-right;
 }
 
-.selector {
+.pagination-select-inner {
   display: flex;
   align-items: center;
-  height: 32px;
+  height: @height;
   padding: 0 12px;
   background-color: #fff;
-  border: 1px solid #d9d9d9;
+  border: 1px solid @border-color;
   border-radius: 2px;
   cursor: pointer;
 
   &:hover {
-    border-color: #197afa;
+    border-color: @border-active-color;
   }
 }
 
-.disabledSelector {
-  color: #00000040;
-  background: #f5f5f5;
+.pagination-select-disabled {
+  color: @disabled-color;
+  background: @background-disabled-color;
   cursor: not-allowed;
 
   &:hover {
-    border-color: #d9d9d9;
+    border-color: @border-color;
   }
 }
 
-.selectorFocus {
-  border-color: #197afa;
+.pagination-select-focus {
+  border-color: @border-active-color;
 }
 
-.selectItem {
+.pagination-select-result {
   padding-right: 18px;
 }
 
-.selectList {
+.pagination-down-icon {
+  color: #bfbfbf;
+  font-size: 28px;
+}
+
+.pagination-pagesize-list {
   position: absolute;
   top: 40px;
   left: 0;
@@ -186,12 +223,12 @@
   transition: all 0.3s;
 }
 
-.showSelectList {
+.pagination-pagesize-list-show {
   visibility: visible;
   opacity: 1;
 }
 
-.optionItem {
+.pagination-select-option {
   min-height: 32px;
   padding: 5px 12px;
   line-height: 22px;
@@ -202,47 +239,47 @@
   }
 }
 
-.optionActiveItem {
+.pagination-select-option-active {
   font-weight: bold;
   background-color: #e6f7ff;
 }
 
-.jumperSection {
+.pagination-jumper {
   display: inline-block;
-  height: 32px;
-  margin-right: 8px;
-  line-height: 32px;
+  height: @height;
+  margin-right: @margin-right;
+  line-height: @line-height;
   vertical-align: top;
 
   input {
     width: 50px;
-    height: 32px;
+    height: @height;
     margin: 0 8px;
     padding: 4px 11px;
     color: rgba(0, 0, 0, 0.85);
-    border: 1px solid #d9d9d9;
+    border: 1px solid @border-color;
     border-radius: 2px;
 
     &:hover {
-      border-color: #197afa;
+      border-color: @border-active-color;
     }
 
     &:focus {
-      border-color: #197afa;
+      border-color: @border-active-color;
       outline: none;
     }
   }
 }
 
-.disabledJumperSection {
+.pagination-jumper-disabled {
   input {
-    color: rgba(0, 0, 0, 0.25);
-    background-color: #f5f5f5;
-    border-color: #d9d9d9;
+    color: @disabled-color;
+    background-color: @background-disabled-color;
+    border-color: @border-color;
     cursor: not-allowed;
 
     &:hover {
-      border-color: #d9d9d9;
+      border-color: @border-color;
     }
 
     &:focus {
@@ -251,10 +288,10 @@
   }
 }
 
-.info {
+.pagination-info {
   display: inline-block;
-  height: 32px;
-  margin-right: 8px;
-  line-height: 30px;
+  height: @height;
+  margin-right: @margin-right;
+  line-height: @line-height;
   vertical-align: middle;
 }

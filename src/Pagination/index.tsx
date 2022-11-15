@@ -1,9 +1,13 @@
 import React, { useState, useMemo, useEffect, useRef, isValidElement } from 'react';
 import classnames from 'classnames';
 import Pager from './Pager';
-import leftDoubleArrow from '@/assets/left-double-arrow.svg';
-import rightDoubleArrow from '@/assets/right-double-arrow.svg';
-import styles from './index.less';
+import Icon from '../Icon';
+import { ReactComponent as DownIcon } from '@/assets/down.svg';
+import { ReactComponent as LeftArrow } from '@/assets/arrow-left.svg';
+import { ReactComponent as RightArrow } from '@/assets/arrow-right.svg';
+import { ReactComponent as LeftDoubleArrow } from '@/assets/left-double-arrow.svg';
+import { ReactComponent as RightDoubleArrow } from '@/assets/right-double-arrow.svg';
+import './index.less';
 
 interface PaginationProps {
   className?: string;
@@ -17,10 +21,10 @@ interface PaginationProps {
   pageSize?: number;
   disabled?: boolean;
   pageSizeOptions?: number[];
-  layout: string[]; // sizes, prev, pager, next, jumper, ->, total total 改成函数  'simple': 简约页码(和links不要同时使用)
+  layout: string[]; // sizes, prev, pager, next, jumper, function({ current, total, pageSize }): 匿名函数，用来信息展示
   itemRender?: (
     page: number,
-    type: 'page' | 'prev' | 'next' | 'jump-prev' | 'jump-next',
+    type: 'page' | 'prev' | 'next',
     originalElement: React.ReactNode,
   ) => React.ReactNode;
   onChange?: (current: number, pageSize: number) => void;
@@ -43,6 +47,7 @@ const Pagination = (props: PaginationProps) => {
   } = props;
 
   const selectRef = useRef<any>(null);
+  const inputRef = useRef<any>(null);
 
   const [current, setCurrent] = useState<number>(() => {
     return props.current || defaultCurrent;
@@ -70,13 +75,12 @@ const Pagination = (props: PaginationProps) => {
     }
   };
 
-  const handleSelect = (size: number) => {
-    setPageSize(size);
+  const handleSelect = (sizes: number) => {
     if (!('pageSize' in props)) {
-      setPageSize(size);
+      setPageSize(sizes);
     }
     if (typeof onChange === 'function') {
-      onChange(1, size);
+      onChange(1, sizes);
     }
   };
 
@@ -89,6 +93,8 @@ const Pagination = (props: PaginationProps) => {
 
       page = Math.max(1, page);
       page = Math.min(totalPages, page);
+
+      inputRef.current.value = '';
 
       if (!('current' in props)) {
         setCurrent(page);
@@ -108,6 +114,8 @@ const Pagination = (props: PaginationProps) => {
 
     page = Math.max(1, page);
     page = Math.min(totalPages, page);
+
+    inputRef.current.value = '';
 
     if (!('current' in props)) {
       setCurrent(page);
@@ -136,6 +144,7 @@ const Pagination = (props: PaginationProps) => {
 
     if (totalPages - current <= pageBufferSize * 2 && current > 3) {
       left = totalPages - pageBufferSize * 2 - 2;
+      left = Math.max(1, left);
     }
 
     if (left > 1) {
@@ -165,18 +174,19 @@ const Pagination = (props: PaginationProps) => {
 
     return pagers;
   }, [totalPages, current]);
-  console.log(pagerList);
 
   useEffect(() => {
     if ('current' in props) {
       setCurrent(props.current || 1);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.current]);
 
   useEffect(() => {
     if ('pageSize' in props) {
       setPageSize(props.pageSize || 10);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.pageSize]);
 
   useEffect(() => {
@@ -212,69 +222,70 @@ const Pagination = (props: PaginationProps) => {
     const page = type === 'next' ? current + 1 : current - 1;
     const isDisabled = page < 1 || page > totalPages || disabled;
 
-    const leftArrowSvg = (
-      <svg
-        viewBox="64 64 896 896"
-        focusable="false"
-        data-icon="left"
-        width="1em"
-        height="1em"
-        fill="currentColor"
-        aria-hidden="true"
-      >
-        <path d="M724 218.3V141c0-6.7-7.7-10.4-12.9-6.3L260.3 486.8a31.86 31.86 0 000 50.3l450.8 352.1c5.3 4.1 12.9.4 12.9-6.3v-77.3c0-4.9-2.3-9.6-6.1-12.6l-360-281 360-281.1c3.8-3 6.1-7.7 6.1-12.6z"></path>
-      </svg>
+    const originalElement = (
+      <Icon
+        component={type === 'next' ? RightArrow : LeftArrow}
+        className="pagination-arrow-icon"
+      />
     );
 
-    const rightArrowSvg = (
-      <svg
-        viewBox="64 64 896 896"
-        focusable="false"
-        data-icon="right"
-        width="1em"
-        height="1em"
-        fill="currentColor"
-        aria-hidden="true"
-      >
-        <path d="M765.7 486.8L314.9 134.7A7.97 7.97 0 00302 141v77.3c0 4.9 2.3 9.6 6.1 12.6l360 281.1-360 281.1c-3.9 3-6.1 7.7-6.1 12.6V883c0 6.7 7.7 10.4 12.9 6.3l450.8-352.1a31.96 31.96 0 000-50.4z"></path>
-      </svg>
-    );
-
-    const defaultNode = type === 'next' ? rightArrowSvg : leftArrowSvg;
-
-    return (
+    const defaultNode = (
       <div
         key={type}
         className={classnames({
-          [styles.paginationItem]: true,
-          [styles.pageinationItemDisabled]: isDisabled,
-          [styles.prevNextItem]: true,
+          'pagination-item': true,
+          'pageination-item-disabled': isDisabled,
         })}
         onClick={() => {
           if (isDisabled) return;
           handleChange(page);
         }}
       >
-        {typeof itemRender === 'function'
-          ? isValidElement(itemRender(page, type as 'next' | 'prev', defaultNode))
-          : defaultNode}
+        {originalElement}
       </div>
     );
+
+    if (typeof itemRender === 'function') {
+      const content = itemRender(page, type as 'next' | 'prev', originalElement);
+      return isValidElement(content) ? (
+        <div
+          key={type}
+          className={classnames({
+            'pagination-custom-item': true,
+            'pagination-custom-item-disabled': isDisabled,
+          })}
+          onClick={() => {
+            if (isDisabled) return;
+            handleChange(page);
+          }}
+        >
+          {content}
+        </div>
+      ) : (
+        defaultNode
+      );
+    } else {
+      return defaultNode;
+    }
   };
 
   const renderJumpPrevNext = (type: string, page: number) => {
-    const defaultNode = (
-      <img
-        src={type === 'jump-next' ? rightDoubleArrow : leftDoubleArrow}
-        alt={type}
-        className={styles.doubleArrow}
-      />
+    return (
+      <div
+        key={type}
+        className={classnames({
+          'pagination-item': true,
+          'pagination-item-more': true,
+          'pagination-item-more-disabled': disabled,
+        })}
+        onClick={() => handleChange(page)}
+      >
+        <Icon
+          component={type === 'jump-next' ? RightDoubleArrow : LeftDoubleArrow}
+          className="pagination-double-arrow-icon"
+        />
+      </div>
     );
-    if (typeof itemRender === 'function') {
-      const customNode = itemRender(page, type as 'jump-next' | 'jump-prev', defaultNode);
-      return isValidElement(customNode) ? customNode : defaultNode;
-    }
-    return defaultNode;
   };
 
   const renderPager = () => {
@@ -293,62 +304,39 @@ const Pagination = (props: PaginationProps) => {
       }
       if (typeof p === 'string') {
         let page =
-          p === 'jump-next' ? current + pageBufferSize * 2 + 1 : current - (pageBufferSize * 2 - 1);
+          p === 'jump-next' ? current + pageBufferSize * 2 + 1 : current - (pageBufferSize * 2 + 1);
         page = Math.max(1, page);
         page = Math.min(totalPages, page);
-        return (
-          <div
-            key={p}
-            className={classnames({
-              [styles.paginationItem]: true,
-              [styles.arrowItemDisabled]: disabled,
-              [styles.arrowItem]: true,
-            })}
-            onClick={() => handleChange(page)}
-          >
-            {renderJumpPrevNext(p, page)}
-          </div>
-        );
+        return renderJumpPrevNext(p, page);
       }
     });
   };
 
   const renderPageSizes = () => {
     return (
-      <div key="sizes" ref={selectRef} className={styles.selectSection} onClick={handleClick}>
+      <div key="sizes" ref={selectRef} className="pagination-pagesize" onClick={handleClick}>
         <div
           className={classnames({
-            [styles.selector]: true,
-            [styles.selectorFocus]: isFocus,
-            [styles.disabledSelector]: disabled,
+            'pagination-select-inner': true,
+            'pagination-select-focus': isFocus,
+            'pagination-select-disabled': disabled,
           })}
         >
-          <span className={styles.selectItem}>{`${pageSize}条/页`}</span>
-          <svg
-            className="icon"
-            viewBox="0 0 1024 1024"
-            version="1.1"
-            xmlns="http://www.w3.org/2000/svg"
-            p-id="3434"
-            width="2em"
-            height="2em"
-          >
-            <path
-              d="M533.333333 605.866667L341.333333 413.866667l29.866667-29.866667 162.133333 162.133333L695.466667 384l29.866666 29.866667-192 192z"
-              fill="#cdcdcd"
-              p-id="3435"
-            ></path>
-          </svg>
+          <span className="pagination-select-result">{`${pageSize}条/页`}</span>
+          <Icon component={DownIcon} className="pagination-down-icon" />
         </div>
         <div
-          className={classnames({ [styles.selectList]: true, [styles.showSelectList]: isFocus })}
+          className={classnames({
+            'pagination-pagesize-list': true,
+            'pagination-pagesize-list-show': isFocus,
+          })}
         >
           {pageSizeOptions.map((p) => {
             return (
               <div
                 className={classnames({
-                  [styles.optionItem]: true,
-                  [styles.optionActiveItem]: pageSize === p,
+                  'pagination-select-option': true,
+                  'pagination-select-option-active': pageSize === p,
                 })}
                 key={p}
                 onClick={() => handleSelect(p)}
@@ -367,21 +355,28 @@ const Pagination = (props: PaginationProps) => {
       <div
         key="jumper"
         className={classnames({
-          [styles.jumperSection]: true,
-          [styles.disabledJumperSection]: disabled,
+          'pagination-jumper': true,
+          'pagination-jumper-disabled': disabled,
         })}
       >
         跳至
-        <input type="text" disabled={disabled} onKeyDown={handleKeyDown} onBlur={handleBlur} />页
+        <input
+          ref={inputRef}
+          type="text"
+          disabled={disabled}
+          onKeyDown={handleKeyDown}
+          onBlur={handleBlur}
+        />
+        页
       </div>
     );
   };
 
   const cls = classnames({
-    [styles.container]: true,
-    [styles.small]: size === 'small',
-    [styles.center]: align === 'center',
-    [styles.right]: align === 'right',
+    'pagination-container': true,
+    'pagination-small': size === 'small',
+    'pagination-center': align === 'center',
+    'pagination-right': align === 'right',
     [className]: !!className,
   });
 
@@ -401,7 +396,7 @@ const Pagination = (props: PaginationProps) => {
           default:
             if (typeof layoutType === 'function') {
               return (
-                <div className={styles.info} key="infos">
+                <div className="pagination-info" key="infos">
                   {(layoutType as any)({ current, total, pageSize })}
                 </div>
               );

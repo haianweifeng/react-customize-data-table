@@ -7,7 +7,7 @@ import FilterIcon from '@/assets/filter.svg';
 import FilterActiveIcon from '@/assets/filter-active.svg';
 import QueryIcon from '@/assets/query.svg';
 import EmptyIcon from '@/assets/empty.svg';
-import { FilterMenusType } from '../interface';
+import type { FilterMenusType } from '../interface';
 import styles from './index.less';
 
 interface FilterProps {
@@ -118,7 +118,7 @@ const Filter = (props: FilterProps) => {
       }
       return true;
     });
-  }, [searchValue]);
+  }, [searchValue, filters, filterSearch]);
 
   return (
     <>
