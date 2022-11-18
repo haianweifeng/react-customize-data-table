@@ -1,3 +1,9 @@
+---
+title: Pagination
+group:
+  path: /pagination
+---
+
 # Pagination 分页
 
 <font size='5'>示例</font>
@@ -8,41 +14,33 @@
 
 ### 大小
 
-内置了 2 种大小供选择，'small' | 'default', 默认为 'default'
-
-<code src="./demo/Size.tsx"></code>
+<code src="./demo/Size.tsx" desc="内置了 2 种大小供选择，'small' | 'default', 默认为 'default'"></code>
 
 ### 对齐
 
-设置 align 属性控制对齐, 'left' | 'center' | 'right' , 默认值为'left'
-
-<code src="./demo/Align.tsx"></code>
+<code src="./demo/Align.tsx" desc="设置 align 属性控制对齐, 'left' | 'center' | 'right' , 默认值为'left'"></code>
 
 ### 布局
 
-设置 layout 属性显示需要的内容, 默认值为['prev', 'pager', 'next']
-
-<code src="./demo/Layout.tsx"></code>
+<code src="./demo/Layout.tsx" desc="设置 layout 属性显示需要的内容, 默认值为['prev', 'pager', 'next']"></code>
 
 ### 禁用
 
-设置 disabled 属性禁用分页
-
-<code src="./demo/Disabled.tsx"></code>
+<code src="./demo/Disabled.tsx" desc="设置 disabled 属性禁用分页"></code>
 
 ### 受控
 
-受控制的页码通过设置 current 配合 onChange 属性
-
-受控制的每页显示条目数通过设置 pageSize 配合 onChange 属性
-
-<code src="./demo/Controlled.tsx"></code>
+<code src="./demo/Controlled.tsx" desc="受控的页码和显示条数,需要配合onChange使用"></code>
 
 ### 自定义渲染
 
-设置 itemRender 自定义页码结构
+<code src="./demo/Custom.tsx" desc="自定义上一页和下一页以及页码列表"></code>
 
-<code src="./demo/Custom.tsx"></code>
+<style>
+table { font-size: 13px; }
+table th:nth-child(1) { width: 160px; }
+table th:nth-child(3) { width: 100px; }
+</style>
 
 ### API
 
@@ -53,7 +51,7 @@
 | align | `'left'` \| `'center'` \| `'right'` | 'left' | 对齐方式 |
 | size | `'default'` \| `'small'` | 'default' | 大小 |
 | total | number | 0 | 数据总数 |
-| current | number | - | 当前页数，如果传入值，组件为受控组件，必须通过 onChange 来处理回调 |
+| current | number | - | 当前页数 |
 | defaultCurrent | number | 1 | 默认的当前页数 |
 | defaultPageSize | number | 10 | 默认的每页条数 |
 | pageSize | number | 10 | 每页条数 |
