@@ -1,14 +1,3 @@
----
-order: 2
----
-
-### 大小
-
-###### 内置了 2 种大小供选择，'small' | 'default'，默认为 'default'
-
-Demo:
-
-```tsx
 import React from 'react';
 import { Pagination } from 'react-data-table';
 
@@ -23,4 +12,3 @@ const App = () => {
 };
 
 export default App;
-```

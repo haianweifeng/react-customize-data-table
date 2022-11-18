@@ -1,19 +1,8 @@
----
-order: 5
----
-
-## 禁用
-
-###### 设置 disabled 属性禁用分页
-
-Demo:
-
-```tsx
 import React from 'react';
 import { Pagination } from 'react-data-table';
 
 const App = () => {
-  const infoContent = ({ current, total, pageSize }) => {
+  const infoContent = ({ total }: { current: number; total: number; pageSize: number }) => {
     return `Total ${total} items`;
   };
 
@@ -28,4 +17,3 @@ const App = () => {
 };
 
 export default App;
-```

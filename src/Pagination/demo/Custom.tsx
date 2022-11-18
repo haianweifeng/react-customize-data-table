@@ -1,14 +1,3 @@
----
-order: 7
----
-
-## 自定义渲染
-
-###### 设置 itemRender 自定义页码结构
-
-Demo:
-
-```tsx
 import React, { useState } from 'react';
 import { Pagination } from 'react-data-table';
 
@@ -16,22 +5,23 @@ const App = () => {
   const [current, setCurrent] = useState(6);
   const [pageSize, setPageSize] = useState(10);
 
-  const infoContent = ({ current, total, pageSize }) => {
+  const infoContent = ({ total }: { current: number; total: number; pageSize: number }) => {
     return `Total ${total} items`;
   };
 
-  const handleChange = (page: number, pageSize: number) => {
+  const handleChange = (page: number, size: number) => {
     setCurrent(page);
-    setPageSize(pageSize);
+    setPageSize(size);
   };
 
-  const itemRender = (page, type, originalElement) => {
+  const itemRender = (page: number, type: string, originalElement: React.ReactNode) => {
     if (type === 'prev') {
       return <a>上一页</a>;
     }
     if (type === 'next') {
       return <a>下一页</a>;
     }
+    console.log(originalElement);
     return <a>{page}</a>;
     // return originalElement;
   };
@@ -49,4 +39,3 @@ const App = () => {
 };
 
 export default App;
-```

@@ -1,14 +1,3 @@
----
-order: 3
----
-
-### 对齐
-
-###### 设置 align 属性控制对齐, 'left' | 'center' | 'right' ,默认值为'left'
-
-Demo:
-
-```tsx
 import React from 'react';
 import { Pagination } from 'react-data-table';
 
@@ -25,4 +14,3 @@ const App = () => {
 };
 
 export default App;
-```

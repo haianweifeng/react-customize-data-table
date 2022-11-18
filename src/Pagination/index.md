@@ -1,15 +1,57 @@
-## Pagination
+# Pagination 分页
 
-<embed src="./basic.md"></embed> <embed src="./size.md"></embed> <embed src="./align.md"></embed> <embed src="./layout.md"></embed> <embed src="./disabled.md"></embed> <embed src="./controlled.md"></embed> <embed src="./custom.md"></embed>
+<font size='5'>示例</font>
 
-## API
+### 基本用法
+
+<code src="./demo/Basic.tsx"></code>
+
+### 大小
+
+内置了 2 种大小供选择，'small' | 'default', 默认为 'default'
+
+<code src="./demo/Size.tsx"></code>
+
+### 对齐
+
+设置 align 属性控制对齐, 'left' | 'center' | 'right' , 默认值为'left'
+
+<code src="./demo/Align.tsx"></code>
+
+### 布局
+
+设置 layout 属性显示需要的内容, 默认值为['prev', 'pager', 'next']
+
+<code src="./demo/Layout.tsx"></code>
+
+### 禁用
+
+设置 disabled 属性禁用分页
+
+<code src="./demo/Disabled.tsx"></code>
+
+### 受控
+
+受控制的页码通过设置 current 配合 onChange 属性
+
+受控制的每页显示条目数通过设置 pageSize 配合 onChange 属性
+
+<code src="./demo/Controlled.tsx"></code>
+
+### 自定义渲染
+
+设置 itemRender 自定义页码结构
+
+<code src="./demo/Custom.tsx"></code>
+
+### API
 
 | 属性 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
 | className | string | - | 扩展 className |
 | style | CSSProperties | - | 样式对象 |
-| align | 'left' \| 'center' \| 'right' | 'left' | 对齐方式 |
-| size | 'default' \| 'small' | 'default' | 大小 |
+| align | `'left'` \| `'center'` \| `'right'` | 'left' | 对齐方式 |
+| size | `'default'` \| `'small'` | 'default' | 大小 |
 | total | number | 0 | 数据总数 |
 | current | number | - | 当前页数，如果传入值，组件为受控组件，必须通过 onChange 来处理回调 |
 | defaultCurrent | number | 1 | 默认的当前页数 |

@@ -1,3 +1,8 @@
+---
+order: 4
+sidemenu: false
+---
+
 ### 布局
 
 ###### 设置 layout 属性显示需要的内容, 默认值为['prev', 'pager', 'next']

@@ -1,14 +1,3 @@
----
-title: basic usage
-order: 1
-hidden: true
----
-
-## 基本用法
-
-Demo:
-
-```tsx
 import React from 'react';
 import { Pagination } from 'react-data-table';
 
@@ -17,4 +6,3 @@ const App = () => {
 };
 
 export default App;
-```
