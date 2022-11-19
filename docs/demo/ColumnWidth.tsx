@@ -1,12 +1,3 @@
-### 列宽
-
-###### 列支持设置像素或者百分比，使用 column 里的 width 进行设置。
-
-<code src='./ColumnWidth.tsx'></code>
-
-Demo:
-
-```tsx
 import React from 'react';
 import type { ColumnsType } from 'react-data-table';
 import { Table } from 'react-data-table';
@@ -97,4 +88,3 @@ const App = () => {
   return <Table columns={columns} dataSource={data} rowKey="id" bordered />;
 };
 export default App;
-```
