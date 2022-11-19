@@ -1,10 +1,17 @@
-.sorterContainer {
+@import '../style/variables.less';
+
+.sorter-container {
   position: relative;
   width: 11px;
   line-height: 0;
 
-  .arrow {
-    width: 100%;
+  .sort-icon {
+    color: @icon-color;
+    font-size: 11px;
     cursor: pointer;
+  }
+
+  .sort-active-icon {
+    color: @icon-active-color;
   }
 }

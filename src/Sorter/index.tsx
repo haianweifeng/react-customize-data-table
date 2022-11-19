@@ -1,9 +1,9 @@
 import React from 'react';
-import ArrowUp from '@/assets/arrow-up.svg';
-import ArrowActiveUp from '@/assets/arrow-up-active.svg';
-import ArrowDown from '@/assets/arrow-down.svg';
-import ArrowActiveDown from '@/assets/arrow-down-active.svg';
-import styles from './index.less';
+import classnames from 'classnames';
+import Icon from '../Icon';
+import { ReactComponent as UpIcon } from '@/assets/arrow-up.svg';
+import { ReactComponent as DownIcon } from '@/assets/arrow-down.svg';
+import './index.less';
 
 interface SorterProps {
   activeAsc: boolean;
@@ -30,25 +30,21 @@ const Sorter = (props: SorterProps) => {
 
   const defaultContent = (
     <>
-      <img
-        key="asc"
-        src={activeAsc ? ArrowActiveUp : ArrowUp}
-        alt="sorter-asc"
-        className={styles.arrow}
+      <Icon
+        component={UpIcon}
         onClick={handleAsc}
+        className={classnames({ 'sort-icon': true, 'sort-active-icon': activeAsc })}
       />
-      <img
-        key="desc"
-        src={activeDesc ? ArrowActiveDown : ArrowDown}
-        alt="sorter-desc"
-        className={styles.arrow}
+      <Icon
+        component={DownIcon}
         onClick={handleDesc}
+        className={classnames({ 'sort-icon': true, 'sort-active-icon': activeDesc })}
       />
     </>
   );
 
   return (
-    <div className={styles.sorterContainer}>
+    <div className="sorter-container">
       {typeof renderSorter === 'function'
         ? renderSorter({
             activeAsc,

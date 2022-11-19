@@ -1,3 +1,5 @@
+@import '../style/variables.less';
+
 .filter-container {
   display: flex;
   align-items: center;
@@ -5,13 +7,13 @@
   margin-left: 5px;
 
   .filter-icon {
-    color: #bfbfbf;
+    color: @icon-color;
     font-size: 16px;
     cursor: pointer;
   }
 
   .filter-icon-active {
-    color: #197afa;
+    color: @icon-active-color;
   }
 }
 

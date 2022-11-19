@@ -16,10 +16,11 @@ interface IconProps {
   component: ComponentType<CustomIconComponentProps>;
   style?: React.CSSProperties;
   className?: string;
+  onClick?: () => void;
 }
 
 const Icon = (props: IconProps) => {
-  const { className = '', style = {}, component: Component } = props;
+  const { className = '', style = {}, component: Component, onClick } = props;
 
   const cls = classnames({ icon: true, [className]: !!className });
 
@@ -30,8 +31,14 @@ const Icon = (props: IconProps) => {
     'aria-hidden': true,
   };
 
+  const handleClick = () => {
+    if (typeof onClick === 'function') {
+      onClick();
+    }
+  };
+
   return (
-    <i className={cls} style={style}>
+    <i className={cls} style={style} onClick={handleClick}>
       <Component {...svgBaseProps} />
     </i>
   );
