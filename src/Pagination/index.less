@@ -169,6 +169,7 @@
   position: relative;
   display: inline-block;
   margin-right: @margin-right;
+  vertical-align: middle;
 }
 
 .pagination-select-inner {
@@ -213,6 +214,7 @@
   position: absolute;
   top: 40px;
   left: 0;
+  z-index: 10;
   width: 100%;
   background-color: #fff;
   border-radius: 2px;
@@ -248,8 +250,8 @@
   display: inline-block;
   height: @height;
   margin-right: @margin-right;
-  line-height: @line-height;
-  vertical-align: top;
+  //line-height: @line-height;
+  vertical-align: middle;
 
   input {
     width: 50px;

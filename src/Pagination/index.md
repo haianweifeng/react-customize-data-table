@@ -34,7 +34,7 @@ group:
 
 ### 自定义渲染
 
-<code src="./demo/Custom.tsx" desc="自定义上一页和下一页以及页码列表"></code>
+<code src="./demo/Custom.tsx" desc="自定义上一页,下一页以及页码列表"></code>
 
 <style>
 table { font-size: 13px; }
@@ -54,7 +54,7 @@ table th:nth-child(3) { width: 100px; }
 | current | number | - | 当前页数 |
 | defaultCurrent | number | 1 | 默认的当前页数 |
 | defaultPageSize | number | 10 | 默认的每页条数 |
-| pageSize | number | 10 | 每页条数 |
+| pageSize | number | - | 每页条数 |
 | disabled | boolean | false | 禁用分页 |
 | pageSizeOptions | number[] | \[10, 20, 30, 50, 100] | 每页显示数量可选列表 |
 | layout | string[] | \['prev', 'pager', 'next'] | 显示需要的内容，可选值为:<br />'pager': 页码<br />'prev': 上一页<br />'next': 下一页<br />'sizes': 每页显示的页码数量<br />'jumper': 跳转页码<br />function({ current, total, pageSize }): 匿名函数，用来信息展示 |

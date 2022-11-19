@@ -65,72 +65,6 @@ const Pagination = (props: PaginationProps) => {
     return allPages === 0 ? 1 : allPages;
   }, [total, pageSize]);
 
-  const handleChange = (page: number) => {
-    if (disabled) return;
-    if (!('current' in props)) {
-      setCurrent(page);
-    }
-    if (typeof onChange === 'function') {
-      onChange(page, pageSize);
-    }
-  };
-
-  const handleSelect = (sizes: number) => {
-    if (!('pageSize' in props)) {
-      setPageSize(sizes);
-    }
-    if (typeof onChange === 'function') {
-      onChange(1, sizes);
-    }
-  };
-
-  const handleKeyDown = (event: any) => {
-    if (disabled) return;
-    if (event.keyCode === 13) {
-      let page = parseInt(event.target.value, 10);
-
-      if (!Number.isFinite(page)) return;
-
-      page = Math.max(1, page);
-      page = Math.min(totalPages, page);
-
-      inputRef.current.value = '';
-
-      if (!('current' in props)) {
-        setCurrent(page);
-      }
-
-      if (typeof onChange === 'function') {
-        onChange(page, pageSize);
-      }
-    }
-  };
-
-  const handleBlur = (event: any) => {
-    if (disabled) return;
-    let page = parseInt(event.target.value, 10);
-
-    if (!Number.isFinite(page)) return;
-
-    page = Math.max(1, page);
-    page = Math.min(totalPages, page);
-
-    inputRef.current.value = '';
-
-    if (!('current' in props)) {
-      setCurrent(page);
-    }
-
-    if (typeof onChange === 'function') {
-      onChange(page, pageSize);
-    }
-  };
-
-  const handleClick = () => {
-    if (disabled) return;
-    setIsFocus((prev) => !prev);
-  };
-
   const pagerList = useMemo(() => {
     const pagers = [];
 
@@ -160,7 +94,6 @@ const Pagination = (props: PaginationProps) => {
     }
 
     if (right === totalPages - 2) {
-      // 此时right:48 所以需要存放49 这一项
       pagers.push(totalPages - 1);
     }
 
@@ -174,6 +107,64 @@ const Pagination = (props: PaginationProps) => {
 
     return pagers;
   }, [totalPages, current]);
+
+  const handleChange = (page: number) => {
+    if (disabled) return;
+    if (!('current' in props)) {
+      setCurrent(page);
+    }
+    if (typeof onChange === 'function') {
+      onChange(page, pageSize);
+    }
+  };
+
+  const handleSelect = (sizes: number) => {
+    if (!('pageSize' in props)) {
+      setPageSize(sizes);
+    }
+    if (!('current' in props)) {
+      setCurrent(1);
+    }
+    if (typeof onChange === 'function') {
+      onChange(1, sizes);
+    }
+  };
+
+  const handleJumper = (event: any) => {
+    let page = parseInt(event.target.value, 10);
+
+    if (!Number.isFinite(page)) return;
+
+    page = Math.max(1, page);
+    page = Math.min(totalPages, page);
+
+    inputRef.current.value = '';
+
+    if (!('current' in props)) {
+      setCurrent(page);
+    }
+
+    if (typeof onChange === 'function') {
+      onChange(page, pageSize);
+    }
+  };
+
+  const handleKeyDown = (event: any) => {
+    if (disabled) return;
+    if (event.keyCode === 13) {
+      handleJumper(event);
+    }
+  };
+
+  const handleBlur = (event: any) => {
+    if (disabled) return;
+    handleJumper(event);
+  };
+
+  const handleClick = () => {
+    if (disabled) return;
+    setIsFocus((prev) => !prev);
+  };
 
   useEffect(() => {
     if ('current' in props) {
@@ -217,6 +208,89 @@ const Pagination = (props: PaginationProps) => {
       document.removeEventListener('click', handleDocumentClick);
     };
   }, []);
+
+  const renderJumpPrevNext = (type: string, page: number) => {
+    return (
+      <div
+        key={type}
+        className={classnames({
+          'pagination-item': true,
+          'pagination-item-more': true,
+          'pagination-item-more-disabled': disabled,
+        })}
+        onClick={() => handleChange(page)}
+      >
+        <Icon
+          component={type === 'jump-next' ? RightDoubleArrow : LeftDoubleArrow}
+          className="pagination-double-arrow-icon"
+        />
+      </div>
+    );
+  };
+
+  const renderPager = () => {
+    return pagerList.map((p) => {
+      if (typeof p === 'number') {
+        return (
+          <Pager
+            key={p}
+            disabled={disabled}
+            active={current === p}
+            page={p}
+            itemRender={itemRender}
+            onClick={handleChange}
+          />
+        );
+      }
+      if (typeof p === 'string') {
+        let page =
+          p === 'jump-next'
+            ? current + (pageBufferSize * 2 + 1)
+            : current - (pageBufferSize * 2 + 1);
+        page = Math.max(1, page);
+        page = Math.min(totalPages, page);
+        return renderJumpPrevNext(p, page);
+      }
+    });
+  };
+
+  const renderPageSizes = () => {
+    return (
+      <div key="sizes" ref={selectRef} className="pagination-pagesize" onClick={handleClick}>
+        <div
+          className={classnames({
+            'pagination-select-inner': true,
+            'pagination-select-focus': isFocus,
+            'pagination-select-disabled': disabled,
+          })}
+        >
+          <span className="pagination-select-result">{`${pageSize}条/页`}</span>
+          <Icon component={DownIcon} className="pagination-down-icon" />
+        </div>
+        <div
+          className={classnames({
+            'pagination-pagesize-list': true,
+            'pagination-pagesize-list-show': isFocus,
+          })}
+        >
+          {pageSizeOptions.map((p) => {
+            return (
+              <div
+                className={classnames({
+                  'pagination-select-option': true,
+                  'pagination-select-option-active': pageSize === p,
+                })}
+                key={p}
+                onClick={() => handleSelect(p)}
+              >
+                {`${p}条/页`}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   const renderPrevNext = (type: string) => {
     const page = type === 'next' ? current + 1 : current - 1;
@@ -267,87 +341,6 @@ const Pagination = (props: PaginationProps) => {
     } else {
       return defaultNode;
     }
-  };
-
-  const renderJumpPrevNext = (type: string, page: number) => {
-    return (
-      <div
-        key={type}
-        className={classnames({
-          'pagination-item': true,
-          'pagination-item-more': true,
-          'pagination-item-more-disabled': disabled,
-        })}
-        onClick={() => handleChange(page)}
-      >
-        <Icon
-          component={type === 'jump-next' ? RightDoubleArrow : LeftDoubleArrow}
-          className="pagination-double-arrow-icon"
-        />
-      </div>
-    );
-  };
-
-  const renderPager = () => {
-    return pagerList.map((p) => {
-      if (typeof p === 'number') {
-        return (
-          <Pager
-            key={p}
-            disabled={disabled}
-            active={current === p}
-            page={p}
-            itemRender={itemRender}
-            onClick={handleChange}
-          />
-        );
-      }
-      if (typeof p === 'string') {
-        let page =
-          p === 'jump-next' ? current + pageBufferSize * 2 + 1 : current - (pageBufferSize * 2 + 1);
-        page = Math.max(1, page);
-        page = Math.min(totalPages, page);
-        return renderJumpPrevNext(p, page);
-      }
-    });
-  };
-
-  const renderPageSizes = () => {
-    return (
-      <div key="sizes" ref={selectRef} className="pagination-pagesize" onClick={handleClick}>
-        <div
-          className={classnames({
-            'pagination-select-inner': true,
-            'pagination-select-focus': isFocus,
-            'pagination-select-disabled': disabled,
-          })}
-        >
-          <span className="pagination-select-result">{`${pageSize}条/页`}</span>
-          <Icon component={DownIcon} className="pagination-down-icon" />
-        </div>
-        <div
-          className={classnames({
-            'pagination-pagesize-list': true,
-            'pagination-pagesize-list-show': isFocus,
-          })}
-        >
-          {pageSizeOptions.map((p) => {
-            return (
-              <div
-                className={classnames({
-                  'pagination-select-option': true,
-                  'pagination-select-option-active': pageSize === p,
-                })}
-                key={p}
-                onClick={() => handleSelect(p)}
-              >
-                {`${p}条/页`}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
   };
 
   const renderJumper = () => {
