@@ -10,7 +10,7 @@ interface DataType {
   amount3: number;
 }
 
-const columns: ColumnsType<DataType> = [
+const columns: ColumnsType<DataType>[] = [
   {
     title: 'ID',
     dataIndex: 'id',

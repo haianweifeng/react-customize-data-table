@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import type { ColumnsType } from 'react-data-table';
 import { Table } from 'react-data-table';
 
@@ -53,12 +53,9 @@ const data: DataType[] = [
 ];
 
 const App = () => {
-  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
-
   const rowSelection = {
-    selections: true,
     onChange: (selectedRowKeys: (string | number)[], selectedRows: DataType[]) => {
-      console.log('selectedRowKeys:', selectedRowKeys, 'selectedRows: ', selectedRows);
+      console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
     },
     onSelect: (
       record: DataType,
@@ -76,9 +73,6 @@ const App = () => {
         nativeEvent,
       );
     },
-    onSelectNone: () => {
-      console.log('select none');
-    },
     getCheckboxProps: (record: DataType) => ({
       disabled: record.name === 'Joe1 Black', // Column configuration not to be checked
       name: record.name,
@@ -91,16 +85,14 @@ const App = () => {
       dataSource={data}
       columns={columns}
       bordered
-      // rowKey="key"
+      rowKey="key"
       rowClassName={(record: DataType) => {
         if (record.name === 'John Brown') {
           return 'custom-row';
         }
       }}
       expandable={{
-        expandedRowKeys,
-        // defaultExpandedRowKeys: expandedRowKeys,
-        defaultExpandAllRows: true,
+        insertBeforeColumnName: 'Name',
         expandedRowRender: (record: DataType) => <p style={{ margin: 0 }}>{record.description}</p>,
         rowExpandable: (record: DataType) => record.name !== 'Jim Green',
         // expandedRowClassName: (record, index) => {
@@ -109,9 +101,6 @@ const App = () => {
         // },
         onExpand: (expanded: boolean, record: DataType) => {
           console.log(`expanded: ${expanded}`, 'record: ', record);
-          setExpandedRowKeys((prev) => {
-            return expanded ? [...prev, record.key] : prev.filter((p) => p !== record.key);
-          });
         },
       }}
     />

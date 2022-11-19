@@ -9,7 +9,7 @@ export { default as Pagination } from './Pagination';
 
 export { default as Icon } from './Icon';
 
-export type { ColumnsType } from './interface';
+export type { ColumnsType, FilterInfoType, FilterMenusType } from './interface';
 
 export * from './index.less';
 
