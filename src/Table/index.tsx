@@ -57,7 +57,7 @@ export interface TableProps<T> {
   onHeaderRow?: (columns: ColumnsType<T>[], index: number) => any;
   /** 设置行事件监听器集合属性 todo columns 发生了改变 */
   onRowEvents?: (columns: any, index: number) => any;
-  // todo
+  /** 分页 */
   pagination?: PaginationProps;
   /** disabled 为 true，禁用全部选项 todo 好像不需要 */
   disabled?: (data: any) => boolean | boolean;
@@ -96,7 +96,6 @@ export interface TableProps<T> {
 // todo 还未测试列宽设为百分比的情况
 // todo scroll: { width, height } 设置滚动时候表格的宽度 高度
 // todo 表头弄好 要考虑处理border
-// todo onFilter 是不是要放到分页那时候一起处理 为了服务端处理  onSort 也是一样的
 // todo 如果没有筛选到数据时候提示文本
 // 设置colgroup 列的宽度  然后获取每个单元格最后渲染的宽度 重新设置 colgroup 的宽度
 function Table<T extends { key?: number | string; children?: T[] }>(props: TableProps<T>) {
@@ -461,7 +460,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return totalData;
   }, [pagination, pageSize, currentPage, totalData]);
 
-  const { records: allRecords, keys: allKeys } = useMemo(() => {
+  const { records: currPageRecords, keys: currPageKeys } = useMemo(() => {
     return flatData(currentPageData);
   }, [flatData, currentPageData]);
 
@@ -492,7 +491,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       treeProps?.defaultExpandAllRows &&
       !(treeProps?.defaultExpandedRowKeys || treeProps?.expandedRowKeys)
     ) {
-      return allKeys;
+      return currPageKeys;
     }
     return treeProps?.expandedRowKeys || treeProps?.defaultExpandedRowKeys || [];
   });
@@ -608,7 +607,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     let selectedRows: T[];
     let selectKeys: (number | string)[];
     if (selected) {
-      const { checkedKeys, checkedRowWithKey, halfCheckedKeys } = fillMissSelectedKeys(allKeys);
+      const { checkedKeys, checkedRowWithKey, halfCheckedKeys } =
+        fillMissSelectedKeys(currPageKeys);
       selectKeys = checkedKeys;
       selectedRows = Object.values(checkedRowWithKey);
       setHalfSelectedKeys(halfCheckedKeys);
@@ -619,8 +619,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
 
     if (rowSelection?.onSelectAll) {
-      // 3. 待测试--分页情况下allRecords 也是当前current页面操作的数据
-      rowSelection.onSelectAll(selected, selectedRows, allRecords);
+      // 3. 待测试--分页情况下currPageRecords 也是当前current页面操作的数据
+      rowSelection.onSelectAll(selected, selectedRows, currPageRecords);
     }
     if (rowSelection?.onChange) {
       rowSelection.onChange(selectKeys, selectedRows);
@@ -793,14 +793,14 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     if (!selectedKeys.length) {
       return false;
     }
-    const isSame = allKeys.every((key) => {
+    const isSame = currPageKeys.every((key) => {
       return selectedKeys.indexOf(key) >= 0;
     });
-    const isExist = allKeys.some((key) => {
+    const isExist = currPageKeys.some((key) => {
       return selectedKeys.indexOf(key) >= 0;
     });
     return isSame ? true : isExist ? 'indeterminate' : false;
-  }, [selectedKeys, allKeys]);
+  }, [selectedKeys, currPageKeys]);
 
   const list = useMemo(() => {
     const records: T[] = [];
