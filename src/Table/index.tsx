@@ -443,7 +443,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         return compareResult;
       });
     });
-
+    // console.log(records);
     return records;
   }, [dataSource, filterState, sorterState]);
 
@@ -728,6 +728,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           filterInfo[f.dataIndex] = f.filteredValue;
         });
         onFilter(filterInfo);
+      }
+      if (pagination && !('current' in pagination)) {
+        setCurrentPage(1);
       }
       if (typeof pagination?.onChange === 'function') {
         pagination.onChange(1, pageSize);
