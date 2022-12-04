@@ -420,10 +420,10 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   });
 
   const totalData = useMemo(() => {
-    let records: T[] = [];
+    let records: T[] = [...dataSource];
 
     filterState.forEach((f) => {
-      records = dataSource.filter((r) => {
+      records = records.filter((r) => {
         let result = !f.filteredValue.length;
         for (let i = 0; i < f.filteredValue.length; i++) {
           if (typeof f?.filterMethod === 'function') {
@@ -882,7 +882,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const tableWrapClass = classnames({
     'table-container': true,
     size: true,
-    bordered: bordered,
+    'table-bordered': bordered,
     [className]: !!className,
   });
   return (
