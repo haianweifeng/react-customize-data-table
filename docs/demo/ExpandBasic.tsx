@@ -84,7 +84,7 @@ const App = () => {
       rowSelection={rowSelection}
       dataSource={data}
       columns={columns}
-      bordered
+      bordered={false}
       rowKey="key"
       rowClassName={(record: DataType) => {
         if (record.name === 'John Brown') {

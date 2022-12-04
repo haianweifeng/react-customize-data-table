@@ -55,7 +55,7 @@ const data: DataType[] = [
 ];
 
 const App = () => {
-  return <Table dataSource={data} columns={columns} bordered striped rowKey="key" />;
+  return <Table dataSource={data} columns={columns} striped rowKey="key" />;
 };
 
 export default App;

@@ -1,4 +1,5 @@
 import React, { useMemo, useCallback } from 'react';
+import classnames from 'classnames';
 import type {
   ColumnsWithType,
   ColumnsGroupWithType,
@@ -111,7 +112,7 @@ function Thead<T>(props: TheadProps<T>) {
     (key: string, rowSpan: number) => {
       if (rowSelection?.columnTitle) {
         return (
-          <th key={key} rowSpan={rowSpan}>
+          <th key={key} rowSpan={rowSpan} className="selection-expand-column">
             {rowSelection.columnTitle}
           </th>
         );
@@ -189,6 +190,10 @@ function Thead<T>(props: TheadProps<T>) {
       index: string,
     ) => {
       const totalLevel = trs.length;
+      const cls = classnames({
+        'table-align-center': col.align === 'left',
+        'table-align-right': col.align === 'right',
+      });
       switch (col.type) {
         case 'checkbox':
         case 'radio':
@@ -209,7 +214,7 @@ function Thead<T>(props: TheadProps<T>) {
             });
           } else {
             trs[level].push(
-              <th colSpan={col.colSpan} rowSpan={totalLevel - level} key={index}>
+              <th colSpan={col.colSpan} rowSpan={totalLevel - level} key={index} className={cls}>
                 <div className="has-sorter-filter">
                   <span className="column-title">{col.title}</span>
                   <div className="sorter-filter">

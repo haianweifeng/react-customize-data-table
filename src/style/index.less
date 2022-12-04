@@ -29,7 +29,7 @@ table {
     background-color: @table-selected-row-bg;
   }
 }
-// todo .bordered 要不要加个前缀
+
 .table-bordered {
   table {
     border: 1px solid @table-border-color;
@@ -39,6 +39,14 @@ table {
 
   .table-tbody table {
     border-top: 0;
+  }
+
+  td {
+    border-right: 1px solid @table-border-color;
+  }
+
+  thead > tr > th {
+    border-right: 1px solid @table-border-color;
   }
 }
 
@@ -50,8 +58,29 @@ thead > tr > th {
   word-break: break-all;
   // overflow-wrap: break-word;
   background-color: @table-head-bg;
-  border-right: 1px solid @table-border-color;
   border-bottom: 1px solid @table-border-color;
+
+  .has-sorter-filter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+}
+
+thead > tr > th.table-align-center {
+  text-align: center;
+
+  .has-sorter-filter {
+    justify-content: center;
+  }
+}
+
+thead > tr > th.table-align-right {
+  text-align: right;
+
+  .has-sorter-filter {
+    justify-content: flex-end;
+  }
 }
 
 thead > tr > th[colspan]:not([colspan='1']) {
@@ -76,7 +105,6 @@ td {
   padding: @table-cell-padding-vertical @table-cell-padding-horizontal;
   word-break: break-all;
   // overflow-wrap: break-word;
-  border-right: 1px solid @table-border-color;
   border-bottom: 1px solid @table-border-color;
 }
 
@@ -155,14 +183,9 @@ th {
   margin-right: 8px;
 }
 
-.has-sorter-filter {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
 .column-title {
-  flex: 1;
+  // flex: 1;
+  margin-right: 5px;
 }
 
 .sorter-filter {
