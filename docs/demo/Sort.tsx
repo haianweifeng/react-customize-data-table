@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ColumnsType } from 'react-data-table';
+import type { ColumnsType, SortInfoType } from 'react-data-table';
 import { Table } from 'react-data-table';
 
 interface DataType {
@@ -64,10 +64,9 @@ const data: DataType[] = [
 ];
 
 const App = () => {
-  const handleSortCancel = (cancelName: ColumnsType<DataType>, order: 'asc' | 'desc') => {
-    console.log(`取消排序字段: ${cancelName}`);
-    console.log(order);
+  const handleSort = (sortInfo: SortInfoType) => {
+    console.log(sortInfo);
   };
-  return <Table columns={columns} dataSource={data} bordered onSortCancel={handleSortCancel} />;
+  return <Table columns={columns} dataSource={data} bordered onSort={handleSort} />;
 };
 export default App;

@@ -1,9 +1,9 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
-import omit from 'omit.js';
 import classnames from 'classnames';
 import Thead from '../Thead';
 import Tbody from '../Tbody';
 import Colgroup from '../Colgroup';
+import Pagination from '../Pagination';
 import type {
   RowSelectionType,
   ColumnsType,
@@ -19,9 +19,11 @@ import type {
   RowKeyType,
   SorterStateType,
   SorterType,
+  SortInfoType,
   FilterStateType,
   FilterInfoType,
 } from '../interface';
+import type { PaginationProps } from '../index';
 import '../style/index.less';
 import { getRowKey, toPoint, findParentByKey } from '../utils/util';
 // import styles from './index.less';
@@ -56,7 +58,7 @@ export interface TableProps<T> {
   /** 设置行事件监听器集合属性 todo columns 发生了改变 */
   onRowEvents?: (columns: any, index: number) => any;
   // todo
-  pagination?: any;
+  pagination?: PaginationProps;
   /** disabled 为 true，禁用全部选项 todo 好像不需要 */
   disabled?: (data: any) => boolean | boolean;
   /** 空数据文案 */
@@ -82,8 +84,8 @@ export interface TableProps<T> {
   }) => React.ReactNode;
   /** 排序取消事件 */
   onSortCancel?: (col: ColumnsType<T>, order: 'asc' | 'desc') => void;
-  /** 排序事件 todo 防止向服务端请求时候需要带上相应的字段 还没有弄服务端的md 等分页弄好了 */
-  onSort?: (column: ColumnsType<T>, order: 'ascend' | 'descend') => void;
+  /** 排序事件 */
+  onSort?: (sortInfo: SortInfoType[]) => void;
   /** 筛选事件 */
   onFilter?: (filterInfo: FilterInfoType) => void;
   /** 配置展开属性 todo header 需要表头空一行 */
@@ -112,8 +114,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     rowSelection,
     treeProps,
     renderSorter,
-    onSortCancel,
+    onSort,
     onFilter,
+    pagination,
   } = props;
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 44;
@@ -375,11 +378,15 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return getFlatColumns(formatColumns);
   }, [getFlatColumns, formatColumns]);
 
-  const { records: allRecords, keys: allKeys } = useMemo(() => {
-    return flatData(dataSource);
-  }, [dataSource, flatData]);
+  const [currentPage, setCurrentPage] = useState(() => {
+    return pagination?.current || pagination?.defaultCurrent || 1;
+  });
 
-  const filterStates = useMemo(() => {
+  const [pageSize, setPageSize] = useState(() => {
+    return pagination?.pageSize || pagination?.defaultPageSize || 10;
+  });
+
+  const [filterState, setFilterState] = useState<FilterStateType<T>[]>(() => {
     const filter: FilterStateType<T>[] = [];
     flatColumns.forEach((col) => {
       if (col?.filters || typeof col?.filterMethod === 'function') {
@@ -391,38 +398,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       }
     });
     return filter;
-  }, [flatColumns]);
-
-  const [colWidths, setColWidths] = useState<number[]>([]);
-
-  // const [startRowIndex, setStartRowIndex] = useState<number>(0);
-
-  const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
-    const initSelectedKeys =
-      rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
-    if (initSelectedKeys.length) {
-      return fillMissSelectedKeys(initSelectedKeys).checkedKeys;
-    }
-    return initSelectedKeys;
-  });
-
-  const [halfSelectedKeys, setHalfSelectedKeys] = useState(() => {
-    const initSelectedKeys =
-      rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
-    if (initSelectedKeys.length) {
-      return fillMissSelectedKeys(initSelectedKeys).halfCheckedKeys;
-    }
-    return initSelectedKeys;
-  });
-
-  const [treeExpandKeys, setTreeExpandKeys] = useState<(string | number)[]>(() => {
-    if (
-      treeProps?.defaultExpandAllRows &&
-      !(treeProps?.defaultExpandedRowKeys || treeProps?.expandedRowKeys)
-    ) {
-      return allKeys;
-    }
-    return treeProps?.expandedRowKeys || treeProps?.defaultExpandedRowKeys || [];
   });
 
   const [sorterState, setSorterState] = useState<SorterStateType<T>[]>(() => {
@@ -445,7 +420,82 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return sorter;
   });
 
-  const [filterState, setFilterState] = useState<FilterStateType<T>[]>(filterStates);
+  const totalData = useMemo(() => {
+    let records: T[] = [];
+
+    filterState.forEach((f) => {
+      records = dataSource.filter((r) => {
+        let result = !f.filteredValue.length;
+        for (let i = 0; i < f.filteredValue.length; i++) {
+          if (typeof f?.filterMethod === 'function') {
+            result = f.filterMethod(f.filteredValue[i], r);
+            if (result) break;
+          }
+        }
+        return result;
+      });
+    });
+
+    sorterState.forEach((s) => {
+      records.sort((a, b) => {
+        const compareResult = s.sorter(a, b);
+        if (compareResult !== 0) {
+          return s.order === 'asc' ? compareResult : -compareResult;
+        }
+        return compareResult;
+      });
+    });
+
+    return records;
+  }, [dataSource, filterState, sorterState]);
+
+  const currentPageData = useMemo(() => {
+    if (pagination) {
+      if (totalData.length <= pageSize) {
+        return totalData;
+      } else {
+        const start = (currentPage - 1) * pageSize;
+        return totalData.slice(start, start + pageSize);
+      }
+    }
+    return totalData;
+  }, [pagination, pageSize, currentPage, totalData]);
+
+  const { records: allRecords, keys: allKeys } = useMemo(() => {
+    return flatData(currentPageData);
+  }, [flatData, currentPageData]);
+
+  const [colWidths, setColWidths] = useState<number[]>([]);
+
+  // const [startRowIndex, setStartRowIndex] = useState<number>(0);
+
+  const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
+    const initSelectedKeys =
+      rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
+    if (initSelectedKeys.length) {
+      return fillMissSelectedKeys(initSelectedKeys).checkedKeys;
+    }
+    return initSelectedKeys;
+  });
+
+  const [halfSelectedKeys, setHalfSelectedKeys] = useState(() => {
+    const initSelectedKeys =
+      rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
+    if (initSelectedKeys.length) {
+      return fillMissSelectedKeys(initSelectedKeys).halfCheckedKeys;
+    }
+    return initSelectedKeys;
+  });
+  // 1.测试列表-分页情况下 展开的也是只展开当前页的
+  const [treeExpandKeys, setTreeExpandKeys] = useState<(string | number)[]>(() => {
+    if (
+      treeProps?.defaultExpandAllRows &&
+      !(treeProps?.defaultExpandedRowKeys || treeProps?.expandedRowKeys)
+    ) {
+      return allKeys;
+    }
+    return treeProps?.expandedRowKeys || treeProps?.defaultExpandedRowKeys || [];
+  });
 
   const getTreeChildrenData = useCallback(
     (parent: T) => {
@@ -553,7 +603,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   };
 
-  // todo 如果存在分页的话只勾选当页的数据
+  // 2.待测试--分页的话只勾选当页的数据
   const handleSelectAll = (selected: boolean) => {
     let selectedRows: T[];
     let selectKeys: (number | string)[];
@@ -569,6 +619,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
 
     if (rowSelection?.onSelectAll) {
+      // 3. 待测试--分页情况下allRecords 也是当前current页面操作的数据
       rowSelection.onSelectAll(selected, selectedRows, allRecords);
     }
     if (rowSelection?.onChange) {
@@ -600,12 +651,16 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     const isCancel = index >= 0 && sorterState[index].order === order;
 
     if (isCancel) {
-      setSorterState((prev) => {
-        return prev.filter((p) => p.dataIndex !== col.dataIndex);
-      });
-      if (typeof onSortCancel === 'function') {
-        onSortCancel(omit(col, ['colSpan', 'type']) as ColumnsType<T>, order);
-      }
+      const filterResult = sorterState.filter((s) => s.dataIndex !== col.dataIndex);
+      setSorterState(filterResult);
+      // setSorterState((prev) => {
+      //   return prev.filter((p) => p.dataIndex !== col.dataIndex);
+      // });
+      // if (typeof onSortCancel === 'function') {
+      //   onSortCancel(omit(col, ['colSpan', 'type']) as ColumnsType<T>, order);
+      // }
+      const sortInfos = filterResult.map((f) => ({ field: f.dataIndex, order: f.order }));
+      onSort && onSort(sortInfos);
       return;
     }
     if (typeof col?.sorter === 'object') {
@@ -615,6 +670,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         item.order = order;
         copyList.splice(index, 1, item);
         setSorterState(copyList);
+        onSort && onSort(copyList.map((c) => ({ field: c.dataIndex, order: c.order })));
       } else {
         const list =
           sorterState.length === 1 && sorterState[0]?.weight === undefined ? [] : [...sorterState];
@@ -630,6 +686,10 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           return a1.localeCompare(b1);
         });
         setSorterState(list);
+        const sortInfo = list.map((l) => {
+          return { field: l.dataIndex, order: l.order };
+        });
+        onSort && onSort(sortInfo);
       }
       return;
     }
@@ -641,7 +701,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           sorter: col.sorter as (rowA: T, rowB: T) => number,
         },
       ]);
+      onSort && onSort([{ field: col.dataIndex, order }]);
     }
+
+    // if (typeof onSort === 'function') {
+    //   // (column: ColumnsType<T>, order: 'ascend' | 'descend') => void;
+    //   onSort(omit(col, ['colSpan', 'type']) as ColumnsType<T>, order);
+    // }
   };
 
   const handleFilterChange = (
@@ -652,7 +718,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     if (index >= 0) {
       const copyFilterState = [...filterState];
       const item = copyFilterState[index];
-      item.filteredValue = checkedValue;
+      item.filteredValue = [...checkedValue];
       copyFilterState.splice(index, 1, item);
       if (!('filteredValue' in col)) {
         setFilterState(copyFilterState);
@@ -664,8 +730,32 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         });
         onFilter(filterInfo);
       }
+      if (typeof pagination?.onChange === 'function') {
+        pagination.onChange(1, pageSize);
+      }
     }
   };
+
+  const handlePaginationChange = (current: number, size: number) => {
+    if (pagination && !('current' in pagination)) {
+      setCurrentPage(current);
+    }
+    if (pagination && 'pageSize' in pagination) {
+      setPageSize(size);
+    }
+    if (typeof pagination?.onChange === 'function') {
+      pagination.onChange(current, size);
+    }
+  };
+
+  useEffect(() => {
+    if (pagination && 'current' in pagination) {
+      setCurrentPage(pagination?.current || 1);
+    }
+    if (pagination && 'pageSize' in pagination) {
+      setPageSize(pagination?.pageSize || 10);
+    }
+  }, [pagination]);
 
   useEffect(() => {
     if (rowSelection && 'selectedRowKeys' in rowSelection) {
@@ -684,50 +774,45 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   }, [treeProps]);
 
   useEffect(() => {
-    setFilterState(filterStates);
-  }, [filterStates]);
-
+    let exist = false;
+    const filter: FilterStateType<T>[] = [];
+    flatColumns.forEach((col) => {
+      if ('filteredValue' in col) {
+        exist = true;
+        filter.push({
+          filteredValue: col?.filteredValue || [],
+          dataIndex: col.dataIndex,
+          filterMethod: col?.filterMethod,
+        });
+      }
+    });
+    exist && setFilterState(filter);
+  }, [flatColumns]);
+  // 4. 待测试-分页情况下表头的全选只针对当前页面数据
   const checked = useMemo(() => {
     if (!selectedKeys.length) {
       return false;
     }
-    return selectedKeys.length === allKeys.length ? true : 'indeterminate';
+    const isSame = allKeys.every((key) => {
+      return selectedKeys.indexOf(key) >= 0;
+    });
+    const isExist = allKeys.some((key) => {
+      return selectedKeys.indexOf(key) >= 0;
+    });
+    return isSame ? true : isExist ? 'indeterminate' : false;
   }, [selectedKeys, allKeys]);
 
   const list = useMemo(() => {
-    let records: T[] = [];
+    const records: T[] = [];
 
-    dataSource.forEach((d) => {
+    currentPageData.forEach((d) => {
       records.push(d);
       const childrenRecords = getTreeChildrenData(d);
       records.push(...childrenRecords);
     });
 
-    sorterState.forEach((s) => {
-      records.sort((a, b) => {
-        const compareResult = s.sorter(a, b);
-        if (compareResult !== 0) {
-          return s.order === 'asc' ? compareResult : -compareResult;
-        }
-        return compareResult;
-      });
-    });
-
-    filterState.forEach((f) => {
-      records = records.filter((r) => {
-        let result = !f.filteredValue.length;
-        for (let i = 0; i < f.filteredValue.length; i++) {
-          if (typeof f?.filterMethod === 'function') {
-            result = f.filterMethod(f.filteredValue[i], r);
-            if (result) break;
-          }
-        }
-        return result;
-      });
-    });
-
     return records;
-  }, [dataSource, getTreeChildrenData, sorterState, filterState]);
+  }, [currentPageData, getTreeChildrenData]);
 
   const renderBody = () => {
     return (
@@ -775,6 +860,24 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     );
   };
 
+  // todo 等增加loading 时候把disabled: loading
+  const renderPagination = () => {
+    if (pagination) {
+      // disabled: loading,
+      const pageProps = Object.assign(
+        {
+          current: currentPage,
+          pageSize: pageSize,
+          total: totalData.length,
+        },
+        pagination,
+        { onChange: handlePaginationChange },
+      );
+      return <Pagination {...pageProps} className="table-pagination" />;
+    }
+    return null;
+  };
+
   // todo
   const tableWrapClass = classnames({
     'table-container': true,
@@ -783,10 +886,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     [className]: !!className,
   });
   return (
-    <div style={style} className={tableWrapClass}>
-      {showHeader ? renderHeader() : null}
-      {renderBody()}
-    </div>
+    <>
+      <div style={style} className={tableWrapClass}>
+        {showHeader ? renderHeader() : null}
+        {renderBody()}
+      </div>
+      {renderPagination()}
+    </>
   );
 }
 

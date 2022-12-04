@@ -29,5 +29,6 @@ module.exports = {
     'react/no-array-index-key': 'off',
     'no-param-reassign': 'off',
     '@typescript-eslint/no-loop-func': 'off',
+    '@typescript-eslint/no-unused-expressions': 'off',
   },
 };

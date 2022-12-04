@@ -119,12 +119,13 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
       if (!tr) return;
       const tds = tr.querySelectorAll('td');
       // setTimeout for 不同例子之间切换时候头部和body 之间没有对齐  todo 如果表格宽度太宽但是容器太小时候后列宽怎么处理 group.md
-      setTimeout(() => {
-        onBodyRender(tds);
-      }, 0);
+      // setTimeout(() => {
+      //   onBodyRender(tds);
+      // });
+      onBodyRender(tds);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dataSource]);
 
   useEffect(() => {
     if (expandable?.expandedRowKeys) {

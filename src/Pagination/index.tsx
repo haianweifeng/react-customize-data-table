@@ -9,7 +9,7 @@ import { ReactComponent as LeftDoubleArrow } from '@/assets/left-double-arrow.sv
 import { ReactComponent as RightDoubleArrow } from '@/assets/right-double-arrow.svg';
 import './index.less';
 
-interface PaginationProps {
+export interface PaginationProps {
   className?: string;
   style?: React.CSSProperties;
   align?: 'center' | 'left' | 'right';

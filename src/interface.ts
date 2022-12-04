@@ -42,6 +42,11 @@ export interface SorterStateType<T> {
   weight?: number;
 }
 
+export interface SortInfoType {
+  field: string;
+  order: 'asc' | 'desc';
+}
+
 export interface FilterMenusType {
   label: string;
   value: string;
