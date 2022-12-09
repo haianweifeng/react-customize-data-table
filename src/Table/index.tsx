@@ -4,6 +4,7 @@ import Thead from '../Thead';
 import Tbody from '../Tbody';
 import Colgroup from '../Colgroup';
 import Pagination from '../Pagination';
+import Spin from '../Spin';
 import type {
   RowSelectionType,
   ColumnsType,
@@ -46,7 +47,7 @@ export interface TableProps<T> {
   /** 是否展示外边框和列边框 */
   bordered?: boolean;
   /** 页面是否加载中 */
-  loading?: boolean;
+  loading?: boolean | React.ReactNode;
   /** 是否显示表头  todo header */
   showHeader?: boolean;
   /** 表格大小 */
@@ -115,6 +116,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     onSort,
     onFilter,
     pagination,
+    loading,
   } = props;
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 44;
@@ -862,15 +864,14 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     );
   };
 
-  // todo 等增加loading 时候把disabled: loading
   const renderPagination = () => {
     if (pagination) {
-      // disabled: loading,
       const pageProps = Object.assign(
         {
           current: currentPage,
           pageSize: pageSize,
           total: totalData.length,
+          disabled: !!loading,
         },
         pagination,
         { onChange: handlePaginationChange },
@@ -892,6 +893,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       <div style={style} className={tableWrapClass}>
         {showHeader ? renderHeader() : null}
         {renderBody()}
+        {loading ? (
+          <div className="table-loading">{typeof loading === 'boolean' ? <Spin /> : loading}</div>
+        ) : null}
       </div>
       {renderPagination()}
     </>
