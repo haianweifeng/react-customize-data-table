@@ -64,6 +64,18 @@ export function toPoint(value: string | number) {
   return Number(val) / 100;
 }
 
+export function getParent(el: HTMLElement, target: HTMLElement | null) {
+  if (!target) return null;
+
+  let temp: HTMLElement | null = el;
+  while (temp) {
+    if (temp === target) return temp;
+    temp = temp.parentElement;
+  }
+
+  return null;
+}
+
 // const getChildrenKeys = (data: T[] = [], all = true) => {
 //   const keys: (number | string)[] = [];
 //   data.map((c) => {

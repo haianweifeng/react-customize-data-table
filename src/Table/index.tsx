@@ -822,9 +822,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
     return 0;
   };
-  console.log(`startRowIndex: ${startRowIndex}`);
+  // console.log(`startRowIndex: ${startRowIndex}`);
+  // console.log(`scrollTop: ${scrollTop}`);
 
   const handleScrollVertical = (offset: number) => {
+    // console.log(offset);
     const item = cachePosition.find((p) => p.bottom >= offset);
     if (item) {
       setStartOffset(item.top);
