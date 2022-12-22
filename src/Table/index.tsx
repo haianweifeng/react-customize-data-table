@@ -23,7 +23,9 @@ import type {
   SortInfoType,
   FilterStateType,
   FilterInfoType,
+  CachePositionType,
 } from '../interface';
+import VirtualList from '../VirtualList';
 import type { PaginationProps } from '../index';
 import '../style/index.less';
 import { getRowKey, toPoint, findParentByKey } from '../utils/util';
@@ -50,7 +52,7 @@ export interface TableProps<T> {
   loading?: boolean | React.ReactNode;
   /** 是否显示表头  todo header */
   showHeader?: boolean;
-  /** 表格大小 */
+  /** 表格大小 todo */
   size?: 'default' | 'small';
   /** 表格行的类名 */
   rowClassName?: (record: T, index: number) => string;
@@ -64,15 +66,22 @@ export interface TableProps<T> {
   disabled?: (data: any) => boolean | boolean;
   /** 空数据文案 */
   empty?: string | React.ReactNode;
-  /** 单行表格的预期高度 */
+  /** 单行表格的预期高度 todo */
   rowHeight?: number;
-  /** 单次render的最大行数 */
-  rowsInView?: number;
-  /** 表格是否可以滚动 设置滚动时表格的宽 高 */
+  /** 单次render的最大行数 todo */
+  // rowsInView?: number;
+  renderMaxRows?: number;
+  /** 表格宽度 todo */
+  width?: number;
+  // width?: number | string;
+  /** 表格高度，默认为自动高度，如果表格内容大于此值，会固定表头 todo */
+  // height?: number | string;
+  height?: number;
+  /** 表格是否可以滚动 超过最大宽高时候就可以滚动 todo */
   scroll?: ScrollType;
-  /** 滚动条滚动后回调函数 */
+  /** 滚动条滚动后回调函数 todo */
   onScroll?: (x: number, y: number) => void;
-  /** 列宽伸缩后的回调 */
+  /** 列宽伸缩后的回调 todo */
   onColumnResize?: (newColumns: any) => void;
   /** 表格行是否可选择配置项 todo header 需要表头空一行 */
   rowSelection?: RowSelectionType<T>;
@@ -83,8 +92,8 @@ export interface TableProps<T> {
     triggerAsc: () => void;
     triggerDesc: () => void;
   }) => React.ReactNode;
-  /** 排序取消事件 */
-  onSortCancel?: (col: ColumnsType<T>, order: 'asc' | 'desc') => void;
+  // /** 排序取消事件 */
+  // onSortCancel?: (col: ColumnsType<T>, order: 'asc' | 'desc') => void;
   /** 排序事件 */
   onSort?: (sortInfo: SortInfoType[]) => void;
   /** 筛选事件 */
@@ -102,6 +111,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const {
     className = '',
     style = {},
+    width,
+    height,
     // size = 'default',
     scroll = {},
     showHeader = true,
@@ -117,14 +128,28 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     onFilter,
     pagination,
     loading,
+    renderMaxRows = 20,
+    rowHeight = 46,
   } = props;
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 44;
 
-  const tbodyTableRef = useRef<any>(null);
+  const tbodyRef = useRef<any>(null);
   const maxTreeLevel = useRef<number>(0);
   const treeLevel = useRef<TreeLevelType>({} as TreeLevelType);
   const levelRecord = useRef<LevelRecordType<T>>({} as LevelRecordType<T>);
+
+  // const cachePosition = useRef<CachePositionType[]>([]);
+  const [cachePosition, setCachePosition] = useState<CachePositionType[]>(() => {
+    return dataSource.map((d, index) => {
+      return {
+        index,
+        top: index * rowHeight,
+        bottom: (index + 1) * rowHeight,
+        height: rowHeight,
+      };
+    });
+  });
 
   const isRadio = rowSelection?.type === 'radio';
 
@@ -467,7 +492,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const [colWidths, setColWidths] = useState<number[]>([]);
 
-  // const [startRowIndex, setStartRowIndex] = useState<number>(0);
+  const [startRowIndex, setStartRowIndex] = useState<number>(0);
+
+  const [scrollTop, setScrollTop] = useState<number>(0);
+
+  const [scrollLeft, setScrollLeft] = useState<number>(0);
+
+  const [startOffset, setStartOffset] = useState<number>(0);
 
   const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
     const initSelectedKeys =
@@ -523,7 +554,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const converToPixel = useCallback((val: string | number | undefined) => {
     if (typeof val === 'number' || val === undefined) return val;
     const res = toPoint(val);
-    const { width } = tbodyTableRef.current.getBoundingClientRect();
+    const { width } = tbodyRef.current.getBoundingClientRect();
     return width * res;
   }, []);
 
@@ -569,6 +600,26 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     },
     [converToPixel, flatColumns],
   );
+
+  const handleUpdateRowHeight = (height: number, rowIndex: number) => {
+    const copyCachePosition = [...cachePosition];
+    const index = copyCachePosition.findIndex((c) => c.index === rowIndex);
+    if (index >= 0) {
+      const item = { ...copyCachePosition[index] };
+      const diff = item.height - height;
+      if (diff) {
+        item.height = height;
+        item.bottom = item.bottom - diff;
+        for (let j = index + 1; j < copyCachePosition.length; j++) {
+          copyCachePosition[j].top = copyCachePosition[j - 1].bottom;
+          copyCachePosition[j].bottom = copyCachePosition[j].bottom - diff;
+        }
+      }
+      copyCachePosition.splice(index, 1, item);
+    }
+    setCachePosition(copyCachePosition);
+  };
+  // console.log(cachePosition);
 
   const handleSelect = (
     keys: (number | string)[],
@@ -752,6 +803,49 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   };
 
+  const getSumHeight = useCallback(
+    (start: number, end: number) => {
+      let height = 0;
+      for (let i = start; i < end; i++) {
+        height += cachePosition[i]?.height || rowHeight;
+      }
+      return height;
+    },
+    [cachePosition, rowHeight],
+  );
+
+  const getStartRowIndex = (offset: number) => {
+    const item = cachePosition.find((p) => p.bottom >= offset);
+    if (item) {
+      // setStartRowIndex(item.index);
+      return item.index;
+    }
+    return 0;
+  };
+  console.log(`startRowIndex: ${startRowIndex}`);
+
+  const handleScrollVertical = (offset: number) => {
+    const item = cachePosition.find((p) => p.bottom >= offset);
+    if (item) {
+      setStartOffset(item.top);
+      setStartRowIndex(item.index);
+      setScrollTop(offset);
+    }
+  };
+  console.log(cachePosition);
+
+  useEffect(() => {
+    const positions = dataSource.map((d, index) => {
+      return {
+        index,
+        top: index * rowHeight,
+        bottom: (index + 1) * rowHeight,
+        height: rowHeight,
+      };
+    });
+    setCachePosition(positions);
+  }, [dataSource]);
+
   useEffect(() => {
     if (pagination && 'current' in pagination) {
       setCurrentPage(pagination?.current || 1);
@@ -818,27 +912,56 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return records;
   }, [currentPageData, getTreeChildrenData]);
 
+  // todo 待测试如果是可变行高会不会触发重新计算
+  const scrollHeight = useMemo(() => {
+    return getSumHeight(0, dataSource.length);
+  }, [getSumHeight, dataSource]);
+
+  const showScrollbarY = useMemo(() => {
+    return height === undefined ? false : height < scrollHeight;
+  }, [height, scrollHeight]);
+
+  // todo 1. 考虑没有设置height 时候展示数据范围
+  // TODO 2. 考虑分页时候设置pageSize 大于renderMaxRows
   const renderBody = () => {
     return (
-      <div className="table-tbody" ref={tbodyTableRef}>
-        <table style={{ width: scroll.width }}>
-          <Colgroup colWidths={colWidths} columns={flatColumns} />
-          <Tbody
-            {...props}
-            // startRowIndex={startRowIndex}
-            startRowIndex={0}
-            dataSource={list}
-            columns={flatColumns}
-            treeLevelMap={treeLevel.current}
-            treeExpandKeys={treeExpandKeys}
-            selectedKeys={selectedKeys}
-            halfSelectedKeys={halfSelectedKeys}
-            onSelect={handleSelect}
-            onTreeExpand={handleTreeExpand}
-            onBodyRender={handleBodyRender}
-          />
-        </table>
-      </div>
+      <VirtualList
+        width={width}
+        scrollHeight={scrollHeight}
+        scrollTop={scrollTop}
+        scrollLeft={scrollLeft}
+        showScrollbarY={showScrollbarY}
+        onScrollVertical={handleScrollVertical}
+      >
+        <div
+          className="table-tbody"
+          ref={tbodyRef}
+          style={{
+            width,
+            marginTop: `${startOffset}px`,
+            transform: `translate(${scrollLeft}px, -${scrollTop}px)`,
+          }}
+        >
+          <table style={{ width }}>
+            <Colgroup colWidths={colWidths} columns={flatColumns} />
+            <Tbody
+              {...props}
+              startRowIndex={startRowIndex}
+              // startRowIndex={0}
+              dataSource={list.slice(startRowIndex, startRowIndex + renderMaxRows)}
+              columns={flatColumns}
+              treeLevelMap={treeLevel.current}
+              treeExpandKeys={treeExpandKeys}
+              selectedKeys={selectedKeys}
+              halfSelectedKeys={halfSelectedKeys}
+              onSelect={handleSelect}
+              onTreeExpand={handleTreeExpand}
+              onBodyRender={handleBodyRender}
+              onUpdateRowHeight={handleUpdateRowHeight}
+            />
+          </table>
+        </div>
+      </VirtualList>
     );
   };
 
@@ -888,9 +1011,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     'table-bordered': bordered,
     [className]: !!className,
   });
+  const styles = Object.assign({}, style, {
+    height: height || '100%',
+    overflow: loading ? 'hidden' : 'auto',
+  });
   return (
     <>
-      <div style={style} className={tableWrapClass}>
+      <div style={styles} className={tableWrapClass}>
         {showHeader ? renderHeader() : null}
         {renderBody()}
         {loading ? (

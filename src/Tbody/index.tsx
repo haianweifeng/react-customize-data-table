@@ -23,13 +23,14 @@ interface TbodyProps<T> extends TableProps<T> {
   ) => void;
   onTreeExpand: (treeExpanded: boolean, record: T, recordKey: number | string) => void;
   onBodyRender: (cells: HTMLElement[]) => void;
+  onUpdateRowHeight: (height: number, rowIndex: number) => void;
 }
 
 function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
   const {
     dataSource = [],
     columns,
-    // startRowIndex,
+    startRowIndex,
     rowKey = 'key',
     treeLevelMap,
     treeExpandKeys,
@@ -54,6 +55,8 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     });
     return keys;
   };
+
+  const [isMount, setIsMount] = useState<boolean>(false);
 
   const [expandedRowKeys, setExpandedRowKeys] = useState<(string | number)[]>(() => {
     if (
@@ -114,18 +117,27 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
   };
 
   useEffect(() => {
+    setIsMount(true);
+  }, []);
+
+  // 待测试 1.bug 分页切换页码时候宽度不对 已修复
+  // 待测试 2.筛选后 宽度不对  已修复
+  // mount 不需要 setTimeout
+  useEffect(() => {
     if (tbodyRef.current) {
       const tr = tbodyRef.current.querySelector('tr');
       if (!tr) return;
       const tds = tr.querySelectorAll('td');
       // setTimeout for 不同例子之间切换时候头部和body 之间没有对齐  todo 如果表格宽度太宽但是容器太小时候后列宽怎么处理 group.md
-      // setTimeout(() => {
-      //   onBodyRender(tds);
-      // });
-      onBodyRender(tds);
+      if (isMount) {
+        onBodyRender(tds);
+      } else {
+        setTimeout(() => {
+          onBodyRender(tds);
+        });
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataSource]);
+  }, [onBodyRender, isMount]);
 
   useEffect(() => {
     if (expandable?.expandedRowKeys) {
@@ -341,6 +353,8 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     );
   };
 
-  return <tbody ref={tbodyRef}>{dataSource.map((d, i: number) => renderTr(d, i))}</tbody>;
+  return (
+    <tbody ref={tbodyRef}>{dataSource.map((d, i: number) => renderTr(d, i + startRowIndex))}</tbody>
+  );
 }
 export default Tbody;

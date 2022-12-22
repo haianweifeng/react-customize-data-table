@@ -8,13 +8,21 @@
 
 .table-container {
   position: relative;
+  display: flex;
+  flex-direction: column;
   max-width: 100%;
   font-size: 14px;
+  line-height: 1.5;
   .table-thead {
+    // flex: 0 1 auto; 不放大会缩小
+    // flex: 1 1 auto; 放大且缩小
+    // flex: 0 0 auto; 不放大也不缩小
+    flex: 0 0 auto; // 不放大也不缩小  flex-basis: auto  项目原本大小
     overflow: hidden;
     background-color: @table-head-bg;
   }
   .table-tbody {
+    flex: 1;
     min-width: 100%;
   }
 }
@@ -63,6 +71,18 @@ table {
 
   thead > tr > th {
     border-right: 1px solid @table-border-color;
+  }
+
+  &:before {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    display: inline-block;
+    height: 1px;
+    background: @table-border-color;
+    content: '';
   }
 }
 
@@ -212,4 +232,77 @@ th {
 
 .table-pagination {
   margin-top: 16px;
+}
+
+.virtual-container,
+.virtual-content {
+  position: relative;
+  overflow: hidden;
+}
+
+.virtual-container-scroll-horizontal {
+  .scrollbar-track-vertical {
+    bottom: 16px;
+  }
+}
+
+.virtual-container-scroll-vertical {
+  .scrollbar-track-horizontal {
+    right: 16px;
+  }
+}
+
+.scrollbar-track {
+  position: absolute;
+  box-sizing: border-box;
+  background: #fafafa;
+  border: 1px solid transparent;
+  //background: transparent;
+  //transition: background 120ms ease-out;
+
+  &:hover {
+    background: #fafafa;
+  }
+}
+
+.scrollbar-track-vertical {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  border-width: 0 1px;
+
+  .scrollbar-thumb {
+    left: 50%;
+    width: 10px;
+    margin-left: -5px;
+  }
+}
+
+.table-bordered {
+  .scrollbar-track-vertical {
+    border-right: 1px solid @table-border-color;
+    border-left: 1px solid @table-border-color;
+  }
+}
+
+.scrollbar-track-horizontal {
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 16px;
+  border-width: 1px 0;
+
+  .scrollbar-thumb {
+    top: 50%;
+    height: 10px;
+    margin-top: -5px;
+  }
+}
+
+.scrollbar-thumb {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  cursor: default;
 }

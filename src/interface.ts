@@ -5,7 +5,7 @@ export interface RowSelectionType<T> {
   columnTitle?: React.ReactNode;
   /** 自定义列表选择框宽度 todo 把这个宽度设置到colgroup 中 */
   columnWidth?: string | number;
-  /** 把选择框列固定在左边 */
+  /** 把选择框列固定在左边 todo */
   fixed?: boolean;
   /** 选择框的默认属性配置 */
   getCheckboxProps?: (record: T) => any;
@@ -70,7 +70,7 @@ export interface ColumnsType<T> {
   className?: string;
   /** 列对应字段名 */
   dataIndex: string;
-  /** 列固定 */
+  /** 列固定 todo */
   fixed?: 'left' | 'right';
   /** 生成复杂数据的渲染函数 */
   render?: (text: string, record: T, index: number) => React.ReactNode;
@@ -174,7 +174,7 @@ export interface CellProps {
   align?: 'left' | 'center' | 'right';
   /** 样式类名 */
   className?: string;
-  /** 列固定 */
+  /** 列固定 todo */
   fixed?: 'left' | 'right';
   /** 单元格占据的列数 */
   colSpan: number;
@@ -200,3 +200,5 @@ export type LevelRecordType<T> = Record<number, T[]>;
 export type TreeLevelType = Record<string | number, number>;
 
 export type RowKeyType<T> = string | ((row: T) => string | number);
+
+export type CachePositionType = { index: number; top: number; bottom: number; height: number };
