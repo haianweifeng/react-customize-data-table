@@ -832,7 +832,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       setScrollTop(offset);
     }
   };
-  console.log(cachePosition);
+  // console.log(cachePosition);
 
   useEffect(() => {
     const positions = dataSource.map((d, index) => {
