@@ -13,6 +13,8 @@ import Sorter from '../Sorter';
 import Filter from '../Filter';
 
 interface TheadProps<T> {
+  scrollLeft: number;
+  offsetRight: number;
   sorterState: SorterStateType<T>[];
   filterState: FilterStateType<T>[];
   checked: boolean | 'indeterminate';
@@ -38,6 +40,8 @@ function Thead<T>(props: TheadProps<T>) {
     sorterState,
     filterState,
     expandable,
+    scrollLeft,
+    offsetRight,
     rowSelection,
     renderSorter,
     onSelectAll,
@@ -110,19 +114,19 @@ function Thead<T>(props: TheadProps<T>) {
   );
 
   const renderSelection = useCallback(
-    (key: string, rowSpan: number) => {
+    (key: string, rowSpan: number, cls: string, styles: React.CSSProperties) => {
       if (rowSelection?.columnTitle) {
         return (
-          <th key={key} rowSpan={rowSpan} className="selection-expand-column">
+          <th key={key} rowSpan={rowSpan} className={cls} style={styles}>
             {rowSelection.columnTitle}
           </th>
         );
       }
       if (rowSelection?.type === 'radio') {
-        return <th key={key} rowSpan={rowSpan} />;
+        return <th key={key} rowSpan={rowSpan} className={cls} style={styles} />;
       }
       return (
-        <th key={key} rowSpan={rowSpan} className="selection-expand-column">
+        <th key={key} rowSpan={rowSpan} className={cls} style={styles}>
           <Checkbox checked={checked} onChange={handleChange} />
         </th>
       );
@@ -131,15 +135,15 @@ function Thead<T>(props: TheadProps<T>) {
   );
 
   const renderExpand = useCallback(
-    (key: string, rowSpan: number) => {
+    (key: string, rowSpan: number, cls: string, styles: React.CSSProperties) => {
       if (expandable?.columnTitle) {
         return (
-          <th key={key} rowSpan={rowSpan}>
+          <th key={key} rowSpan={rowSpan} className={cls} style={styles}>
             {expandable.columnTitle}
           </th>
         );
       }
-      return <th key={key} rowSpan={rowSpan} />;
+      return <th key={key} rowSpan={rowSpan} className={cls} style={styles} />;
     },
     [expandable],
   );
@@ -191,23 +195,42 @@ function Thead<T>(props: TheadProps<T>) {
       index: string,
     ) => {
       const totalLevel = trs.length;
+      const colClassName = col.className || '';
       const cls = classnames({
-        'table-align-center': col.align === 'left',
+        'table-align-center': col.align === 'center',
         'table-align-right': col.align === 'right',
+        'selection-expand-column':
+          col.type === 'checkbox' || col.type === 'radio' || col.type === 'expanded',
+        'table-fixed-left': col.fixed === 'left',
+        'table-fixed-right': col.fixed === 'right',
+        [colClassName]: !!col.className,
       });
+
+      const styles: React.CSSProperties = {};
+      if (col.fixed === 'left') styles.transform = `translate(${scrollLeft}px, 0px)`;
+      if (col.fixed === 'right') styles.transform = `translate(-${offsetRight}px, 0px)`;
+
       switch (col.type) {
         case 'checkbox':
         case 'radio':
-          return trs[level].push(renderSelection(index, totalLevel));
+          return trs[level].push(renderSelection(index, totalLevel, cls, styles));
         case 'expanded':
-          return trs[level].push(renderExpand(index, totalLevel));
+          return trs[level].push(renderExpand(index, totalLevel, cls, styles));
         default: {
           if (isColumnGroup(col)) {
             trs[level].push(
-              <th key={index} colSpan={col.colSpan}>
-                <div>
-                  <span>{col.title}</span>
-                </div>
+              <th
+                key={index}
+                colSpan={col.colSpan}
+                className={classnames({
+                  'table-align-center': true,
+                  'cell-fixed-left': col.fixed === 'left',
+                  'cell-fixed-right': col.fixed === 'right',
+                  [colClassName]: !!col.className,
+                })}
+                style={styles}
+              >
+                {col.title}
               </th>,
             );
             (col as any).children.forEach((c: any, i: number) => {
@@ -215,7 +238,13 @@ function Thead<T>(props: TheadProps<T>) {
             });
           } else {
             trs[level].push(
-              <th colSpan={col.colSpan} rowSpan={totalLevel - level} key={index} className={cls}>
+              <th
+                colSpan={col.colSpan}
+                rowSpan={totalLevel - level}
+                key={index}
+                className={cls}
+                style={styles}
+              >
                 <div className="has-sorter-filter">
                   <span className="column-title">{col.title}</span>
                   <div className="sorter-filter">

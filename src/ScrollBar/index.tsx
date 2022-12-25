@@ -27,7 +27,6 @@ const Scrollbar = (props: ScrollbarProps) => {
   const ratio = useMemo(() => {
     return (contentSize - size) / (size - thumbSize);
   }, [contentSize, size, thumbSize]);
-  // console.log(`ratio: ${ratio}`);
 
   const handleMouseMoveThumb = (event: any) => {
     let deltaX = event.clientX - lastedClientX.current;
@@ -62,8 +61,6 @@ const Scrollbar = (props: ScrollbarProps) => {
 
     document.onselectstart = () => false;
   };
-  // console.log(`size: ${size}`);
-  // console.log(`contentSize: ${contentSize}`);
 
   const handleMouseDownTrack = (event: any) => {
     if (event.target === thumbRef.current) return;

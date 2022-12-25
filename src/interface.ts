@@ -70,7 +70,7 @@ export interface ColumnsType<T> {
   className?: string;
   /** 列对应字段名 */
   dataIndex: string;
-  /** 列固定 todo */
+  /** 列固定 如果相邻的多列需要锁定，只需指定最外侧的column即可 todo 需要配合横向滚动才生效 */
   fixed?: 'left' | 'right';
   /** 生成复杂数据的渲染函数 */
   render?: (text: string, record: T, index: number) => React.ReactNode;

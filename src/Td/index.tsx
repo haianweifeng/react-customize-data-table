@@ -3,22 +3,42 @@ import classnames from 'classnames';
 import '../style/index.less';
 import type { CellProps } from '../interface';
 
-type TdProps = CellProps;
+type TdProps = CellProps & { scrollLeft: number; offsetRight: number };
 
 function Td(props: TdProps) {
-  const { colSpan, rowSpan, align, className = '', fixed, content, type } = props;
+  const {
+    colSpan,
+    rowSpan,
+    align,
+    className = '',
+    fixed,
+    content,
+    type,
+    scrollLeft,
+    offsetRight,
+  } = props;
 
-  // todo 选择框的fixed  固定列的样式还没写
+  const fixedLeft = fixed === 'left';
+  const fixedRight = fixed === 'right';
+
+  // todo  固定列的样式还没写
   const cls = classnames({
-    'fixed-left': fixed === 'left',
-    'fixed-right': fixed === 'right',
+    'cell-fixed-left': fixedLeft,
+    'cell-fixed-right': fixedRight,
     [`align-${align}`]: !!align,
     'selection-expand-column': type === 'checkbox' || type === 'radio' || type === 'expanded',
     [className]: !!className,
   });
+  const styles: any = {};
+  if (fixedLeft) {
+    styles.transform = `translate(${scrollLeft}px, 0)`;
+  }
+  if (fixedRight) {
+    styles.transform = `translate(-${offsetRight}px, 0)`;
+  }
 
   return (
-    <td colSpan={colSpan} rowSpan={rowSpan} className={cls}>
+    <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles}>
       {content}
     </td>
   );

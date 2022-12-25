@@ -14,6 +14,7 @@
   font-size: 14px;
   line-height: 1.5;
   .table-thead {
+    position: relative;
     // flex: 0 1 auto; 不放大会缩小
     // flex: 1 1 auto; 放大且缩小
     // flex: 0 0 auto; 不放大也不缩小
@@ -21,6 +22,22 @@
     overflow: hidden;
     background-color: @table-head-bg;
   }
+
+  .table-head-padding {
+    padding-right: 16px;
+
+    &:after {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 16px;
+      background-color: @table-head-bg;
+      border-bottom: 1px solid @table-border-color;
+      content: '';
+    }
+  }
+
   .table-tbody {
     flex: 1;
     min-width: 100%;
@@ -119,9 +136,9 @@ thead > tr > th.table-align-right {
   }
 }
 
-thead > tr > th[colspan]:not([colspan='1']) {
-  text-align: center;
-}
+//thead > tr > th[colspan]:not([colspan='1']) {
+//  text-align: center;
+//}
 
 tbody > tr:hover,
 tbody > tr:hover > td {
@@ -140,6 +157,7 @@ td {
   position: relative;
   padding: @table-cell-padding-vertical @table-cell-padding-horizontal;
   word-break: break-all;
+  background-color: #fff;
   // overflow-wrap: break-word;
   border-bottom: 1px solid @table-border-color;
 }
@@ -160,6 +178,11 @@ td,
 th {
   &.selection-expand-column {
     text-align: center;
+  }
+
+  &.cell-fixed-left {
+    position: relative;
+    z-index: 1;
   }
 }
 
@@ -234,22 +257,14 @@ th {
   margin-top: 16px;
 }
 
+//.virtual-container {
+//  overscroll-behavior-x: contain;
+//}
+
 .virtual-container,
 .virtual-content {
   position: relative;
   overflow: hidden;
-}
-
-.virtual-container-scroll-horizontal {
-  .scrollbar-track-vertical {
-    bottom: 16px;
-  }
-}
-
-.virtual-container-scroll-vertical {
-  .scrollbar-track-horizontal {
-    right: 16px;
-  }
 }
 
 .scrollbar-track {
@@ -279,13 +294,6 @@ th {
   }
 }
 
-.table-bordered {
-  .scrollbar-track-vertical {
-    border-right: 1px solid @table-border-color;
-    border-left: 1px solid @table-border-color;
-  }
-}
-
 .scrollbar-track-horizontal {
   right: 0;
   bottom: 0;
@@ -297,6 +305,50 @@ th {
     top: 50%;
     height: 10px;
     margin-top: -5px;
+  }
+}
+
+.table-bordered {
+  .scrollbar-track {
+    border-left: 1px solid @table-border-color;
+  }
+
+  .scrollbar-track-vertical {
+    border-right: 1px solid @table-border-color;
+  }
+
+  .scrollbar-track-horizontal {
+    border-top: 1px solid @table-border-color;
+  }
+
+  .virtual-container-scroll-horizontal {
+    .scrollbar-track-vertical {
+      &:after {
+        border-right: 1px solid @table-border-color;
+      }
+    }
+  }
+}
+
+.virtual-container-scroll-horizontal {
+  .scrollbar-track-vertical {
+    bottom: 16px;
+
+    &:after {
+      position: absolute;
+      top: 100%;
+      left: -1px;
+      width: 16px;
+      height: 16px;
+      background: #fafafa;
+      content: '';
+    }
+  }
+}
+
+.virtual-container-scroll-vertical {
+  .scrollbar-track-horizontal {
+    right: 16px;
   }
 }
 

@@ -29,6 +29,7 @@ import VirtualList from '../VirtualList';
 import type { PaginationProps } from '../index';
 import '../style/index.less';
 import { getRowKey, toPoint, findParentByKey } from '../utils/util';
+import { BAR_WIDTH } from '../utils/constant';
 // import styles from './index.less';
 
 export interface TableProps<T> {
@@ -77,6 +78,8 @@ export interface TableProps<T> {
   /** 表格高度，默认为自动高度，如果表格内容大于此值，会固定表头 todo */
   // height?: number | string;
   height?: number;
+  /** 是否开启虚拟列表 todo */
+  virtual?: boolean;
   /** 表格是否可以滚动 超过最大宽高时候就可以滚动 todo */
   scroll?: ScrollType;
   /** 滚动条滚动后回调函数 todo */
@@ -106,6 +109,8 @@ export interface TableProps<T> {
 // todo 还未测试列宽设为百分比的情况
 // todo scroll: { width, height } 设置滚动时候表格的宽度 高度
 // todo 如果没有筛选到数据时候提示文本
+// todo renderMaxRows 需要做限制
+// todo bug columnWidth: '160' 不起作用
 // 设置colgroup 列的宽度  然后获取每个单元格最后渲染的宽度 重新设置 colgroup 的宽度
 function Table<T extends { key?: number | string; children?: T[] }>(props: TableProps<T>) {
   const {
@@ -387,6 +392,87 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return cols;
   }, [columns, expandable, rowSelection]);
 
+  const addFixedToColumn: any = useCallback(
+    (columns: ColumnsType<T>[] | ColumnsGroupType<T>[], fixed: 'left' | 'right') => {
+      return columns.map((c) => {
+        if (typeof (c as ColumnsGroupWithType<T>).children !== 'undefined') {
+          return {
+            ...c,
+            fixed,
+            children: addFixedToColumn((c as ColumnsGroupWithType<T>).children, fixed),
+          };
+        }
+        return { ...c, fixed };
+      });
+    },
+    [],
+  );
+
+  const existFixedInColumn = useCallback(
+    (columns: ColumnsType<T>[] | ColumnsGroupType<T>[]): boolean => {
+      let exist: boolean;
+      const lastColumn = columns[columns.length - 1];
+      if ((lastColumn as ColumnsGroupWithType<T>).children) {
+        exist = existFixedInColumn((lastColumn as ColumnsGroupWithType<T>).children);
+      } else {
+        exist = !!lastColumn.fixed;
+      }
+      return exist;
+    },
+    [],
+  );
+
+  const columnsWithFixed = useMemo(() => {
+    let left = -1;
+    let right = -1;
+    const cols = formatColumns.map((column, index: number) => {
+      if (typeof (column as ColumnsGroupWithType<T>).children !== 'undefined') {
+        const isFixedLeft = column.fixed === 'left';
+        const isFixedRight = column.fixed === 'right';
+
+        if (isFixedLeft || !column.fixed) {
+          let exist = false;
+          if (!column.fixed) {
+            exist = existFixedInColumn((column as ColumnsGroupWithType<T>).children);
+          }
+          if (isFixedLeft || exist) {
+            left = index;
+            const children = addFixedToColumn((column as ColumnsGroupWithType<T>).children, 'left');
+            (column as ColumnsGroupWithType<T>).children = children;
+            column.fixed = 'left';
+          }
+        }
+
+        if (isFixedRight || !column.fixed) {
+          let exist = false;
+          if (!column.fixed) {
+            exist = existFixedInColumn((column as ColumnsGroupWithType<T>).children);
+          }
+          if (isFixedRight || exist) {
+            if (right < 0) right = index;
+            const children = addFixedToColumn(
+              (column as ColumnsGroupWithType<T>).children,
+              'right',
+            );
+            (column as ColumnsGroupWithType<T>).children = children;
+            column.fixed = 'right';
+          }
+        }
+      } else {
+        if (column.fixed === 'left') left = index;
+        if (column.fixed === 'right' && right < 0) right = index;
+      }
+      return column;
+    });
+    return cols.map((c, i: number) => {
+      if (i <= left) c.fixed = 'left';
+      // if (i === left) c.lastFixed = true;
+      if (i >= right && right > 0) c.fixed = 'right';
+      // if (i === right) c.firstFixed = true;
+      return c;
+    });
+  }, [formatColumns, addFixedToColumn, existFixedInColumn]);
+
   const getFlatColumns = useCallback((cols: (ColumnsWithType<T> | ColumnsGroupWithType<T>)[]) => {
     const flatColumns: ColumnsWithType<T>[] = [];
     cols.map((column: any) => {
@@ -400,8 +486,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   }, []);
 
   const flatColumns = useMemo(() => {
-    return getFlatColumns(formatColumns);
-  }, [getFlatColumns, formatColumns]);
+    return getFlatColumns(columnsWithFixed);
+  }, [getFlatColumns, columnsWithFixed]);
 
   const [currentPage, setCurrentPage] = useState(() => {
     return pagination?.current || pagination?.defaultCurrent || 1;
@@ -491,6 +577,10 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   }, [flatData, currentPageData]);
 
   const [colWidths, setColWidths] = useState<number[]>([]);
+
+  const [virtualContainerWidth, setVirtualContainerWidth] = useState<number>(0);
+
+  const [scrollWidth, setScrollWidth] = useState<number>(width || 0);
 
   const [startRowIndex, setStartRowIndex] = useState<number>(0);
 
@@ -608,6 +698,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       const item = { ...copyCachePosition[index] };
       const diff = item.height - height;
       if (diff) {
+        // todo 如果存在差距的话得更新下scrollTop  startOffset
         item.height = height;
         item.bottom = item.bottom - diff;
         for (let j = index + 1; j < copyCachePosition.length; j++) {
@@ -826,13 +917,18 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // console.log(`scrollTop: ${scrollTop}`);
 
   const handleScrollVertical = (offset: number) => {
-    // console.log(offset);
     const item = cachePosition.find((p) => p.bottom >= offset);
     if (item) {
       setStartOffset(item.top);
       setStartRowIndex(item.index);
       setScrollTop(offset);
     }
+  };
+
+  // todo 样式
+  const handleScrollHorizontal = (offset: number) => {
+    // console.log(offset);
+    setScrollLeft(offset);
   };
   // console.log(cachePosition);
 
@@ -888,6 +984,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     });
     exist && setFilterState(filter);
   }, [flatColumns]);
+
   // 4. 待测试-分页情况下表头的全选只针对当前页面数据
   const checked = useMemo(() => {
     if (!selectedKeys.length) {
@@ -923,17 +1020,32 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return height === undefined ? false : height < scrollHeight;
   }, [height, scrollHeight]);
 
+  const handleMount = (clientWidth: number) => {
+    // todo 固定列或者想要产生横向滚动一定要设置width
+    setScrollWidth(width || tbodyRef.current.scrollWidth || 0);
+    setVirtualContainerWidth(clientWidth);
+  };
+
+  const offsetRight = useMemo(() => {
+    const availableWidth =
+      virtualContainerWidth === 0 ? 0 : virtualContainerWidth - (showScrollbarY ? BAR_WIDTH : 0);
+    const maxScrollWidth = scrollWidth - availableWidth;
+    return maxScrollWidth - scrollLeft;
+  }, [scrollWidth, virtualContainerWidth, showScrollbarY, scrollLeft]);
+
   // todo 1. 考虑没有设置height 时候展示数据范围
   // TODO 2. 考虑分页时候设置pageSize 大于renderMaxRows
   const renderBody = () => {
     return (
       <VirtualList
-        width={width}
+        scrollWidth={scrollWidth}
         scrollHeight={scrollHeight}
         scrollTop={scrollTop}
         scrollLeft={scrollLeft}
         showScrollbarY={showScrollbarY}
+        onMount={handleMount}
         onScrollVertical={handleScrollVertical}
+        onScrollHorizontal={handleScrollHorizontal}
       >
         <div
           className="table-tbody"
@@ -941,13 +1053,15 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           style={{
             width,
             marginTop: `${startOffset}px`,
-            transform: `translate(${scrollLeft}px, -${scrollTop}px)`,
+            transform: `translate(-${scrollLeft}px, -${scrollTop}px)`,
           }}
         >
           <table style={{ width }}>
             <Colgroup colWidths={colWidths} columns={flatColumns} />
             <Tbody
               {...props}
+              scrollLeft={scrollLeft}
+              offsetRight={offsetRight}
               startRowIndex={startRowIndex}
               // startRowIndex={0}
               dataSource={list.slice(startRowIndex, startRowIndex + renderMaxRows)}
@@ -969,12 +1083,24 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const renderHeader = () => {
     return (
-      <div className="table-thead">
-        <table style={{ width: scroll.width }}>
+      <div
+        className={classnames({
+          'table-thead': true,
+          'table-head-padding': showScrollbarY,
+        })}
+      >
+        <table
+          style={{
+            width,
+            transform: `translate(-${scrollLeft}px, 0)`,
+          }}
+        >
           <Colgroup colWidths={colWidths} columns={flatColumns} />
           <Thead
             checked={checked}
-            columns={formatColumns}
+            columns={columnsWithFixed}
+            scrollLeft={scrollLeft}
+            offsetRight={offsetRight}
             sorterState={sorterState}
             filterState={filterState}
             expandable={expandable}
@@ -1007,6 +1133,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   };
 
   // todo
+  // todo 考虑style 中如果设置了width
   const tableWrapClass = classnames({
     'table-container': true,
     size: true,

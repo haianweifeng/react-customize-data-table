@@ -3,24 +3,32 @@ import classnames from 'classnames';
 import normalizeWheel from 'normalize-wheel';
 import ScrollBar from '../ScrollBar';
 import { getParent } from '../utils/util';
+import { BAR_WIDTH } from '../utils/constant';
 
 interface VirtualListProps {
-  width?: number;
+  scrollWidth: number;
   scrollHeight: number;
   scrollTop: number;
   scrollLeft: number;
   showScrollbarY: boolean;
   children: React.ReactNode;
   onScrollVertical: (offset: number) => void;
+  onScrollHorizontal: (offset: number) => void;
+  onMount: (containerWidth: number) => void;
 }
 
-// 在Mac下，滚动条是不占位的，所以宽度始终是为0的，在windows系统下，是占位的。
 const VirtualList = (props: VirtualListProps) => {
-  const { width, scrollHeight, scrollTop, scrollLeft, showScrollbarY, children, onScrollVertical } =
-    props;
-  // console.log(`scrollTop: ${scrollTop}`);
-
-  const BAR_WIDTH = 16;
+  const {
+    scrollWidth,
+    scrollHeight,
+    scrollTop,
+    scrollLeft,
+    showScrollbarY,
+    children,
+    onScrollVertical,
+    onScrollHorizontal,
+    onMount,
+  } = props;
 
   const pixelX = useRef<number>(0);
   const pixelY = useRef<number>(0);
@@ -33,39 +41,44 @@ const VirtualList = (props: VirtualListProps) => {
 
   const [virtualContainerWidth, setVirtualContainerWidth] = useState<number>(0);
   const [virtualContainerHeight, setVirtualContainerHeight] = useState<number>(0);
-  const [scrollWidth, setScrollWidth] = useState<number>(width || 0);
+  // const [scrollWidth, setScrollWidth] = useState<number>(width || 0);
   // console.log(`scrollWidth: ${scrollWidth}`);
 
-  // useEffect(() => {
-  //   virtualContainerRef.current?.addEventListener('wheel', handleWheel, { passive: false });
-  //
-  //   return () => {
-  //     virtualContainerRef.current?.removeEventListener('wheel', handleWheel)
-  //   };
-  // }, [scrollTop]);
+  useEffect(() => {
+    virtualContainerRef.current?.addEventListener('wheel', handleWheel);
+
+    return () => {
+      virtualContainerRef.current?.removeEventListener('wheel', handleWheel);
+    };
+  }, [scrollTop, scrollLeft]);
 
   useEffect(() => {
     if (virtualContainerRef.current) {
       const { width: containerWidth, height: containerHeight } =
         virtualContainerRef.current.getBoundingClientRect();
+
       setVirtualContainerWidth(containerWidth);
       setVirtualContainerHeight(containerHeight);
+
+      onMount && onMount(containerWidth);
     }
   }, []);
 
-  useEffect(() => {
-    // todo 这里是offsetWidth 还是scrollWidth
-    setScrollWidth(width || virtualContentRef.current?.offsetWidth || 0);
-  }, [width]);
+  // useEffect(() => {
+  //   setScrollWidth(width || virtualContentRef.current?.scrollWidth || 0);
+  // }, [width]);
 
   const showScrollbarX = useMemo(() => {
-    return width === undefined
-      ? scrollWidth > virtualContainerWidth
-      : width > virtualContainerWidth;
-  }, [scrollWidth, width, virtualContainerWidth]);
+    // return width === undefined
+    //   ? scrollWidth > virtualContainerWidth
+    //   : width > virtualContainerWidth;
+    return scrollWidth > virtualContainerWidth;
+  }, [scrollWidth, virtualContainerWidth]);
   // console.log(`showScrollbarX: ${showScrollbarX}`);
 
   const { virtualContainerAvailableWidth, virtualContainerAvailableHeight } = useMemo(() => {
+    // console.log('触发');
+    // todo bug 当从固定列切换到固定表头 再从固定表头切换到固定列 横向滚动发现滚动有偏差
     return {
       virtualContainerAvailableWidth:
         virtualContainerWidth === 0 ? 0 : virtualContainerWidth - (showScrollbarY ? BAR_WIDTH : 0),
@@ -80,7 +93,9 @@ const VirtualList = (props: VirtualListProps) => {
     onScrollVertical && onScrollVertical(deltaY);
   };
 
-  const handleHorizontalScroll = (deltaX: number) => {};
+  const handleHorizontalScroll = (deltaX: number) => {
+    onScrollHorizontal && onScrollHorizontal(deltaX);
+  };
 
   const handleScroll = () => {
     if (Math.abs(pixelX.current) > Math.abs(pixelY.current)) {
@@ -99,7 +114,18 @@ const VirtualList = (props: VirtualListProps) => {
       pixelY.current = 0;
     }
 
-    // todo horizontal wheel
+    // horizontal wheel
+    if (pixelY.current === 0) {
+      let offset = scrollLeft + pixelX.current;
+      offset = Math.max(0, offset);
+      // console.log(`scrollWidth: ${scrollWidth}`)
+      // console.log(`virtualContainerAvailableWidth: ${virtualContainerAvailableWidth}`)
+      // console.log(scrollWidth - virtualContainerAvailableWidth)
+      offset = Math.min(offset, scrollWidth - virtualContainerAvailableWidth);
+      if (offset === scrollLeft) return;
+      handleHorizontalScroll(offset);
+      pixelX.current = 0;
+    }
   };
 
   const handleWheel = (event: any) => {
@@ -110,8 +136,9 @@ const VirtualList = (props: VirtualListProps) => {
     const normalized = normalizeWheel(event);
     pixelX.current = normalized.pixelX;
     pixelY.current = normalized.pixelY;
-    handleScroll();
+
     event.preventDefault();
+    handleScroll();
   };
 
   const handleTouchStart = (event: any) => {
@@ -144,7 +171,7 @@ const VirtualList = (props: VirtualListProps) => {
         'virtual-container-scroll-horizontal': showScrollbarX,
       })}
       ref={virtualContainerRef}
-      onWheel={handleWheel}
+      // onWheel={handleWheel}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
     >

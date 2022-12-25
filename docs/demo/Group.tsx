@@ -35,6 +35,7 @@ const columns: ColumnsType<DataType>[] = [
   },
   {
     title: 'Other',
+    // fixed: 'left',
     children: [
       {
         title: 'Age',
@@ -68,6 +69,7 @@ const columns: ColumnsType<DataType>[] = [
                 dataIndex: 'number',
                 key: 'number',
                 width: 100,
+                fixed: 'left',
                 // headerColSpan: 0,
               },
             ],

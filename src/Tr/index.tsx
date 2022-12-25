@@ -6,6 +6,8 @@ import type { TableProps } from '../Table';
 import Td from '../Td';
 
 interface TrProps<T> extends TableProps<T> {
+  scrollLeft: number;
+  offsetRight: number;
   cols: CellProps[];
   rowData: T;
   rowIndex: number;
@@ -13,8 +15,11 @@ interface TrProps<T> extends TableProps<T> {
   expanded: boolean;
   onUpdateRowHeight: (height: number, rowIndex: number) => void;
 }
+
 function Tr<T>(props: TrProps<T>) {
   const {
+    scrollLeft,
+    offsetRight,
     cols,
     rowData,
     rowIndex,
@@ -67,7 +72,7 @@ function Tr<T>(props: TrProps<T>) {
     lastIndex.current = rowIndex;
     lastExpandHeight.current = expandHeight;
     lastCols.current = cols;
-    onUpdateRowHeight(height + expandHeight, rowIndex);
+    // onUpdateRowHeight(height + expandHeight, rowIndex);
     // setRowHeight(height + this.expandHeight, this.props.index, expand)
   }, [rowIndex, cols, onUpdateRowHeight]);
 
@@ -76,7 +81,7 @@ function Tr<T>(props: TrProps<T>) {
     for (let i = 0; i < cols.length; i++) {
       const column = cols[i];
       if (!column.colSpan || !column.rowSpan) continue;
-      tds.push(<Td key={i} {...column} />);
+      tds.push(<Td key={i} {...column} scrollLeft={scrollLeft} offsetRight={offsetRight} />);
     }
 
     return tds;
@@ -92,9 +97,13 @@ function Tr<T>(props: TrProps<T>) {
       return;
     const cls =
       expandable?.expandedRowClassName && expandable.expandedRowClassName(rowData, rowIndex);
+    const existFixed = cols.some((c) => c.fixed === 'left' || c.fixed === 'right');
+    const styles = existFixed ? { transform: `translate(${scrollLeft}px, 0)` } : {};
     return (
       <tr key="1" className={cls} ref={expandTrRef}>
-        <td colSpan={cols.length}>{expandable.expandedRowRender(rowData, rowIndex, expanded)}</td>
+        <td colSpan={cols.length} style={styles}>
+          {expandable.expandedRowRender(rowData, rowIndex, expanded)}
+        </td>
       </tr>
     );
   };

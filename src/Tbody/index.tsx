@@ -9,6 +9,8 @@ import Checkbox from '../Checkbox';
 
 interface TbodyProps<T> extends TableProps<T> {
   columns: ColumnsWithType<T>[];
+  scrollLeft: number;
+  offsetRight: number;
   startRowIndex: number;
   treeLevelMap: TreeLevelType;
   treeExpandKeys: (number | string)[];
@@ -26,6 +28,8 @@ interface TbodyProps<T> extends TableProps<T> {
   onUpdateRowHeight: (height: number, rowIndex: number) => void;
 }
 
+// todo 处理列的fixed
+// todo 处理包含选择框列的fixed
 function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
   const {
     dataSource = [],
@@ -155,6 +159,7 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     rowData: T,
     checked: boolean | 'indeterminate',
     rowIndex: number,
+    fixed?: 'left' | 'right',
   ) => {
     const checkboxProps =
       typeof rowSelection?.getCheckboxProps === 'function'
@@ -181,6 +186,7 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     // todo fixed
     return {
       type,
+      fixed,
       // fixed: rowSelection?.fixed,
       colSpan: 1,
       rowSpan: 1,
@@ -191,7 +197,12 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     };
   };
 
-  const renderExpandColumn = (rowData: T, expanded: boolean, recordKey?: number | string) => {
+  const renderExpandColumn = (
+    rowData: T,
+    expanded: boolean,
+    recordKey?: number | string,
+    fixed?: 'left' | 'right',
+  ) => {
     let ableExpand = true;
 
     if (expandable?.rowExpandable && !expandable?.rowExpandable(rowData)) {
@@ -216,12 +227,14 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
 
     return {
       type: 'expanded',
+      fixed,
       colSpan: 1,
       rowSpan: 1,
       content: ableExpand ? content : '',
     };
   };
 
+  // todo fixed
   const getColumns = (
     rowData: T,
     rowIndex: number,
@@ -242,9 +255,9 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
       switch (type) {
         case 'checkbox':
         case 'radio':
-          return renderSelectionColumn(type, rowData, checked, rowIndex);
+          return renderSelectionColumn(type, rowData, checked, rowIndex, fixed);
         case 'expanded':
-          return renderExpandColumn(rowData, expanded, recordKey);
+          return renderExpandColumn(rowData, expanded, recordKey, fixed);
         default: {
           const cell: CellProps = {
             type,
