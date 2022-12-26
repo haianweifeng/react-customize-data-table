@@ -27,6 +27,7 @@ function Tr<T>(props: TrProps<T>) {
     expandable,
     expanded,
     striped,
+    bordered,
     rowClassName,
     onUpdateRowHeight,
   } = props;
@@ -81,7 +82,19 @@ function Tr<T>(props: TrProps<T>) {
     for (let i = 0; i < cols.length; i++) {
       const column = cols[i];
       if (!column.colSpan || !column.rowSpan) continue;
-      tds.push(<Td key={i} {...column} scrollLeft={scrollLeft} offsetRight={offsetRight} />);
+      const ignoreRightBorder = !!(
+        bordered &&
+        (i === cols.length - 1 || column.colSpan === cols.length)
+      );
+      tds.push(
+        <Td
+          key={i}
+          {...column}
+          scrollLeft={scrollLeft}
+          offsetRight={offsetRight}
+          ignoreRightBorder={ignoreRightBorder}
+        />,
+      );
     }
 
     return tds;
@@ -101,7 +114,11 @@ function Tr<T>(props: TrProps<T>) {
     const styles = existFixed ? { transform: `translate(${scrollLeft}px, 0)` } : {};
     return (
       <tr key="1" className={cls} ref={expandTrRef}>
-        <td colSpan={cols.length} style={styles}>
+        <td
+          colSpan={cols.length}
+          style={styles}
+          className={classnames({ 'cell-ignore-right-border': bordered })}
+        >
           {expandable.expandedRowRender(rowData, rowIndex, expanded)}
         </td>
       </tr>

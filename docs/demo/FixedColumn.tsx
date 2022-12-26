@@ -96,9 +96,9 @@ const App = () => {
       width={1500}
       height={300}
       bordered
-      expandable={{
-        expandedRowRender: (record) => <p style={{ margin: 0 }}>{record.description}</p>,
-      }}
+      // expandable={{
+      //   expandedRowRender: (record) => <p style={{ margin: 0 }}>{record.description}</p>,
+      // }}
     />
   );
 };

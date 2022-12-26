@@ -155,17 +155,16 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
   }, [dataSource]);
 
   const renderSelectionColumn = (
-    type: string,
     rowData: T,
     checked: boolean | 'indeterminate',
     rowIndex: number,
-    fixed?: 'left' | 'right',
+    cellProps: CellProps,
   ) => {
     const checkboxProps =
       typeof rowSelection?.getCheckboxProps === 'function'
         ? rowSelection.getCheckboxProps(rowData)
         : {};
-    const isRadio = type === 'radio';
+    const isRadio = cellProps.type === 'radio';
     const defaultContent = isRadio ? (
       <Radio
         {...checkboxProps}
@@ -183,25 +182,31 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
         }}
       />
     );
-    // todo fixed
+
     return {
-      type,
-      fixed,
-      // fixed: rowSelection?.fixed,
-      colSpan: 1,
-      rowSpan: 1,
+      ...cellProps,
       content:
         typeof rowSelection?.renderCell === 'function'
           ? rowSelection.renderCell(!!checked, rowData, rowIndex, defaultContent)
           : defaultContent,
     };
+    // return {
+    //   type,
+    //   fixed,
+    //   colSpan: 1,
+    //   rowSpan: 1,
+    //   content:
+    //     typeof rowSelection?.renderCell === 'function'
+    //       ? rowSelection.renderCell(!!checked, rowData, rowIndex, defaultContent)
+    //       : defaultContent,
+    // };
   };
 
   const renderExpandColumn = (
     rowData: T,
     expanded: boolean,
+    cellProps: CellProps,
     recordKey?: number | string,
-    fixed?: 'left' | 'right',
   ) => {
     let ableExpand = true;
 
@@ -226,12 +231,17 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
         : expandIcon;
 
     return {
-      type: 'expanded',
-      fixed,
-      colSpan: 1,
-      rowSpan: 1,
+      ...cellProps,
       content: ableExpand ? content : '',
     };
+
+    // return {
+    //   type: 'expanded',
+    //   fixed,
+    //   colSpan: 1,
+    //   rowSpan: 1,
+    //   content: ableExpand ? content : '',
+    // };
   };
 
   // todo fixed
@@ -250,24 +260,47 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     const startIndex = columns.findIndex((c) => !c.type);
 
     return columns.map((column, index: number) => {
-      const { render, dataIndex, onCell, align, className, fixed, title, type } = column;
+      const {
+        render,
+        dataIndex,
+        onCell,
+        align,
+        className,
+        fixed,
+        title,
+        type,
+        lastLeftFixed,
+        fistRightFixed,
+      } = column;
 
+      const cellProps = {
+        type,
+        fixed,
+        lastLeftFixed,
+        fistRightFixed,
+        colSpan: 1,
+        rowSpan: 1,
+        content: '',
+      };
       switch (type) {
         case 'checkbox':
         case 'radio':
-          return renderSelectionColumn(type, rowData, checked, rowIndex, fixed);
+          return renderSelectionColumn(rowData, checked, rowIndex, cellProps);
+        // return renderSelectionColumn(type, rowData, checked, rowIndex, fixed, lastLeftFixed, fistRightFixed);
         case 'expanded':
-          return renderExpandColumn(rowData, expanded, recordKey, fixed);
+          return renderExpandColumn(rowData, expanded, cellProps, recordKey);
         default: {
-          const cell: CellProps = {
-            type,
-            align,
-            className,
-            fixed,
-            colSpan: 1,
-            rowSpan: 1,
-            content: '',
-          };
+          // const cell: CellProps = {
+          //   type,
+          //   align,
+          //   className,
+          //   fixed,
+          //   colSpan: 1,
+          //   rowSpan: 1,
+          //   content: '',
+          // };
+
+          const cell: CellProps = { ...cellProps, align, className };
 
           if (typeof onCell === 'function') {
             const cellProps = onCell(rowData, rowIndex);

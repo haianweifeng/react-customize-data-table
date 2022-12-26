@@ -466,9 +466,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     });
     return cols.map((c, i: number) => {
       if (i <= left) c.fixed = 'left';
-      // if (i === left) c.lastFixed = true;
+      if (i === left) c.lastLeftFixed = true;
       if (i >= right && right > 0) c.fixed = 'right';
-      // if (i === right) c.firstFixed = true;
+      if (i === right) c.fistRightFixed = true;
       return c;
     });
   }, [formatColumns, addFixedToColumn, existFixedInColumn]);
@@ -917,7 +917,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // console.log(`scrollTop: ${scrollTop}`);
 
   const handleScrollVertical = (offset: number) => {
+    // console.log(`offset: ${offset}`)
     const item = cachePosition.find((p) => p.bottom >= offset);
+    // console.log(item)
     if (item) {
       setStartOffset(item.top);
       setStartRowIndex(item.index);
@@ -1026,6 +1028,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     setVirtualContainerWidth(clientWidth);
   };
 
+  // todo offsetRight 需要优化成有需要fixed='right'时候才更新
   const offsetRight = useMemo(() => {
     const availableWidth =
       virtualContainerWidth === 0 ? 0 : virtualContainerWidth - (showScrollbarY ? BAR_WIDTH : 0);
@@ -1086,7 +1089,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       <div
         className={classnames({
           'table-thead': true,
-          'table-head-padding': showScrollbarY,
+          'table-head-gutter': showScrollbarY,
         })}
       >
         <table
@@ -1097,6 +1100,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         >
           <Colgroup colWidths={colWidths} columns={flatColumns} />
           <Thead
+            bordered
             checked={checked}
             columns={columnsWithFixed}
             scrollLeft={scrollLeft}

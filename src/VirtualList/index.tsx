@@ -169,6 +169,7 @@ const VirtualList = (props: VirtualListProps) => {
         'virtual-container': true,
         'virtual-container-scroll-vertical': showScrollbarY,
         'virtual-container-scroll-horizontal': showScrollbarX,
+        'virtual-container-gutter': showScrollbarY,
       })}
       ref={virtualContainerRef}
       // onWheel={handleWheel}

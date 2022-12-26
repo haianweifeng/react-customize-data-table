@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import '../style/index.less';
 import type { CellProps } from '../interface';
 
-type TdProps = CellProps & { scrollLeft: number; offsetRight: number };
+type TdProps = CellProps & { scrollLeft: number; offsetRight: number; ignoreRightBorder: boolean };
 
 function Td(props: TdProps) {
   const {
@@ -12,10 +12,13 @@ function Td(props: TdProps) {
     align,
     className = '',
     fixed,
+    lastLeftFixed,
+    fistRightFixed,
     content,
     type,
     scrollLeft,
     offsetRight,
+    ignoreRightBorder,
   } = props;
 
   const fixedLeft = fixed === 'left';
@@ -25,8 +28,11 @@ function Td(props: TdProps) {
   const cls = classnames({
     'cell-fixed-left': fixedLeft,
     'cell-fixed-right': fixedRight,
-    [`align-${align}`]: !!align,
+    'cell-fixed-last-left': !!lastLeftFixed && !!scrollLeft,
+    'cell-fixed-first-right': !!fistRightFixed && !!offsetRight,
+    [`cell-align-${align}`]: !!align,
     'selection-expand-column': type === 'checkbox' || type === 'radio' || type === 'expanded',
+    'cell-ignore-right-border': ignoreRightBorder,
     [className]: !!className,
   });
   const styles: any = {};

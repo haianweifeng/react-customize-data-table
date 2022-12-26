@@ -125,10 +125,14 @@ export interface ColumnsGroupType<T> extends Omit<ColumnsType<T>, 'dataIndex'> {
 
 export interface ColumnsWithType<T> extends ColumnsType<T> {
   type: string;
+  lastLeftFixed?: boolean;
+  fistRightFixed?: boolean;
 }
 
 export interface ColumnsGroupWithType<T> extends ColumnsGroupType<T> {
   type: string;
+  lastLeftFixed?: boolean;
+  fistRightFixed?: boolean;
 }
 
 export interface BaseExpandableType<T> {
@@ -182,6 +186,10 @@ export interface CellProps {
   rowSpan: number;
   /** 单元格渲染内容 */
   content: React.ReactNode;
+  /** 是否是最后一列向左固定的列 */
+  lastLeftFixed?: boolean;
+  /** 是否是向右固定的第一列 */
+  fistRightFixed?: boolean;
 }
 
 export type CellType = { colSpan?: number; rowSpan?: number };

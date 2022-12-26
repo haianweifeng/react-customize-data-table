@@ -13,6 +13,7 @@ import Sorter from '../Sorter';
 import Filter from '../Filter';
 
 interface TheadProps<T> {
+  bordered: boolean;
   scrollLeft: number;
   offsetRight: number;
   sorterState: SorterStateType<T>[];
@@ -35,6 +36,7 @@ interface TheadProps<T> {
 // todo bug 当过滤后表格高度太小时候 过滤框显示不全
 function Thead<T>(props: TheadProps<T>) {
   const {
+    bordered,
     checked,
     columns,
     sorterState,
@@ -60,15 +62,26 @@ function Thead<T>(props: TheadProps<T>) {
     (
       cols: (ColumnsWithType<T> | ColumnsGroupWithType<T>)[],
       target?: (ColumnsWithType<T> | ColumnsGroupWithType<T>) & { colSpan: number },
+      lastColumn?: boolean,
     ) => {
       const formatColumns: ((ColumnsWithType<T> | ColumnsGroupWithType<T>) & {
         colSpan: number;
+        ignoreRightBorder: boolean;
       })[] = [];
 
-      cols.map((col) => {
+      cols.map((col, index: number) => {
+        const isLastColumn = index === cols.length - 1;
         if (isColumnGroup(col)) {
-          const obj = { ...col, colSpan: 0 };
-          (obj as any).children = getFormatColumns((col as any).children, obj);
+          const obj = {
+            ...col,
+            colSpan: 0,
+            ignoreRightBorder: !!(bordered && isLastColumn && (!target || (target && lastColumn))),
+          };
+          (obj as any).children = getFormatColumns(
+            (col as any).children,
+            obj,
+            !target && isLastColumn,
+          );
           if (target) {
             target.colSpan += obj.colSpan;
           }
@@ -78,7 +91,11 @@ function Thead<T>(props: TheadProps<T>) {
             target.colSpan += 1;
           }
           if (col?.headerColSpan === 0) return;
-          formatColumns.push({ colSpan: col?.headerColSpan || 1, ...col });
+          formatColumns.push({
+            colSpan: col?.headerColSpan || 1,
+            ...col,
+            ignoreRightBorder: !!(bordered && isLastColumn && (!target || (target && lastColumn))),
+          });
         }
       });
 
@@ -149,7 +166,7 @@ function Thead<T>(props: TheadProps<T>) {
   );
 
   const renderSorterContent = useCallback(
-    (col: ColumnsWithType<T> & { colSpan: number }) => {
+    (col: ColumnsWithType<T> & { colSpan: number; ignoreRightBorder: boolean }) => {
       const item = sorterState.find((s) => s.dataIndex === col.dataIndex);
       return (
         <Sorter
@@ -166,7 +183,7 @@ function Thead<T>(props: TheadProps<T>) {
   );
 
   const renderFilterContent = useCallback(
-    (col: ColumnsWithType<T> & { colSpan: number }) => {
+    (col: ColumnsWithType<T> & { colSpan: number; ignoreRightBorder: boolean }) => {
       const curr = filterState.find((f) => f.dataIndex === col.dataIndex);
       return (
         <Filter
@@ -189,7 +206,10 @@ function Thead<T>(props: TheadProps<T>) {
 
   const renderTh = useCallback(
     (
-      col: (ColumnsWithType<T> | ColumnsGroupWithType<T>) & { colSpan: number },
+      col: (ColumnsWithType<T> | ColumnsGroupWithType<T>) & {
+        colSpan: number;
+        ignoreRightBorder: boolean;
+      },
       trs: React.ReactNode[][],
       level: number,
       index: string,
@@ -197,12 +217,15 @@ function Thead<T>(props: TheadProps<T>) {
       const totalLevel = trs.length;
       const colClassName = col.className || '';
       const cls = classnames({
-        'table-align-center': col.align === 'center',
-        'table-align-right': col.align === 'right',
+        'cell-align-center': col.align === 'center',
+        'cell-align-right': col.align === 'right',
         'selection-expand-column':
           col.type === 'checkbox' || col.type === 'radio' || col.type === 'expanded',
-        'table-fixed-left': col.fixed === 'left',
-        'table-fixed-right': col.fixed === 'right',
+        'cell-fixed-left': col.fixed === 'left',
+        'cell-fixed-right': col.fixed === 'right',
+        'cell-fixed-last-left': !!col.lastLeftFixed && !!scrollLeft,
+        'cell-fixed-first-right': !!col.fistRightFixed && !!offsetRight,
+        'cell-ignore-right-border': col.ignoreRightBorder,
         [colClassName]: !!col.className,
       });
 
@@ -223,9 +246,12 @@ function Thead<T>(props: TheadProps<T>) {
                 key={index}
                 colSpan={col.colSpan}
                 className={classnames({
-                  'table-align-center': true,
+                  'cell-align-center': true,
                   'cell-fixed-left': col.fixed === 'left',
                   'cell-fixed-right': col.fixed === 'right',
+                  'cell-fixed-last-left': !!col.lastLeftFixed && !!scrollLeft,
+                  'cell-fixed-first-right': !!col.fistRightFixed && !!offsetRight,
+                  'cell-ignore-right-border': col.ignoreRightBorder,
                   [colClassName]: !!col.className,
                 })}
                 style={styles}
@@ -249,10 +275,20 @@ function Thead<T>(props: TheadProps<T>) {
                   <span className="column-title">{col.title}</span>
                   <div className="sorter-filter">
                     {col.sorter
-                      ? renderSorterContent(col as ColumnsWithType<T> & { colSpan: number })
+                      ? renderSorterContent(
+                          col as ColumnsWithType<T> & {
+                            colSpan: number;
+                            ignoreRightBorder: boolean;
+                          },
+                        )
                       : null}
                     {col.filters
-                      ? renderFilterContent(col as ColumnsWithType<T> & { colSpan: number })
+                      ? renderFilterContent(
+                          col as ColumnsWithType<T> & {
+                            colSpan: number;
+                            ignoreRightBorder: boolean;
+                          },
+                        )
                       : null}
                   </div>
                 </div>
