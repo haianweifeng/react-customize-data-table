@@ -216,17 +216,20 @@ function Thead<T>(props: TheadProps<T>) {
     ) => {
       const totalLevel = trs.length;
       const colClassName = col.className || '';
-      const cls = classnames({
-        'cell-align-center': col.align === 'center',
-        'cell-align-right': col.align === 'right',
-        'selection-expand-column':
-          col.type === 'checkbox' || col.type === 'radio' || col.type === 'expanded',
+      const classes = {
         'cell-fixed-left': col.fixed === 'left',
         'cell-fixed-right': col.fixed === 'right',
         'cell-fixed-last-left': !!col.lastLeftFixed && !!scrollLeft,
         'cell-fixed-first-right': !!col.fistRightFixed && !!offsetRight,
         'cell-ignore-right-border': col.ignoreRightBorder,
         [colClassName]: !!col.className,
+      };
+      const cls = classnames({
+        'cell-align-center': col.align === 'center',
+        'cell-align-right': col.align === 'right',
+        'selection-expand-column':
+          col.type === 'checkbox' || col.type === 'radio' || col.type === 'expanded',
+        ...classes,
       });
 
       const styles: React.CSSProperties = {};
@@ -247,12 +250,7 @@ function Thead<T>(props: TheadProps<T>) {
                 colSpan={col.colSpan}
                 className={classnames({
                   'cell-align-center': true,
-                  'cell-fixed-left': col.fixed === 'left',
-                  'cell-fixed-right': col.fixed === 'right',
-                  'cell-fixed-last-left': !!col.lastLeftFixed && !!scrollLeft,
-                  'cell-fixed-first-right': !!col.fistRightFixed && !!offsetRight,
-                  'cell-ignore-right-border': col.ignoreRightBorder,
-                  [colClassName]: !!col.className,
+                  ...classes,
                 })}
                 style={styles}
               >
