@@ -28,8 +28,6 @@ interface TbodyProps<T> extends TableProps<T> {
   onUpdateRowHeight: (height: number, rowIndex: number) => void;
 }
 
-// todo 处理列的fixed
-// todo 处理包含选择框列的fixed
 function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
   const {
     dataSource = [],
@@ -244,7 +242,6 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     // };
   };
 
-  // todo fixed
   const getColumns = (
     rowData: T,
     rowIndex: number,

@@ -24,7 +24,6 @@ function Td(props: TdProps) {
   const fixedLeft = fixed === 'left';
   const fixedRight = fixed === 'right';
 
-  // todo  固定列的样式还没写
   const cls = classnames({
     'cell-fixed-left': fixedLeft,
     'cell-fixed-right': fixedRight,

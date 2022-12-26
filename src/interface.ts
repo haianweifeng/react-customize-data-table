@@ -5,8 +5,8 @@ export interface RowSelectionType<T> {
   columnTitle?: React.ReactNode;
   /** 自定义列表选择框宽度 todo 把这个宽度设置到colgroup 中 */
   columnWidth?: string | number;
-  /** 把选择框列固定在左边 todo */
-  fixed?: boolean;
+  // /** 把选择框列固定在左边 todo */
+  // fixed?: boolean;
   /** 选择框的默认属性配置 */
   getCheckboxProps?: (record: T) => any;
   /** 渲染表体的勾选框 */
@@ -149,7 +149,6 @@ export interface BaseExpandableType<T> {
 }
 
 export interface ExpandableType<T> extends BaseExpandableType<T> {
-  // todo fixed 属性
   /** 可展开行嵌入哪一列之前 */
   insertBeforeColumnName?: string;
   /** 自定义展开列表头 */
@@ -178,7 +177,7 @@ export interface CellProps {
   align?: 'left' | 'center' | 'right';
   /** 样式类名 */
   className?: string;
-  /** 列固定 todo */
+  /** 列固定 */
   fixed?: 'left' | 'right';
   /** 单元格占据的列数 */
   colSpan: number;

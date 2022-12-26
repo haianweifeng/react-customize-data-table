@@ -927,7 +927,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   };
 
-  // todo 样式
   const handleScrollHorizontal = (offset: number) => {
     // console.log(offset);
     setScrollLeft(offset);
