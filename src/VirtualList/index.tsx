@@ -53,15 +53,16 @@ const VirtualList = (props: VirtualListProps) => {
   }, [scrollTop, scrollLeft]);
 
   useEffect(() => {
-    if (virtualContainerRef.current) {
-      const { width: containerWidth, height: containerHeight } =
-        virtualContainerRef.current.getBoundingClientRect();
+    setTimeout(() => {
+      if (virtualContainerRef.current) {
+        const { width: containerWidth, height: containerHeight } =
+          virtualContainerRef.current.getBoundingClientRect();
+        setVirtualContainerWidth(containerWidth);
+        setVirtualContainerHeight(containerHeight);
 
-      setVirtualContainerWidth(containerWidth);
-      setVirtualContainerHeight(containerHeight);
-
-      onMount && onMount(containerWidth);
-    }
+        onMount && onMount(containerWidth);
+      }
+    }, 0);
   }, []);
 
   // useEffect(() => {
@@ -169,7 +170,8 @@ const VirtualList = (props: VirtualListProps) => {
         'virtual-container': true,
         'virtual-container-scroll-vertical': showScrollbarY,
         'virtual-container-scroll-horizontal': showScrollbarX,
-        'virtual-container-gutter': showScrollbarY,
+        'virtual-container-vertical-gutter': showScrollbarY,
+        'virtual-container-horizontal-gutter': showScrollbarX,
       })}
       ref={virtualContainerRef}
       // onWheel={handleWheel}

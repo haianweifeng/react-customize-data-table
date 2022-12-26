@@ -87,7 +87,7 @@
 
 // table-tbody
 .table-container .table-tbody {
-  flex: 1;
+  // flex: 1;
   min-width: 100%;
 }
 
@@ -259,14 +259,23 @@
 //  text-align: center;
 //}
 
+.virtual-container {
+  flex: 1;
+  min-width: 100%;
+}
+
 .virtual-container,
 .virtual-content {
   position: relative;
   overflow: hidden;
 }
 
-.virtual-container-gutter {
+.virtual-container-vertical-gutter {
   padding-right: 16px;
+}
+
+.virtual-container-horizontal-gutter {
+  padding-bottom: 16px;
 }
 
 .scrollbar-track {

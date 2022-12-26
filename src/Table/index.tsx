@@ -926,6 +926,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       setScrollTop(offset);
     }
   };
+  // console.log(`scrollTop: ${scrollTop}`)
 
   const handleScrollHorizontal = (offset: number) => {
     // console.log(offset);
@@ -1017,6 +1018,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return getSumHeight(0, dataSource.length);
   }, [getSumHeight, dataSource]);
 
+  // const getScrollWidth = useCallback(() => {
+  //   if (width) return width;
+  //   if (tbodyRef.current) return tbodyRef.current.offsetWidth;
+  //   return 0;
+  // }, [width]);
+
   const showScrollbarY = useMemo(() => {
     return height === undefined ? false : height < scrollHeight;
   }, [height, scrollHeight]);
@@ -1029,6 +1036,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   // todo offsetRight 需要优化成有需要fixed='right'时候才更新
   const offsetRight = useMemo(() => {
+    // const scrollWidth = getScrollWidth();
     const availableWidth =
       virtualContainerWidth === 0 ? 0 : virtualContainerWidth - (showScrollbarY ? BAR_WIDTH : 0);
     const maxScrollWidth = scrollWidth - availableWidth;
