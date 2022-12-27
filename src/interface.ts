@@ -5,7 +5,7 @@ export interface RowSelectionType<T> {
   columnTitle?: React.ReactNode;
   /** 自定义列表选择框宽度 todo 把这个宽度设置到colgroup 中 */
   columnWidth?: string | number;
-  // /** 把选择框列固定在左边 todo */
+  // /** 把选择框列固定在左边 */
   // fixed?: boolean;
   /** 选择框的默认属性配置 */
   getCheckboxProps?: (record: T) => any;
@@ -143,7 +143,11 @@ export interface BaseExpandableType<T> {
   /** 展开的行，控制属性 */
   expandedRowKeys?: string[] | number[];
   /** 自定义展开图标 */
-  expandIcon?: (record: T, expanded: boolean) => React.ReactNode;
+  expandIcon?: (
+    record: T,
+    expanded: boolean,
+    onExpand?: (expanded: boolean, record: T) => void,
+  ) => React.ReactNode;
   /** 点击展开图标时触发 */
   onExpand?: (expanded: boolean, record: T) => void;
 }
@@ -184,7 +188,7 @@ export interface CellProps {
   /** 单元格占据的行数 */
   rowSpan: number;
   /** 单元格渲染内容 */
-  content: React.ReactNode;
+  content: React.ReactNode | (() => React.ReactNode);
   /** 是否是最后一列向左固定的列 */
   lastLeftFixed?: boolean;
   /** 是否是向右固定的第一列 */

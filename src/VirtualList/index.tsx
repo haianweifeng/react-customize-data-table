@@ -132,11 +132,13 @@ const VirtualList = (props: VirtualListProps) => {
   const handleWheel = (event: any) => {
     if (!showScrollbarX && !showScrollbarY) return;
 
+    // todo 控制下滚动速度
+    const speed = 1;
     const target = getParent(event.target, virtualContainerRef.current);
     if (target !== virtualContainerRef.current) return;
     const normalized = normalizeWheel(event);
-    pixelX.current = normalized.pixelX;
-    pixelY.current = normalized.pixelY;
+    pixelX.current = normalized.pixelX / speed;
+    pixelY.current = normalized.pixelY / speed;
 
     event.preventDefault();
     handleScroll();

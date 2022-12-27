@@ -111,6 +111,7 @@ export interface TableProps<T> {
 // todo 如果没有筛选到数据时候提示文本
 // todo renderMaxRows 需要做限制
 // todo bug columnWidth: '160' 不起作用
+// todo bug 如果dataIndex 在data 中找不到对应字段数据 是不是要加个key 给用户自己设置
 // 设置colgroup 列的宽度  然后获取每个单元格最后渲染的宽度 重新设置 colgroup 的宽度
 function Table<T extends { key?: number | string; children?: T[] }>(props: TableProps<T>) {
   const {
@@ -355,6 +356,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   );
 
   const formatColumns = useMemo(() => {
+    // todo insertBeforeColumnName 如果是放到最后一列
     let insertIndex = 0;
     const cols = columns.map((column, index: number) => {
       const { title } = column;
@@ -580,7 +582,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const [virtualContainerWidth, setVirtualContainerWidth] = useState<number>(0);
 
-  const [scrollWidth, setScrollWidth] = useState<number>(width || 0);
+  // const [scrollWidth, setScrollWidth] = useState<number>(width || 0);
 
   const [startRowIndex, setStartRowIndex] = useState<number>(0);
 
@@ -1013,16 +1015,21 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return records;
   }, [currentPageData, getTreeChildrenData]);
 
+  const isTree = useMemo(() => {
+    const data = list.filter((d) => d?.children && d.children.length);
+    return data.length > 0;
+  }, [list]);
+
   // todo 待测试如果是可变行高会不会触发重新计算
   const scrollHeight = useMemo(() => {
     return getSumHeight(0, dataSource.length);
   }, [getSumHeight, dataSource]);
 
-  // const getScrollWidth = useCallback(() => {
-  //   if (width) return width;
-  //   if (tbodyRef.current) return tbodyRef.current.offsetWidth;
-  //   return 0;
-  // }, [width]);
+  const getScrollWidth = useCallback(() => {
+    if (width) return width;
+    if (tbodyRef.current) return tbodyRef.current.offsetWidth;
+    return 0;
+  }, [width]);
 
   const showScrollbarY = useMemo(() => {
     return height === undefined ? false : height < scrollHeight;
@@ -1030,25 +1037,25 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const handleMount = (clientWidth: number) => {
     // todo 固定列或者想要产生横向滚动一定要设置width
-    setScrollWidth(width || tbodyRef.current.scrollWidth || 0);
+    // setScrollWidth(width || tbodyRef.current.scrollWidth || 0);
     setVirtualContainerWidth(clientWidth);
   };
 
   // todo offsetRight 需要优化成有需要fixed='right'时候才更新
   const offsetRight = useMemo(() => {
-    // const scrollWidth = getScrollWidth();
+    const scrollWidth = getScrollWidth();
     const availableWidth =
       virtualContainerWidth === 0 ? 0 : virtualContainerWidth - (showScrollbarY ? BAR_WIDTH : 0);
     const maxScrollWidth = scrollWidth - availableWidth;
     return maxScrollWidth - scrollLeft;
-  }, [scrollWidth, virtualContainerWidth, showScrollbarY, scrollLeft]);
+  }, [getScrollWidth, virtualContainerWidth, showScrollbarY, scrollLeft]);
 
   // todo 1. 考虑没有设置height 时候展示数据范围
   // TODO 2. 考虑分页时候设置pageSize 大于renderMaxRows
   const renderBody = () => {
     return (
       <VirtualList
-        scrollWidth={scrollWidth}
+        scrollWidth={getScrollWidth()}
         scrollHeight={scrollHeight}
         scrollTop={scrollTop}
         scrollLeft={scrollLeft}
@@ -1070,6 +1077,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             <Colgroup colWidths={colWidths} columns={flatColumns} />
             <Tbody
               {...props}
+              isTree={isTree}
               scrollLeft={scrollLeft}
               offsetRight={offsetRight}
               startRowIndex={startRowIndex}

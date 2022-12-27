@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useMemo } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import classnames from 'classnames';
 import { getRowKey } from '../utils/util';
 import type { TableProps } from '../Table';
@@ -8,6 +8,7 @@ import Radio from '../Radio';
 import Checkbox from '../Checkbox';
 
 interface TbodyProps<T> extends TableProps<T> {
+  isTree: boolean;
   columns: ColumnsWithType<T>[];
   scrollLeft: number;
   offsetRight: number;
@@ -30,6 +31,7 @@ interface TbodyProps<T> extends TableProps<T> {
 
 function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
   const {
+    isTree,
     dataSource = [],
     columns,
     startRowIndex,
@@ -119,6 +121,7 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
   };
 
   useEffect(() => {
+    // console.log('tbody mount')
     setIsMount(true);
   }, []);
 
@@ -147,10 +150,10 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     }
   }, [expandable]);
 
-  const isTree = useMemo(() => {
-    const data = dataSource.filter((d) => d?.children && d.children.length);
-    return data.length > 0;
-  }, [dataSource]);
+  // const isTree = useMemo(() => {
+  //   const data = dataSource.filter((d) => d?.children && d.children.length);
+  //   return data.length > 0;
+  // }, [dataSource]);
 
   const renderSelectionColumn = (
     rowData: T,
@@ -188,16 +191,6 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
           ? rowSelection.renderCell(!!checked, rowData, rowIndex, defaultContent)
           : defaultContent,
     };
-    // return {
-    //   type,
-    //   fixed,
-    //   colSpan: 1,
-    //   rowSpan: 1,
-    //   content:
-    //     typeof rowSelection?.renderCell === 'function'
-    //       ? rowSelection.renderCell(!!checked, rowData, rowIndex, defaultContent)
-    //       : defaultContent,
-    // };
   };
 
   const renderExpandColumn = (
@@ -225,21 +218,13 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
 
     const content =
       typeof expandable?.expandIcon === 'function'
-        ? expandable.expandIcon(rowData, expanded)
+        ? expandable.expandIcon(rowData, expanded, expandable?.onExpand)
         : expandIcon;
 
     return {
       ...cellProps,
       content: ableExpand ? content : '',
     };
-
-    // return {
-    //   type: 'expanded',
-    //   fixed,
-    //   colSpan: 1,
-    //   rowSpan: 1,
-    //   content: ableExpand ? content : '',
-    // };
   };
 
   const getColumns = (
@@ -283,7 +268,6 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
         case 'checkbox':
         case 'radio':
           return renderSelectionColumn(rowData, checked, rowIndex, cellProps);
-        // return renderSelectionColumn(type, rowData, checked, rowIndex, fixed, lastLeftFixed, fistRightFixed);
         case 'expanded':
           return renderExpandColumn(rowData, expanded, cellProps, recordKey);
         default: {
@@ -305,8 +289,9 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
             cell.rowSpan = cellProps?.rowSpan === 0 ? 0 : cellProps?.rowSpan || 1;
           }
 
-          let content;
+          let content: any;
           if (typeof render === 'function') {
+            // todo bug 如果没有这个字段怎么办
             content = render(rowData[dataIndex as keyof T] as string, rowData, rowIndex);
           } else {
             content = rowData[dataIndex as keyof T] as string;
@@ -332,28 +317,49 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
             );
             const treeIcon =
               typeof treeProps?.expandIcon === 'function'
-                ? treeProps.expandIcon(rowData, treeExpanded)
+                ? treeProps.expandIcon(rowData, treeExpanded, treeProps?.onExpand)
                 : defaultTreeIcon;
 
-            cell.content = (
-              <span style={{ marginLeft: treeLevel * treeIndent }}>
-                {treeIcon}
-                {content}
-              </span>
-            );
+            cell.content = () => {
+              return (
+                <span style={{ marginLeft: treeLevel * treeIndent }}>
+                  {treeIcon}
+                  {content}
+                </span>
+              );
+            };
+
+            // cell.content = (
+            //   <span style={{ marginLeft: treeLevel * treeIndent }}>
+            //     {treeIcon}
+            //     {content}
+            //   </span>
+            // );
           } else if (isTreeColumn) {
-            cell.content = (
-              <span
-                style={{
-                  marginLeft: treeLevel * treeIndent,
-                  paddingLeft: treeLevel > 0 || (isTree && treeLevel === 0) ? 25 : 0,
-                }}
-              >
-                {content}
-              </span>
-            );
+            cell.content = () => {
+              return (
+                <span
+                  style={{
+                    marginLeft: treeLevel * treeIndent,
+                    paddingLeft: treeLevel > 0 || (isTree && treeLevel === 0) ? 25 : 0,
+                  }}
+                >
+                  {content}
+                </span>
+              );
+            };
+            // cell.content = (
+            //   <span
+            //     style={{
+            //       marginLeft: treeLevel * treeIndent,
+            //       paddingLeft: treeLevel > 0 || (isTree && treeLevel === 0) ? 25 : 0,
+            //     }}
+            //   >
+            //     {content}
+            //   </span>
+            // );
           } else {
-            cell.content = content;
+            cell.content = () => content;
           }
           return cell;
         }

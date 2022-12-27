@@ -44,7 +44,7 @@ function Td(props: TdProps) {
 
   return (
     <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles}>
-      {content}
+      {typeof content === 'function' ? content() : content}
     </td>
   );
 }
