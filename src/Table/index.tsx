@@ -72,12 +72,10 @@ export interface TableProps<T> {
   /** 单次render的最大行数 todo */
   // rowsInView?: number;
   renderMaxRows?: number;
-  /** 表格宽度 todo */
+  /** 表格宽度 */
   width?: number;
-  // width?: number | string;
-  /** 表格高度，默认为自动高度，如果表格内容大于此值，会固定表头 todo */
-  // height?: number | string;
-  height?: number;
+  /** 表格高度，默认为自动高度，如果表格内容大于此值，会固定表头 */
+  height?: number | string;
   /** 是否开启虚拟列表 todo */
   virtual?: boolean;
   /** 表格是否可以滚动 超过最大宽高时候就可以滚动 todo */
@@ -140,6 +138,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 44;
 
+  const tableContainer = useRef<HTMLDivElement>(null);
   const tbodyRef = useRef<any>(null);
   const maxTreeLevel = useRef<number>(0);
   const treeLevel = useRef<TreeLevelType>({} as TreeLevelType);
@@ -580,6 +579,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const [colWidths, setColWidths] = useState<number[]>([]);
 
+  const [tableContainerHeight, setTableContainerHeight] = useState<number>(0);
+
   const [virtualContainerWidth, setVirtualContainerWidth] = useState<number>(0);
 
   // const [scrollWidth, setScrollWidth] = useState<number>(width || 0);
@@ -693,6 +694,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     [converToPixel, flatColumns],
   );
 
+  // todo 参数height 名字要更改
   const handleUpdateRowHeight = (height: number, rowIndex: number) => {
     const copyCachePosition = [...cachePosition];
     const index = copyCachePosition.findIndex((c) => c.index === rowIndex);
@@ -898,23 +900,15 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const getSumHeight = useCallback(
     (start: number, end: number) => {
-      let height = 0;
+      let sumHeight = 0;
       for (let i = start; i < end; i++) {
-        height += cachePosition[i]?.height || rowHeight;
+        sumHeight += cachePosition[i]?.height || rowHeight;
       }
-      return height;
+      return sumHeight;
     },
     [cachePosition, rowHeight],
   );
 
-  const getStartRowIndex = (offset: number) => {
-    const item = cachePosition.find((p) => p.bottom >= offset);
-    if (item) {
-      // setStartRowIndex(item.index);
-      return item.index;
-    }
-    return 0;
-  };
   // console.log(`startRowIndex: ${startRowIndex}`);
   // console.log(`scrollTop: ${scrollTop}`);
 
@@ -935,6 +929,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     setScrollLeft(offset);
   };
   // console.log(cachePosition);
+
+  useEffect(() => {
+    if (tableContainer.current) {
+      setTableContainerHeight(tableContainer.current.offsetHeight);
+    }
+  }, []);
 
   useEffect(() => {
     const positions = dataSource.map((d, index) => {
@@ -1032,8 +1032,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   }, [width]);
 
   const showScrollbarY = useMemo(() => {
-    return height === undefined ? false : height < scrollHeight;
-  }, [height, scrollHeight]);
+    return tableContainerHeight < scrollHeight;
+    // return height === undefined ? false : height < scrollHeight;
+  }, [scrollHeight, tableContainerHeight]);
 
   const handleMount = (clientWidth: number) => {
     // todo 固定列或者想要产生横向滚动一定要设置width
@@ -1152,20 +1153,25 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   };
 
   // todo
-  // todo 考虑style 中如果设置了width
   const tableWrapClass = classnames({
     'table-container': true,
     size: true,
     'table-bordered': bordered,
     [className]: !!className,
   });
-  const styles = Object.assign({}, style, {
-    height: height || '100%',
-    overflow: loading ? 'hidden' : 'auto',
-  });
+
+  const styles = Object.assign(
+    {
+      height: height || '100%',
+    },
+    style,
+    {
+      overflow: loading ? 'hidden' : 'auto',
+    },
+  );
   return (
     <>
-      <div style={styles} className={tableWrapClass}>
+      <div style={styles} className={tableWrapClass} ref={tableContainer}>
         {showHeader ? renderHeader() : null}
         {renderBody()}
         {loading ? (

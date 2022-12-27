@@ -24,10 +24,10 @@ const VirtualList = (props: VirtualListProps) => {
     scrollTop,
     scrollLeft,
     showScrollbarY,
-    children,
     onScrollVertical,
     onScrollHorizontal,
     onMount,
+    children,
   } = props;
 
   const pixelX = useRef<number>(0);
@@ -41,7 +41,6 @@ const VirtualList = (props: VirtualListProps) => {
 
   const [virtualContainerWidth, setVirtualContainerWidth] = useState<number>(0);
   const [virtualContainerHeight, setVirtualContainerHeight] = useState<number>(0);
-  // const [scrollWidth, setScrollWidth] = useState<number>(width || 0);
   // console.log(`scrollWidth: ${scrollWidth}`);
 
   useEffect(() => {
@@ -59,27 +58,16 @@ const VirtualList = (props: VirtualListProps) => {
           virtualContainerRef.current.getBoundingClientRect();
         setVirtualContainerWidth(containerWidth);
         setVirtualContainerHeight(containerHeight);
-
         onMount && onMount(containerWidth);
       }
     }, 0);
   }, []);
 
-  // useEffect(() => {
-  //   setScrollWidth(width || virtualContentRef.current?.scrollWidth || 0);
-  // }, [width]);
-
   const showScrollbarX = useMemo(() => {
-    // return width === undefined
-    //   ? scrollWidth > virtualContainerWidth
-    //   : width > virtualContainerWidth;
     return scrollWidth > virtualContainerWidth;
   }, [scrollWidth, virtualContainerWidth]);
-  // console.log(`showScrollbarX: ${showScrollbarX}`);
 
   const { virtualContainerAvailableWidth, virtualContainerAvailableHeight } = useMemo(() => {
-    // console.log('触发');
-    // todo bug 当从固定列切换到固定表头 再从固定表头切换到固定列 横向滚动发现滚动有偏差
     return {
       virtualContainerAvailableWidth:
         virtualContainerWidth === 0 ? 0 : virtualContainerWidth - (showScrollbarY ? BAR_WIDTH : 0),
@@ -119,9 +107,6 @@ const VirtualList = (props: VirtualListProps) => {
     if (pixelY.current === 0) {
       let offset = scrollLeft + pixelX.current;
       offset = Math.max(0, offset);
-      // console.log(`scrollWidth: ${scrollWidth}`)
-      // console.log(`virtualContainerAvailableWidth: ${virtualContainerAvailableWidth}`)
-      // console.log(scrollWidth - virtualContainerAvailableWidth)
       offset = Math.min(offset, scrollWidth - virtualContainerAvailableWidth);
       if (offset === scrollLeft) return;
       handleHorizontalScroll(offset);

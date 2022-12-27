@@ -58,6 +58,18 @@ export function omitRowsProps<T>(data: T[] | T = []) {
   return arr;
 }
 
+export function parseValue(value: string | number | undefined | null) {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    if (/^\d+(?:px)?$/.test(value)) {
+      return parseInt(value, 10);
+    } else {
+      return value;
+    }
+  }
+  return null;
+}
+
 export function toPoint(value: string | number) {
   if (typeof value === 'number') return value;
   const val = value.replace('%', '');

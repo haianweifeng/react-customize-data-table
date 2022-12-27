@@ -1,5 +1,8 @@
 import type React from 'react';
 
+// todo 把column 增加type?: string 可选属性 expanded checkbox radio
+// rowSelection 中不再设置type
+// expandable 也需要修改
 export interface RowSelectionType<T> {
   /** 自定义列表选择框标题 */
   columnTitle?: React.ReactNode;
