@@ -78,8 +78,8 @@ export interface TableProps<T> {
   height?: number;
   /** 是否开启虚拟列表 todo */
   virtual?: boolean;
-  /** 表格是否可以滚动 超过最大宽高时候就可以滚动 todo */
-  scroll?: ScrollType;
+  // /** 表格是否可以滚动 超过最大宽高时候就可以滚动 todo */
+  // scroll?: ScrollType;
   /** 滚动条滚动后回调函数 todo */
   onScroll?: (x: number, y: number) => void;
   /** 列宽伸缩后的回调 todo */
@@ -105,9 +105,7 @@ export interface TableProps<T> {
   treeProps?: TreeExpandableType<T>;
 }
 // todo 还未测试列宽设为百分比的情况
-// todo scroll: { width, height } 设置滚动时候表格的宽度 高度
 // todo 如果没有筛选到数据时候提示文本
-// todo renderMaxRows 需要做限制
 // todo bug columnWidth: '160' 不起作用
 // todo bug 如果dataIndex 在data 中找不到对应字段数据 是不是要加个key 给用户自己设置
 // 设置colgroup 列的宽度  然后获取每个单元格最后渲染的宽度 重新设置 colgroup 的宽度
@@ -118,7 +116,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     width,
     height,
     // size = 'default',
-    scroll = {},
     showHeader = true,
     bordered,
     rowKey = 'key',
@@ -1013,6 +1010,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   // todo 点击扩展行后引起cachePosition 变化后 scrollTop 的更新计算 setRowHeight
   // todo 滚动到底部了但是改变了列宽引起的高度变化 scrollTop 的更新计算 width: 150 -> 180
+  // todo 考虑点击树形的第一行和最后一行折叠icon 虚拟滚动会不会出现空白 等到handleUpdateRowHeight 修复了
   // todo 待测试如果是可变行高会不会触发重新计算
   const scrollHeight = useMemo(() => {
     return getSumHeight(0, list.length);
