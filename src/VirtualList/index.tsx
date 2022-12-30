@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useEffect, useState } from 'react';
+import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import classnames from 'classnames';
 import normalizeWheel from 'normalize-wheel';
 import ScrollBar from '../ScrollBar';
@@ -10,11 +10,12 @@ interface VirtualListProps {
   scrollHeight: number;
   scrollTop: number;
   scrollLeft: number;
+  showScrollbarX: boolean;
   showScrollbarY: boolean;
   children: React.ReactNode;
   onScrollVertical: (offset: number) => void;
   onScrollHorizontal: (offset: number) => void;
-  onMount: (containerWidth: number) => void;
+  onMount: (containerWidth: number, containerHeight: number) => void;
 }
 
 const VirtualList = (props: VirtualListProps) => {
@@ -24,6 +25,7 @@ const VirtualList = (props: VirtualListProps) => {
     scrollTop,
     scrollLeft,
     showScrollbarY,
+    showScrollbarX,
     onScrollVertical,
     onScrollHorizontal,
     onMount,
@@ -41,15 +43,6 @@ const VirtualList = (props: VirtualListProps) => {
 
   const [virtualContainerWidth, setVirtualContainerWidth] = useState<number>(0);
   const [virtualContainerHeight, setVirtualContainerHeight] = useState<number>(0);
-  // console.log(`scrollWidth: ${scrollWidth}`);
-
-  useEffect(() => {
-    virtualContainerRef.current?.addEventListener('wheel', handleWheel);
-
-    return () => {
-      virtualContainerRef.current?.removeEventListener('wheel', handleWheel);
-    };
-  }, [scrollTop, scrollLeft]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -58,14 +51,22 @@ const VirtualList = (props: VirtualListProps) => {
           virtualContainerRef.current.getBoundingClientRect();
         setVirtualContainerWidth(containerWidth);
         setVirtualContainerHeight(containerHeight);
-        onMount && onMount(containerWidth);
+        onMount && onMount(containerWidth, containerHeight);
       }
     }, 0);
   }, []);
 
-  const showScrollbarX = useMemo(() => {
-    return scrollWidth > virtualContainerWidth;
-  }, [scrollWidth, virtualContainerWidth]);
+  // const showScrollbarX = useMemo(() => {
+  //   return scrollWidth > virtualContainerWidth;
+  // }, [scrollWidth, virtualContainerWidth]);
+
+  useEffect(() => {
+    virtualContainerRef.current?.addEventListener('wheel', handleWheel);
+
+    return () => {
+      virtualContainerRef.current?.removeEventListener('wheel', handleWheel);
+    };
+  }, [scrollTop, scrollLeft, scrollWidth, scrollHeight, showScrollbarY, showScrollbarX]);
 
   const { virtualContainerAvailableWidth, virtualContainerAvailableHeight } = useMemo(() => {
     return {
@@ -125,7 +126,13 @@ const VirtualList = (props: VirtualListProps) => {
     pixelX.current = normalized.pixelX / speed;
     pixelY.current = normalized.pixelY / speed;
 
-    event.preventDefault();
+    const isHorizontal = Math.abs(pixelX.current) > Math.abs(pixelY.current);
+
+    if (isHorizontal) {
+      showScrollbarX && event.preventDefault();
+    } else {
+      showScrollbarY && event.preventDefault();
+    }
     handleScroll();
   };
 
@@ -144,8 +151,8 @@ const VirtualList = (props: VirtualListProps) => {
     touchStartY.current = position.clientY;
     pixelX.current = deltaX;
     pixelY.current = deltaY;
-    handleScroll();
     event.preventDefault();
+    handleScroll();
   };
 
   // console.log(`virtualContainerAvailableWidth: ${virtualContainerAvailableWidth}`);

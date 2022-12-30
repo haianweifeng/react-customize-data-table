@@ -108,7 +108,7 @@ const App = () => {
       // width={1500}
       width={1740}
       // height='30%'
-      // style={{ width: '50%' }}
+      // style={{ height: 400 }}
       height={300}
       bordered
       // rowSelection={{

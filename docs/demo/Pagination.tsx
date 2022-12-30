@@ -40,20 +40,20 @@ for (let i = 0; i < 46; i++) {
     age: 32 + i,
     address: `London, Park Lane no. ${i}`,
     // description: 'test description',
-    children: [
-      {
-        key: `${i}_1`,
-        name: 'Jim Green jr.',
-        age: 25 + i,
-        address: 'London No. 3 Lake Park',
-      },
-    ],
+    // children: [
+    //   {
+    //     key: `${i}_1`,
+    //     name: 'Jim Green jr.',
+    //     age: 25 + i,
+    //     address: 'London No. 3 Lake Park',
+    //   },
+    // ],
   });
 }
 
 const App = () => {
   const [current, setCurrent] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
+  const [pageSize, setPageSize] = useState<number>(20);
   // const [expandedRowKeys, setExpandedRowKeys] = useState<number[]>([]);
 
   const handleChange = (page: number, size: number) => {
@@ -97,7 +97,9 @@ const App = () => {
       bordered
       columns={columns}
       dataSource={data}
-      rowSelection={rowSelection}
+      // rowSelection={rowSelection}
+      height={300}
+      // renderMaxRows={3}
       pagination={{
         align: 'right',
         current,
@@ -105,21 +107,21 @@ const App = () => {
         layout: ['sizes', 'prev', 'pager', 'next', 'jumper', renderInfo],
         onChange: handleChange,
       }}
-      treeProps={
-        {
-          // expandedRowKeys,
-          // onExpand: (expanded: boolean, record: DataType) => {
-          //   setExpandedRowKeys((prev) => {
-          //     return expanded ? [...prev, record.key] : prev.filter((p) => p !== record.key);
-          //   });
-          // },
-          // defaultExpandAllRows: true,
-          // expandedRowRender: (record: DataType) => <p style={{ margin: 0 }}>{record.description}</p>,
-          // onExpand: (expanded: boolean, record: DataType) => {
-          //   console.log(`expanded: ${expanded}`, 'record: ', record);
-          // },
-        }
-      }
+      // treeProps={
+      //   {
+      //     // expandedRowKeys,
+      //     // onExpand: (expanded: boolean, record: DataType) => {
+      //     //   setExpandedRowKeys((prev) => {
+      //     //     return expanded ? [...prev, record.key] : prev.filter((p) => p !== record.key);
+      //     //   });
+      //     // },
+      //     // defaultExpandAllRows: true,
+      //     // expandedRowRender: (record: DataType) => <p style={{ margin: 0 }}>{record.description}</p>,
+      //     // onExpand: (expanded: boolean, record: DataType) => {
+      //     //   console.log(`expanded: ${expanded}`, 'record: ', record);
+      //     // },
+      //   }
+      // }
     />
   );
 };

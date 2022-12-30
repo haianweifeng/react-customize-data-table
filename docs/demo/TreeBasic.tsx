@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { ColumnsType } from 'react-data-table';
 import { Table } from 'react-data-table';
 
@@ -93,113 +93,113 @@ const data: DataType[] = [
     age: 32,
     address: 'Sidney No. 1 Lake Park',
   },
-  // {
-  //   key: 3,
-  //   name: 'Joe Black',
-  //   age: 42,
-  //   address: 'Sidney No. 1 Lake Park',
-  // },
-  // {
-  //   key: 4,
-  //   name: 'Joe Black',
-  //   age: 52,
-  //   address: 'Sidney No. 1 Lake Park',
-  // },
-  // {
-  //   key: 5,
-  //   name: 'Joe Black',
-  //   age: 62,
-  //   address: 'Sidney No. 1 Lake Park',
-  // },
-  // {
-  //   key: 7,
-  //   name: 'Joe Black',
-  //   age: 72,
-  //   address: 'Sidney No. 1 Lake Park',
-  // },
-  // {
-  //   key: 8,
-  //   name: 'Joe Black',
-  //   age: 82,
-  //   address: 'Sidney No. 1 Lake Park',
-  // },
-  // {
-  //   key: 9,
-  //   name: 'Joe Black',
-  //   age: 92,
-  //   address: 'Sidney No. 1 Lake Park',
-  // },
-  // {
-  //   key: 10,
-  //   name: 'Joe Black',
-  //   age: 102,
-  //   address: 'Sidney No. 1 Lake Park',
-  // },
-  // {
-  //   key: 21,
-  //   name: 'Joe Black',
-  //   age: 112,
-  //   address: 'Sidney No. 1 Lake Park',
-  // },
-  // {
-  //   key: 22,
-  //   name: 'Joe Black',
-  //   age: 122,
-  //   address: 'Sidney No. 1 Lake Park',
-  // },
-  // {
-  //   key: 23,
-  //   name: 'Joe Black',
-  //   age: 232,
-  //   address: 'Sidney No. 1 Lake Park',
-  // },
-  // {
-  //   key: 24,
-  //   name: 'Joe Black',
-  //   age: 242,
-  //   address: 'Sidney No. 1 Lake Park',
-  // },
-  // {
-  //   key: 25,
-  //   name: 'Joe Black',
-  //   age: 252,
-  //   address: 'Sidney No. 1 Lake Park',
-  // },
-  // {
-  //   key: 26,
-  //   name: 'Joe Black',
-  //   age: 262,
-  //   address: 'Sidney No. 1 Lake Park',
-  // },
-  // {
-  //   key: 27,
-  //   name: 'Joe Black',
-  //   age: 272,
-  //   address: 'Sidney No. 1 Lake Park',
-  // },
-  // {
-  //   key: 28,
-  //   name: 'Joe Black',
-  //   age: 282,
-  //   address: 'Sidney No. 1 Lake Park',
-  // },
-  // {
-  //   key: 29,
-  //   name: 'Joe Black',
-  //   age: 292,
-  //   address: 'Sidney No. 1 Lake Park',
-  // },
-  // {
-  //   key: 30,
-  //   name: 'Joe Black',
-  //   age: 302,
-  //   address: 'Sidney No. 1 Lake Park',
-  // },
+  {
+    key: 3,
+    name: 'Joe Black',
+    age: 42,
+    address: 'Sidney No. 1 Lake Park',
+  },
+  {
+    key: 4,
+    name: 'Joe Black',
+    age: 52,
+    address: 'Sidney No. 1 Lake Park',
+  },
+  {
+    key: 5,
+    name: 'Joe Black',
+    age: 62,
+    address: 'Sidney No. 1 Lake Park',
+  },
+  {
+    key: 7,
+    name: 'Joe Black',
+    age: 72,
+    address: 'Sidney No. 1 Lake Park',
+  },
+  {
+    key: 8,
+    name: 'Joe Black',
+    age: 82,
+    address: 'Sidney No. 1 Lake Park',
+  },
+  {
+    key: 9,
+    name: 'Joe Black',
+    age: 92,
+    address: 'Sidney No. 1 Lake Park',
+  },
+  {
+    key: 10,
+    name: 'Joe Black',
+    age: 102,
+    address: 'Sidney No. 1 Lake Park',
+  },
+  {
+    key: 21,
+    name: 'Joe Black',
+    age: 112,
+    address: 'Sidney No. 1 Lake Park',
+  },
+  {
+    key: 22,
+    name: 'Joe Black',
+    age: 122,
+    address: 'Sidney No. 1 Lake Park',
+  },
+  {
+    key: 23,
+    name: 'Joe Black',
+    age: 232,
+    address: 'Sidney No. 1 Lake Park',
+  },
+  {
+    key: 24,
+    name: 'Joe Black',
+    age: 242,
+    address: 'Sidney No. 1 Lake Park',
+  },
+  {
+    key: 25,
+    name: 'Joe Black',
+    age: 252,
+    address: 'Sidney No. 1 Lake Park',
+  },
+  {
+    key: 26,
+    name: 'Joe Black',
+    age: 262,
+    address: 'Sidney No. 1 Lake Park',
+  },
+  {
+    key: 27,
+    name: 'Joe Black',
+    age: 272,
+    address: 'Sidney No. 1 Lake Park',
+  },
+  {
+    key: 28,
+    name: 'Joe Black',
+    age: 282,
+    address: 'Sidney No. 1 Lake Park',
+  },
+  {
+    key: 29,
+    name: 'Joe Black',
+    age: 292,
+    address: 'Sidney No. 1 Lake Park',
+  },
+  {
+    key: 30,
+    name: 'Joe Black',
+    age: 302,
+    address: 'Sidney No. 1 Lake Park',
+  },
 ];
 
 const App = () => {
   // const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  // const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
 
   const rowSelection = {
     // selectedRowKeys,
@@ -274,12 +274,12 @@ const App = () => {
           // },
         }
       }
-      rowSelection={rowSelection}
+      // rowSelection={rowSelection}
       dataSource={data}
       columns={columns}
       bordered
       rowKey="key"
-      // height={300}
+      height={300}
     />
   );
 };

@@ -69,13 +69,13 @@ export interface TableProps<T> {
   empty?: string | React.ReactNode;
   /** 单行表格的预期高度 todo */
   rowHeight?: number;
-  /** 单次render的最大行数 todo */
+  /** 单次render的最大行数 如果单次渲染的行数不足以撑开容器的高度则renderMaxRows 自动取值为容器可容纳的行数值 todo */
   // rowsInView?: number;
   renderMaxRows?: number;
-  /** 表格宽度 */
+  /** 表格宽度 固定列或者产生横向滚动一定要设置width */
   width?: number;
   /** 表格高度，默认为自动高度，如果表格内容大于此值，会固定表头 */
-  height?: number | string;
+  height?: number;
   /** 是否开启虚拟列表 todo */
   virtual?: boolean;
   /** 表格是否可以滚动 超过最大宽高时候就可以滚动 todo */
@@ -134,6 +134,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     loading,
     renderMaxRows = 20,
     rowHeight = 46,
+    virtual,
   } = props;
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 44;
@@ -579,11 +580,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const [colWidths, setColWidths] = useState<number[]>([]);
 
-  const [tableContainerHeight, setTableContainerHeight] = useState<number>(0);
-
   const [virtualContainerWidth, setVirtualContainerWidth] = useState<number>(0);
 
-  // const [scrollWidth, setScrollWidth] = useState<number>(width || 0);
+  const [virtualContainerHeight, setVirtualContainerHeight] = useState<number>(0);
 
   const [startRowIndex, setStartRowIndex] = useState<number>(0);
 
@@ -696,6 +695,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   // todo 参数height 名字要更改
   const handleUpdateRowHeight = (height: number, rowIndex: number) => {
+    // console.log(`height: ${height}`);
     const copyCachePosition = [...cachePosition];
     const index = copyCachePosition.findIndex((c) => c.index === rowIndex);
     if (index >= 0) {
@@ -908,14 +908,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     },
     [cachePosition, rowHeight],
   );
-
   // console.log(`startRowIndex: ${startRowIndex}`);
   // console.log(`scrollTop: ${scrollTop}`);
 
   const handleScrollVertical = (offset: number) => {
-    // console.log(`offset: ${offset}`)
     const item = cachePosition.find((p) => p.bottom >= offset);
-    // console.log(item)
     if (item) {
       setStartOffset(item.top);
       setStartRowIndex(item.index);
@@ -929,12 +926,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     setScrollLeft(offset);
   };
   // console.log(cachePosition);
-
-  useEffect(() => {
-    if (tableContainer.current) {
-      setTableContainerHeight(tableContainer.current.offsetHeight);
-    }
-  }, []);
 
   useEffect(() => {
     const positions = dataSource.map((d, index) => {
@@ -1020,10 +1011,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return data.length > 0;
   }, [list]);
 
+  // todo 点击扩展行后引起cachePosition 变化后 scrollTop 的更新计算 setRowHeight
+  // todo 滚动到底部了但是改变了列宽引起的高度变化 scrollTop 的更新计算 width: 150 -> 180
   // todo 待测试如果是可变行高会不会触发重新计算
   const scrollHeight = useMemo(() => {
-    return getSumHeight(0, dataSource.length);
-  }, [getSumHeight, dataSource]);
+    return getSumHeight(0, list.length);
+  }, [getSumHeight, list]);
 
   const getScrollWidth = useCallback(() => {
     if (width) return width;
@@ -1032,14 +1025,21 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   }, [width]);
 
   const showScrollbarY = useMemo(() => {
-    return tableContainerHeight < scrollHeight;
-    // return height === undefined ? false : height < scrollHeight;
-  }, [scrollHeight, tableContainerHeight]);
+    if (height) {
+      if (!virtualContainerHeight) return false;
+      return virtualContainerHeight < scrollHeight;
+    }
+    return false;
+  }, [scrollHeight, height, virtualContainerHeight]);
 
-  const handleMount = (clientWidth: number) => {
-    // todo 固定列或者想要产生横向滚动一定要设置width
-    // setScrollWidth(width || tbodyRef.current.scrollWidth || 0);
-    setVirtualContainerWidth(clientWidth);
+  const showScrollbarX = useMemo(() => {
+    const scrollWidth = getScrollWidth();
+    return scrollWidth > virtualContainerWidth;
+  }, [getScrollWidth, virtualContainerWidth]);
+
+  const handleMount = (vWidth: number, vHeight: number) => {
+    setVirtualContainerWidth(vWidth);
+    setVirtualContainerHeight(vHeight);
   };
 
   // todo offsetRight 需要优化成有需要fixed='right'时候才更新
@@ -1051,8 +1051,51 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return maxScrollWidth - scrollLeft;
   }, [getScrollWidth, virtualContainerWidth, showScrollbarY, scrollLeft]);
 
-  // todo 1. 考虑没有设置height 时候展示数据范围
-  // TODO 2. 考虑分页时候设置pageSize 大于renderMaxRows
+  // 考虑renderMaxRows 小于容器高度时候会出现底部空白
+  const getRenderMaxRows = useCallback(() => {
+    if (renderMaxRows <= 0 || renderMaxRows > list.length || !showScrollbarY) {
+      return list.length;
+    }
+    if (virtualContainerHeight) {
+      const virtualContainerAvailableHeight =
+        virtualContainerHeight - (showScrollbarX ? BAR_WIDTH : 0);
+      const start = (currentPage - 1) * pageSize + startRowIndex;
+      const sumHeight = getSumHeight(start, start + renderMaxRows);
+      if (sumHeight > virtualContainerAvailableHeight) {
+        return renderMaxRows;
+      } else {
+        const item = cachePosition.find((c) => c.top >= virtualContainerAvailableHeight);
+        return item?.index ?? renderMaxRows;
+      }
+    }
+    return renderMaxRows;
+  }, [
+    renderMaxRows,
+    list,
+    showScrollbarY,
+    virtualContainerHeight,
+    showScrollbarX,
+    cachePosition,
+    startRowIndex,
+    getSumHeight,
+    currentPage,
+    pageSize,
+  ]);
+
+  // 已修复bug 分页滚动到底部 切换到最后一页发现是空白的 在于 startRowIndex 大于数据开始行数
+  // 考虑分页后最后一列的数据的高度小于容器的高度 滚动条是否会出现
+  useEffect(() => {
+    // 如果没有垂直滚动条 startRowIndex 永远为0
+    if (startRowIndex >= list.length) {
+      setStartRowIndex(0);
+      setStartOffset(0);
+      setStartRowIndex(0);
+      setScrollTop(0);
+    }
+  }, [list, startRowIndex]);
+
+  // 1. 考虑没有设置height 时候展示数据范围 没有设置height 就不展示滚动条 设置了height 需要和容器的高度做对比
+  // 2. 考虑分页时候设置pageSize 大于renderMaxRows
   const renderBody = () => {
     return (
       <VirtualList
@@ -1060,6 +1103,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         scrollHeight={scrollHeight}
         scrollTop={scrollTop}
         scrollLeft={scrollLeft}
+        showScrollbarX={showScrollbarX}
         showScrollbarY={showScrollbarY}
         onMount={handleMount}
         onScrollVertical={handleScrollVertical}
@@ -1083,7 +1127,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
               offsetRight={offsetRight}
               startRowIndex={startRowIndex}
               // startRowIndex={0}
-              dataSource={list.slice(startRowIndex, startRowIndex + renderMaxRows)}
+              // dataSource={list}
+              dataSource={list.slice(startRowIndex, startRowIndex + getRenderMaxRows())}
               columns={flatColumns}
               treeLevelMap={treeLevel.current}
               treeExpandKeys={treeExpandKeys}
@@ -1171,7 +1216,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   );
   return (
     <>
-      <div style={styles} className={tableWrapClass} ref={tableContainer}>
+      <div style={styles} className={tableWrapClass}>
         {showHeader ? renderHeader() : null}
         {renderBody()}
         {loading ? (
