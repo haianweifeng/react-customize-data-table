@@ -532,7 +532,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const totalData = useMemo(() => {
     let records: T[] = [...dataSource];
-
     filterState.forEach((f) => {
       records = records.filter((r) => {
         let result = !f.filteredValue.length;

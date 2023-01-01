@@ -10,6 +10,10 @@
     color: @icon-color;
     font-size: 16px;
     cursor: pointer;
+
+    &:hover {
+      color: rgba(0, 0, 0, 0.55);
+    }
   }
 
   .filter-icon-active {
@@ -18,24 +22,24 @@
 }
 
 .filter-popper {
+  position: absolute;
   z-index: 1000;
   white-space: nowrap;
   background-color: #fff;
   border-radius: 4px;
-  box-shadow: 0 3px 6px -4px #0000001f, 0 6px 16px #00000014, 0 9px 28px 8px #0000000d;
-  transition-timing-function: linear;
-  transition-duration: 0.2s;
-  transition-property: opacity, visibility;
+  box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px rgba(0, 0, 0, 0.08),
+    0 9px 28px 8px rgba(0, 0, 0, 0.05);
 }
 
 .filter-popper-show {
-  visibility: visible;
-  opacity: 1;
+  display: block;
+  margin-top: 9px;
+  transform: translateX(-50%);
+  animation: fade 0.3s ease;
 }
 
 .filter-popper-hidden {
-  visibility: hidden;
-  opacity: 0;
+  display: none;
 }
 
 .filter-list {
@@ -80,7 +84,7 @@
   align-items: center;
   width: 100%;
   padding: 4px 11px;
-  color: #000000d9;
+  color: rgba(0, 0, 0, 0.85);
   border: 1px solid #d9d9d9;
   border-radius: 2px;
 
@@ -100,7 +104,7 @@
 .search-input {
   display: inline-block;
   box-sizing: border-box;
-  color: #000000d9;
+  color: rgba(0, 0, 0, 0.85);
   border: none;
   outline: none;
 }
@@ -115,7 +119,7 @@
 
   .filter-btn {
     padding: 0 7px;
-    color: #000000d9;
+    color: rgba(0, 0, 0, 0.85);
     font-weight: normal;
     line-height: 24px;
     cursor: pointer;
@@ -124,5 +128,15 @@
   .filter-btn-disabled {
     color: #c5c8ce;
     cursor: not-allowed;
+  }
+}
+
+@keyframes fade {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
   }
 }

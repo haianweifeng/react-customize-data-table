@@ -132,19 +132,12 @@ function Thead<T>(props: TheadProps<T>) {
 
   const renderSelection = useCallback(
     (key: string, rowSpan: number, cls: string, styles: React.CSSProperties) => {
-      if (rowSelection?.columnTitle) {
-        return (
-          <th key={key} rowSpan={rowSpan} className={cls} style={styles}>
-            {rowSelection.columnTitle}
-          </th>
-        );
-      }
-      if (rowSelection?.type === 'radio') {
-        return <th key={key} rowSpan={rowSpan} className={cls} style={styles} />;
-      }
       return (
         <th key={key} rowSpan={rowSpan} className={cls} style={styles}>
-          <Checkbox checked={checked} onChange={handleChange} />
+          {rowSelection?.columnTitle ||
+            (rowSelection?.type === 'radio' ? null : (
+              <Checkbox checked={checked} onChange={handleChange} />
+            ))}
         </th>
       );
     },
@@ -153,14 +146,11 @@ function Thead<T>(props: TheadProps<T>) {
 
   const renderExpand = useCallback(
     (key: string, rowSpan: number, cls: string, styles: React.CSSProperties) => {
-      if (expandable?.columnTitle) {
-        return (
-          <th key={key} rowSpan={rowSpan} className={cls} style={styles}>
-            {expandable.columnTitle}
-          </th>
-        );
-      }
-      return <th key={key} rowSpan={rowSpan} className={cls} style={styles} />;
+      return (
+        <th key={key} rowSpan={rowSpan} className={cls} style={styles}>
+          {expandable?.columnTitle || null}
+        </th>
+      );
     },
     [expandable],
   );

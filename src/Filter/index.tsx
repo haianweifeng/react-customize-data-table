@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { usePopper } from 'react-popper';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import classnames from 'classnames';
+import { isEqual } from 'lodash';
 import Checkbox from '../Checkbox';
 import Radio from '../Radio';
 import Icon from '../Icon';
@@ -24,16 +24,13 @@ const Filter = (props: FilterProps) => {
   const { filters, filterMultiple, filteredValue, onReset, onChange, filterIcon, filterSearch } =
     props;
 
+  const filterContainerRef = useRef<HTMLDivElement>(null);
+  const popperRef = useRef<HTMLDivElement>(null);
+
   const [visible, setVisible] = useState<boolean>(false);
   const [isFocus, setIsFocus] = useState<boolean>(false);
   const [searchValue, setSearchValue] = useState<string>('');
   const [checkedValue, setCheckedValue] = useState<string[]>(filteredValue);
-
-  const [referenceElement, setReferenceElement] = useState<any>(null);
-  const [popperElement, setPopperElement] = useState<any>(null);
-  const { styles: popperStyle, attributes } = usePopper(referenceElement, popperElement, {
-    placement: 'top-end',
-  });
 
   const handleFocus = () => {
     setIsFocus(true);
@@ -60,52 +57,109 @@ const Filter = (props: FilterProps) => {
 
   const handleReset = () => {
     onReset();
+    setSearchValue('');
     setCheckedValue([]);
     setVisible(false);
   };
 
   const handleFilter = () => {
     onChange(checkedValue);
+    setSearchValue('');
     setVisible(false);
   };
 
+  const getPosition = () => {
+    const el = filterContainerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+    const scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+
+    return {
+      left: scrollLeft + rect.left + rect.width / 2,
+      top: scrollTop + rect.top + rect.height,
+    };
+  };
+
+  const createPopper = () => {
+    let popperPlaceholder = document.querySelector('.popper-placeholder');
+    if (!popperPlaceholder) {
+      const div = document.createElement('div');
+      div.classList.add('popper-placeholder');
+      div.setAttribute('style', 'position: absolute; top: 0; left: 0; width: 100%;');
+      document.body.appendChild(div);
+      popperPlaceholder = div;
+    }
+    const el = popperRef.current;
+    if (el) {
+      const position = getPosition();
+      if (position) {
+        Object.keys(position).map((prop) => {
+          (el.style as any)[prop] = `${(position as any)[prop]}px`;
+        });
+      }
+      popperPlaceholder.appendChild(el);
+    }
+  };
+
   const handleClick = () => {
+    createPopper();
     setVisible((prev) => !prev);
   };
 
-  useEffect(() => {
-    const elementContains = (elem: HTMLElement, target: any) => {
-      let result = false;
-      let parent = target.parentNode;
-      while (parent) {
-        if (parent === elem) {
-          result = true;
-          return result;
-        }
-        parent = parent.parentNode;
+  const elementContains = useCallback((elem: HTMLElement, target: any) => {
+    let result = false;
+    let parent = target.parentNode;
+    while (parent) {
+      if (parent === elem) {
+        result = true;
+        return result;
       }
-      return result;
-    };
+      parent = parent.parentNode;
+    }
+    return result;
+  }, []);
 
-    const handleDocumentClick = (event: Event) => {
+  const handleDocumentClick = useCallback(
+    (event: Event) => {
       const { target } = event;
       if (
-        !referenceElement ||
-        elementContains(referenceElement, target) ||
-        !popperElement ||
-        elementContains(popperElement, target)
+        !filterContainerRef.current ||
+        elementContains(filterContainerRef.current, target) ||
+        !popperRef.current ||
+        elementContains(popperRef.current, target)
       ) {
         return;
       }
-      setVisible(false);
-    };
 
-    document.addEventListener('click', handleDocumentClick);
+      if (!isEqual(checkedValue, filteredValue)) {
+        onChange(checkedValue);
+      }
+      setSearchValue('');
+      setVisible(false);
+      event.stopPropagation();
+    },
+    [checkedValue, filteredValue, onChange, elementContains],
+  );
+
+  useEffect(() => {
+    const removePopper = () => {
+      const popperPlaceholder = document.querySelector('.popper-placeholder');
+      popperPlaceholder && document.body.removeChild(popperPlaceholder);
+    };
 
     return () => {
+      removePopper();
       document.removeEventListener('click', handleDocumentClick);
     };
-  }, [referenceElement, popperElement]);
+    // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (visible) {
+      document.addEventListener('click', handleDocumentClick);
+    }
+  }, [visible, handleDocumentClick]);
 
   const filterOptions = useMemo(() => {
     return filters.filter((f) => {
@@ -122,7 +176,7 @@ const Filter = (props: FilterProps) => {
 
   return (
     <>
-      <div className="filter-container" ref={setReferenceElement} onClick={handleClick}>
+      <div className="filter-container" ref={filterContainerRef} onClick={handleClick}>
         {typeof filterIcon === 'function' ? (
           filterIcon(!!filteredValue.length)
         ) : (
@@ -136,14 +190,12 @@ const Filter = (props: FilterProps) => {
         )}
       </div>
       <div
-        ref={setPopperElement}
+        ref={popperRef}
         className={classnames({
           'filter-popper': true,
           'filter-popper-show': visible,
           'filter-popper-hidden': !visible,
         })}
-        style={popperStyle.popper}
-        {...attributes.popper}
       >
         {!!filterSearch && filters.length ? (
           <div className="filter-search">
@@ -160,6 +212,7 @@ const Filter = (props: FilterProps) => {
                 type="text"
                 placeholder="在筛选项中搜索"
                 className="search-input"
+                value={searchValue}
                 onFocus={handleFocus}
                 onBlur={handleBlur}
                 onChange={handleSearch}
