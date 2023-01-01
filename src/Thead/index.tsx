@@ -33,7 +33,6 @@ interface TheadProps<T> {
   onFilterChange: (col: ColumnsWithType<T> & { colSpan: number }, filteredValue: string[]) => void;
 }
 
-// todo bug 当过滤后表格高度太小时候 过滤框显示不全
 function Thead<T>(props: TheadProps<T>) {
   const {
     bordered,

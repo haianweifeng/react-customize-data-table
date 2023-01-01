@@ -11,7 +11,6 @@ import type {
   ColumnsGroupType,
   ExpandableType,
   TreeExpandableType,
-  ScrollType,
   ColumnsWithType,
   ColumnsGroupWithType,
   SelectedRowWithKey,

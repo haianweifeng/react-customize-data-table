@@ -200,12 +200,12 @@ export interface CellProps {
 
 export type CellType = { colSpan?: number; rowSpan?: number };
 
-export interface ScrollType {
-  /** 设置横向滚动时table 的宽度 */
-  width?: number;
-  /** 设置纵向滚动时table 的高度 */
-  height?: number;
-}
+// export interface ScrollType {
+//   /** 设置横向滚动时table 的宽度 */
+//   width?: number;
+//   /** 设置纵向滚动时table 的高度 */
+//   height?: number;
+// }
 
 export type SelectedRowWithKey<T> = Record<number | string, T>;
 
