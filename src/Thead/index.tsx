@@ -289,26 +289,28 @@ function Thead<T>(props: TheadProps<T>) {
                 className={cls}
                 style={styles}
               >
-                <div className="has-sorter-filter">
+                <div className="cell-header">
                   <span className="column-title">{col.title}</span>
-                  <div className="sorter-filter">
-                    {col.sorter
-                      ? renderSorterContent(
-                          col as ColumnsWithType<T> & {
-                            colSpan: number;
-                            ignoreRightBorder: boolean;
-                          },
-                        )
-                      : null}
-                    {col.filters
-                      ? renderFilterContent(
-                          col as ColumnsWithType<T> & {
-                            colSpan: number;
-                            ignoreRightBorder: boolean;
-                          },
-                        )
-                      : null}
-                  </div>
+                  {col.sorter || col.filters ? (
+                    <div className="sorter-filter">
+                      {col.sorter
+                        ? renderSorterContent(
+                            col as ColumnsWithType<T> & {
+                              colSpan: number;
+                              ignoreRightBorder: boolean;
+                            },
+                          )
+                        : null}
+                      {col.filters
+                        ? renderFilterContent(
+                            col as ColumnsWithType<T> & {
+                              colSpan: number;
+                              ignoreRightBorder: boolean;
+                            },
+                          )
+                        : null}
+                    </div>
+                  ) : null}
                 </div>
                 {level === 0 &&
                 bordered &&
