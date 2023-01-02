@@ -76,11 +76,16 @@ export function toPoint(value: string | number) {
   return Number(val) / 100;
 }
 
-export function getParent(el: HTMLElement, target: HTMLElement | null) {
+export function getParent(el: HTMLElement, target: HTMLElement | string | null) {
   if (!target) return null;
 
   let temp: HTMLElement | null = el;
   while (temp) {
+    if (typeof target === 'string') {
+      if (temp.matches && temp.matches(target)) {
+        return temp;
+      }
+    }
     if (temp === target) return temp;
     temp = temp.parentElement;
   }

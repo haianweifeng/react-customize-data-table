@@ -81,15 +81,17 @@ export interface ColumnsType<T> {
   title: React.ReactNode;
   /** 列宽度 */
   width?: string | number;
-  // /** 最大可拖动列宽 */
-  // maxWidth?: string | number;
-  // /** 最小列宽 */
-  // minWidth?: string | number;
+  /** 最大可拖动列宽 todo */
+  maxWidth?: string | number;
+  /** 最小列宽 todo */
+  minWidth?: string | number;
   /** 超过宽度将自动省略
    * todo 好像需要设置宽度 是获取的tbody 中td 内容宽度来渲染thead th的宽度 如果不设置宽度 tbody 是不是永远不会超出 */
   ellipsis?: boolean | { showTitle: boolean };
   /** 表头列合并 */
   headerColSpan?: number;
+  /** 是否允许拖拽调整宽度 需开启 border 属性，且设置 width todo */
+  resizable?: boolean;
   /** 设置单元格属性 */
   onCell?: (record: T, rowIndex: number) => CellType;
   // /** 支持的排序方式 todo 好像不需要 */
@@ -216,3 +218,5 @@ export type TreeLevelType = Record<string | number, number>;
 export type RowKeyType<T> = string | ((row: T) => string | number);
 
 export type CachePositionType = { index: number; top: number; bottom: number; height: number };
+
+export type ResizeInfoType = { startPosX: number; resizingRect: DOMRect };

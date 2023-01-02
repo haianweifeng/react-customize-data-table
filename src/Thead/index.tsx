@@ -7,10 +7,12 @@ import type {
   RowSelectionType,
   SorterStateType,
   FilterStateType,
+  ResizeInfoType,
 } from '../interface';
 import Checkbox from '../Checkbox';
 import Sorter from '../Sorter';
 import Filter from '../Filter';
+import { getParent } from '../utils/util';
 
 interface TheadProps<T> {
   bordered: boolean;
@@ -31,6 +33,14 @@ interface TheadProps<T> {
     triggerDesc: () => void;
   }) => React.ReactNode;
   onFilterChange: (col: ColumnsWithType<T> & { colSpan: number }, filteredValue: string[]) => void;
+  onMouseDown: (
+    resizeInfo: ResizeInfoType,
+    col: ColumnsWithType<T> & {
+      colSpan: number;
+      ignoreRightBorder: boolean;
+    },
+    colIndex: number,
+  ) => void;
 }
 
 function Thead<T>(props: TheadProps<T>) {
@@ -48,6 +58,7 @@ function Thead<T>(props: TheadProps<T>) {
     onSelectAll,
     onSort,
     onFilterChange,
+    onMouseDown,
   } = props;
 
   const isColumnGroup = useCallback((col: ColumnsWithType<T> | ColumnsGroupWithType<T>) => {
@@ -114,6 +125,26 @@ function Thead<T>(props: TheadProps<T>) {
       }
     }
   }, []);
+
+  const handleMouseDown = (
+    event: any,
+    col: ColumnsWithType<T> & {
+      colSpan: number;
+      ignoreRightBorder: boolean;
+    },
+    colIndex: number,
+  ) => {
+    const { target } = event;
+    const resizingTh = getParent(target, 'th');
+    if (resizingTh) {
+      const resizingRect = resizingTh.getBoundingClientRect();
+      const resizeInfo: ResizeInfoType = {
+        startPosX: event.clientX,
+        resizingRect,
+      };
+      onMouseDown && onMouseDown(resizeInfo, col, colIndex);
+    }
+  };
 
   const handleChange = useCallback(
     (selected: boolean) => {
@@ -279,6 +310,18 @@ function Thead<T>(props: TheadProps<T>) {
                       : null}
                   </div>
                 </div>
+                {level === 0 &&
+                bordered &&
+                !('children' in col) &&
+                !col.ignoreRightBorder &&
+                col?.resizable ? (
+                  <div
+                    className="cell-header-resizable"
+                    onMouseDown={(event) => {
+                      handleMouseDown(event, col, Number(index));
+                    }}
+                  />
+                ) : null}
               </th>,
             );
           }

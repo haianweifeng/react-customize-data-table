@@ -103,7 +103,9 @@ const Filter = (props: FilterProps) => {
   };
 
   const handleClick = () => {
-    createPopper();
+    if (!visible) {
+      createPopper();
+    }
     setVisible((prev) => !prev);
   };
 
@@ -158,6 +160,8 @@ const Filter = (props: FilterProps) => {
   useEffect(() => {
     if (visible) {
       document.addEventListener('click', handleDocumentClick);
+    } else {
+      document.removeEventListener('click', handleDocumentClick);
     }
   }, [visible, handleDocumentClick]);
 

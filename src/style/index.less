@@ -44,6 +44,7 @@
 }
 
 .table-container thead > tr > th {
+  position: relative;
   padding: @table-cell-padding-vertical @table-cell-padding-horizontal;
   color: rgba(0, 0, 0, 0.85);
   font-weight: 500;
@@ -374,6 +375,27 @@
   &.cell-ignore-right-border {
     border-right: 0;
   }
+}
+
+.table-bordered thead > tr > th {
+  .cell-header-resizable {
+    position: absolute;
+    right: -5px;
+    bottom: 0;
+    z-index: 1;
+    width: 10px;
+    height: 100%;
+    cursor: col-resize;
+  }
+}
+
+.table-bordered .table-resize-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  border-right: 1px dashed #e8eaec;
 }
 
 .table-bordered .scrollbar-track-vertical {

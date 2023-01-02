@@ -14,6 +14,7 @@ const columns: ColumnsType<DataType>[] = [
   {
     title: 'ID',
     dataIndex: 'id',
+    resizable: true,
     onCell: (record: DataType, rowIndex: number) => {
       if (rowIndex === 0) {
         return { colSpan: 2 };
@@ -24,6 +25,7 @@ const columns: ColumnsType<DataType>[] = [
   {
     title: '姓名',
     dataIndex: 'name',
+    resizable: true,
     onCell: (record: DataType, rowIndex: number) => {
       if (rowIndex === 0) {
         return { colSpan: 0 };
@@ -34,15 +36,20 @@ const columns: ColumnsType<DataType>[] = [
   {
     title: '数值1',
     width: 40,
+    minWidth: 100,
     dataIndex: 'amount1',
+    resizable: true,
   },
   {
     title: '数值2',
     dataIndex: 'amount2',
+    resizable: true,
   },
   {
     title: '数值3',
     dataIndex: 'amount3',
+    resizable: true,
+    minWidth: 80,
   },
 ];
 

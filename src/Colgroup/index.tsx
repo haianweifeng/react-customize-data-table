@@ -21,7 +21,12 @@ function Colgroup<T>(props: ColgroupProps<T>) {
   return (
     <colgroup>
       {columns.map((c, i) => {
-        return <col key={`${c.dataIndex}_${i}`} style={{ width: c?.width }} />;
+        return (
+          <col
+            key={`${c.dataIndex}_${i}`}
+            style={{ width: c?.width, minWidth: c?.minWidth, maxWidth: c?.maxWidth }}
+          />
+        );
       })}
     </colgroup>
   );

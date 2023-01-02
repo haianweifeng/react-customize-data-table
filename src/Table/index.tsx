@@ -23,6 +23,7 @@ import type {
   FilterStateType,
   FilterInfoType,
   CachePositionType,
+  ResizeInfoType,
 } from '../interface';
 import VirtualList from '../VirtualList';
 import type { PaginationProps } from '../index';
@@ -119,7 +120,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     bordered,
     rowKey = 'key',
     dataSource,
-    columns,
+    // columns,
+    columns: originColumns,
     expandable,
     rowSelection,
     treeProps,
@@ -135,6 +137,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 44;
 
+  const resizeLineRef = useRef<HTMLDivElement>(null);
   const tableContainer = useRef<HTMLDivElement>(null);
   const tbodyRef = useRef<any>(null);
   const maxTreeLevel = useRef<number>(0);
@@ -152,6 +155,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       };
     });
   });
+
+  const [columns, setColumns] = useState<(ColumnsType<T> | ColumnsGroupType<T>)[]>(originColumns);
 
   const isRadio = rowSelection?.type === 'radio';
 
@@ -351,6 +356,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     [rowKey],
   );
 
+  // todo columns
   const formatColumns = useMemo(() => {
     // todo insertBeforeColumnName 如果是放到最后一列
     let insertIndex = 0;
@@ -508,6 +514,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     });
     return filter;
   });
+  // console.log(filterState);
 
   const [sorterState, setSorterState] = useState<SorterStateType<T>[]>(() => {
     const sorter: SorterStateType<T>[] = [];
@@ -586,6 +593,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const [scrollLeft, setScrollLeft] = useState<number>(0);
 
   const [startOffset, setStartOffset] = useState<number>(0);
+
+  // const [resizeLineVisible, setResizeLineVisible] = useState<boolean>(false);
 
   const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
     const initSelectedKeys =
@@ -687,6 +696,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     },
     [converToPixel, flatColumns],
   );
+  // console.log(colWidths);
 
   // todo 参数height 名字要更改
   const handleUpdateRowHeight = (height: number, rowIndex: number) => {
@@ -881,6 +891,50 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   };
 
+  const handleHeaderMouseDown = (
+    resizeInfo: ResizeInfoType,
+    col: ColumnsWithType<T> & {
+      colSpan: number;
+      ignoreRightBorder: boolean;
+    },
+    colIndex: number,
+  ) => {
+    const resizeEl = resizeLineRef.current;
+    const { resizingRect, startPosX } = resizeInfo;
+    if (!resizeEl || !tableContainer.current) return;
+
+    const tableContainerRect = tableContainer.current.getBoundingClientRect();
+    const initLeft = resizingRect.right - tableContainerRect.left;
+    resizeEl.style.cssText = `left: ${initLeft}px; display: block`;
+
+    document.onselectstart = () => false;
+    document.ondragstart = () => false;
+
+    const handleHeaderMouseMove = (event: any) => {
+      const deltaX = event.clientX - startPosX;
+      resizeEl.style.cssText = `left: ${initLeft + deltaX}px; display: block`;
+    };
+
+    const handleHeaderMouseUp = () => {
+      const columnWidth =
+        parseInt(resizeEl.style.left, 10) - (resizingRect.left - tableContainerRect.left);
+      const copyColumns = [...columns];
+      copyColumns[colIndex] = { ...col, width: columnWidth };
+      setColWidths([]);
+      setColumns(copyColumns);
+      resizeEl.style.cssText = `display: none`;
+
+      document.removeEventListener('mousemove', handleHeaderMouseMove);
+      document.removeEventListener('mouseup', handleHeaderMouseUp);
+      document.onselectstart = null;
+      document.ondragstart = null;
+    };
+
+    document.addEventListener('mousemove', handleHeaderMouseMove);
+    document.addEventListener('mouseup', handleHeaderMouseUp);
+  };
+  // console.log(colWidths);
+
   const handlePaginationChange = (current: number, size: number) => {
     if (pagination && !('current' in pagination)) {
       setCurrentPage(current);
@@ -959,6 +1013,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   }, [treeProps]);
 
+  useEffect(() => {
+    setColumns(originColumns);
+  }, [originColumns]);
+
+  // todo column
   useEffect(() => {
     let exist = false;
     const filter: FilterStateType<T>[] = [];
@@ -1170,6 +1229,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             onSelectAll={handleSelectAll}
             onSort={handleSortChange}
             onFilterChange={handleFilterChange}
+            onMouseDown={handleHeaderMouseDown}
           />
         </table>
       </div>
@@ -1212,12 +1272,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   );
   return (
     <>
-      <div style={styles} className={tableWrapClass}>
+      <div style={styles} className={tableWrapClass} ref={tableContainer}>
         {showHeader ? renderHeader() : null}
         {renderBody()}
         {loading ? (
           <div className="table-loading">{typeof loading === 'boolean' ? <Spin /> : loading}</div>
         ) : null}
+        <div ref={resizeLineRef} className="table-resize-line" style={{ display: 'none' }} />
       </div>
       {renderPagination()}
     </>
