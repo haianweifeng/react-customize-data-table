@@ -33,14 +33,7 @@ interface TheadProps<T> {
     triggerDesc: () => void;
   }) => React.ReactNode;
   onFilterChange: (col: ColumnsWithType<T> & { colSpan: number }, filteredValue: string[]) => void;
-  onMouseDown: (
-    resizeInfo: ResizeInfoType,
-    col: ColumnsWithType<T> & {
-      colSpan: number;
-      ignoreRightBorder: boolean;
-    },
-    colIndex: number,
-  ) => void;
+  onMouseDown: (resizeInfo: ResizeInfoType, col: ColumnsWithType<T>, colIndex: number) => void;
 }
 
 function Thead<T>(props: TheadProps<T>) {
@@ -129,8 +122,8 @@ function Thead<T>(props: TheadProps<T>) {
   const handleMouseDown = (
     event: any,
     col: ColumnsWithType<T> & {
-      colSpan: number;
-      ignoreRightBorder: boolean;
+      colSpan?: number;
+      ignoreRightBorder?: boolean;
     },
     colIndex: number,
   ) => {
@@ -142,6 +135,8 @@ function Thead<T>(props: TheadProps<T>) {
         startPosX: event.clientX,
         resizingRect,
       };
+      delete col['colSpan'];
+      delete col.ignoreRightBorder;
       onMouseDown && onMouseDown(resizeInfo, col, colIndex);
     }
   };

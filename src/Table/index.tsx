@@ -82,8 +82,13 @@ export interface TableProps<T> {
   // scroll?: ScrollType;
   /** 滚动条滚动后回调函数 todo */
   onScroll?: (x: number, y: number) => void;
-  /** 列宽伸缩后的回调 todo */
-  onColumnResize?: (newColumns: any) => void;
+  /** 列宽伸缩后的回调 */
+  onColumnResize?: (
+    newWidth: number,
+    oldWidth: number,
+    column: ColumnsType<T>,
+    event: Event,
+  ) => void;
   /** 表格行是否可选择配置项 todo header 需要表头空一行 */
   rowSelection?: RowSelectionType<T>;
   /** 自定义排序图标 */
@@ -133,6 +138,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     renderMaxRows = 20,
     rowHeight = 46,
     virtual,
+    onColumnResize,
   } = props;
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 44;
@@ -771,7 +777,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return width * res;
   }, []);
 
-  // todo 调整列宽后回调传到table 属性
   // 不考虑用handleBodyRender 可以删除相关代码
   const handleBodyRender = useCallback(
     (tds: HTMLElement[]) => {
@@ -1010,12 +1015,10 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   };
 
+  // todo 调整列宽后回调传到table 属性
   const handleHeaderMouseDown = (
     resizeInfo: ResizeInfoType,
-    col: ColumnsWithType<T> & {
-      colSpan: number;
-      ignoreRightBorder: boolean;
-    },
+    col: ColumnsWithType<T>,
     colIndex: number,
   ) => {
     const resizeEl = resizeLineRef.current;
@@ -1034,14 +1037,18 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       resizeEl.style.cssText = `left: ${initLeft + deltaX}px; display: block`;
     };
 
-    const handleHeaderMouseUp = () => {
+    const handleHeaderMouseUp = (event: Event) => {
       const columnWidth =
         parseInt(resizeEl.style.left, 10) - (resizingRect.left - tableContainerRect.left);
       const copyColumns = [...columns];
+      const oldWidth = columnsWithWidth[colIndex].width;
       copyColumns[colIndex] = { ...col, width: columnWidth };
       // setColWidths([]);
       setColumns(copyColumns);
       resizeEl.style.cssText = `display: none`;
+
+      const column = copyColumns[colIndex] as ColumnsType<T>;
+      onColumnResize && onColumnResize(columnWidth, oldWidth as number, column, event);
 
       document.removeEventListener('mousemove', handleHeaderMouseMove);
       document.removeEventListener('mouseup', handleHeaderMouseUp);

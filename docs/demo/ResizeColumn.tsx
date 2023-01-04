@@ -63,6 +63,26 @@ const App = () => {
     },
   ];
 
-  return <Table columns={columns} dataSource={data} rowKey="id" bordered />;
+  const handleColumnResize = (
+    newWidth: number,
+    oldWidth: number,
+    column: ColumnsType<DataType>,
+    event: Event,
+  ) => {
+    console.log(`newWidth: ${newWidth}`);
+    console.log(`oldWidth: ${oldWidth}`);
+    console.log(column);
+    console.log(event);
+  };
+
+  return (
+    <Table
+      columns={columns}
+      dataSource={data}
+      rowKey="id"
+      bordered
+      onColumnResize={handleColumnResize}
+    />
+  );
 };
 export default App;
