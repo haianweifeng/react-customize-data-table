@@ -35,8 +35,8 @@ const columns: ColumnsType<DataType>[] = [
   },
   {
     title: '数值1',
-    width: 40,
-    minWidth: 100,
+    // width: 40,
+    // minWidth: 100,
     dataIndex: 'amount1',
     resizable: true,
   },
@@ -49,7 +49,8 @@ const columns: ColumnsType<DataType>[] = [
     title: '数值3',
     dataIndex: 'amount3',
     resizable: true,
-    minWidth: 80,
+    // minWidth: 80,
+    maxWidth: 80,
   },
 ];
 

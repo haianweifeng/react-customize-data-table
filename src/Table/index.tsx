@@ -28,7 +28,7 @@ import type {
 import VirtualList from '../VirtualList';
 import type { PaginationProps } from '../index';
 import '../style/index.less';
-import { getRowKey, toPoint, findParentByKey } from '../utils/util';
+import { getRowKey, toPoint, findParentByKey, parseValue } from '../utils/util';
 import { BAR_WIDTH } from '../utils/constant';
 // import styles from './index.less';
 
@@ -157,6 +157,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   });
 
   const [columns, setColumns] = useState<(ColumnsType<T> | ColumnsGroupType<T>)[]>(originColumns);
+
+  const [virtualContainerWidth, setVirtualContainerWidth] = useState<number>(0);
 
   const isRadio = rowSelection?.type === 'radio';
 
@@ -493,6 +495,80 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return getFlatColumns(columnsWithFixed);
   }, [getFlatColumns, columnsWithFixed]);
 
+  // todo 考虑如果后面要是把滚动条改动后 tbodyWidth 这个计算要优化
+  const columnsWithWidth = useMemo(() => {
+    if (tbodyRef.current) {
+      let widthSum = 0;
+      let count = 0;
+      const noMaxColumns: ColumnsWithType<T>[] = [];
+      const tbodyWidth = width || virtualContainerWidth;
+
+      flatColumns.map((c) => {
+        if (c.width) {
+          let parseWidth = parseValue(c.width);
+          if (typeof parseWidth === 'string') {
+            parseWidth = toPoint(parseWidth);
+            parseWidth = parseWidth! * tbodyWidth;
+          }
+          widthSum += Number(parseWidth);
+        } else {
+          count++;
+          if (!c.maxWidth) {
+            noMaxColumns.push(c);
+          }
+        }
+      });
+
+      let remainWidth = tbodyWidth - widthSum;
+      let averageWidth = 0;
+      if (count > 0) {
+        averageWidth = remainWidth / count;
+      }
+
+      let widthColumns = flatColumns.map((c) => {
+        if (c.width) {
+          let parseWidth = parseValue(c.width);
+          if (typeof parseWidth === 'string') {
+            parseWidth = toPoint(parseWidth);
+            parseWidth = parseWidth! * tbodyWidth;
+          }
+          return Object.assign({}, c, { width: parseWidth });
+        }
+        let colWidth = averageWidth;
+        if (c.minWidth) {
+          colWidth = Math.max(averageWidth, Number(parseValue(c.minWidth)));
+        }
+        if (c.maxWidth) {
+          colWidth = Math.min(averageWidth, Number(parseValue(c.maxWidth)));
+        }
+        remainWidth -= colWidth;
+        count--;
+        const diff = averageWidth - colWidth;
+        if (diff) {
+          if (count > 0) {
+            averageWidth = remainWidth / count;
+          }
+        }
+        return Object.assign({}, c, { width: colWidth });
+      });
+
+      if (remainWidth > 0) {
+        averageWidth = remainWidth / noMaxColumns.length;
+        widthColumns = widthColumns.map((c) => {
+          const item = noMaxColumns.find((col) => col.dataIndex === c.dataIndex);
+          if (item) {
+            let colWidth = Number(parseValue(c.width)) + averageWidth;
+            return Object.assign({}, c, { width: colWidth });
+          }
+          return c;
+        });
+      }
+      return widthColumns;
+    }
+    return flatColumns;
+  }, [flatColumns, virtualContainerWidth, width]);
+  console.log(columnsWithWidth);
+
   const [currentPage, setCurrentPage] = useState(() => {
     return pagination?.current || pagination?.defaultCurrent || 1;
   });
@@ -514,7 +590,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     });
     return filter;
   });
-  // console.log(filterState);
 
   const [sorterState, setSorterState] = useState<SorterStateType<T>[]>(() => {
     const sorter: SorterStateType<T>[] = [];
@@ -581,8 +656,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   }, [flatData, currentPageData]);
 
   const [colWidths, setColWidths] = useState<number[]>([]);
-
-  const [virtualContainerWidth, setVirtualContainerWidth] = useState<number>(0);
 
   const [virtualContainerHeight, setVirtualContainerHeight] = useState<number>(0);
 
@@ -654,6 +727,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return width * res;
   }, []);
 
+  // todo 调整列宽后回调传到table 属性
+  // 不考虑用handleBodyRender 可以删除相关代码
   const handleBodyRender = useCallback(
     (tds: HTMLElement[]) => {
       const widths = [];
@@ -692,7 +767,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           widths.push(...formatColWidth);
         }
       }
-      setColWidths(widths);
+      // setColWidths(widths);
     },
     [converToPixel, flatColumns],
   );
@@ -920,7 +995,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         parseInt(resizeEl.style.left, 10) - (resizingRect.left - tableContainerRect.left);
       const copyColumns = [...columns];
       copyColumns[colIndex] = { ...col, width: columnWidth };
-      setColWidths([]);
+      // setColWidths([]);
       setColumns(copyColumns);
       resizeEl.style.cssText = `display: none`;
 
@@ -933,7 +1008,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     document.addEventListener('mousemove', handleHeaderMouseMove);
     document.addEventListener('mouseup', handleHeaderMouseUp);
   };
-  // console.log(colWidths);
 
   const handlePaginationChange = (current: number, size: number) => {
     if (pagination && !('current' in pagination)) {
@@ -1017,7 +1091,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     setColumns(originColumns);
   }, [originColumns]);
 
-  // todo column
+  // column
   useEffect(() => {
     let exist = false;
     const filter: FilterStateType<T>[] = [];
@@ -1174,7 +1248,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           }}
         >
           <table style={{ width }}>
-            <Colgroup colWidths={colWidths} columns={flatColumns} />
+            <Colgroup colWidths={colWidths} columns={columnsWithWidth} />
             <Tbody
               {...props}
               isTree={isTree}
@@ -1184,7 +1258,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
               // startRowIndex={0}
               // dataSource={list}
               dataSource={list.slice(startRowIndex, startRowIndex + getRenderMaxRows())}
-              columns={flatColumns}
+              // columns={flatColumns}
+              columns={columnsWithWidth}
               treeLevelMap={treeLevel.current}
               treeExpandKeys={treeExpandKeys}
               selectedKeys={selectedKeys}
@@ -1214,7 +1289,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             transform: `translate(-${scrollLeft}px, 0)`,
           }}
         >
-          <Colgroup colWidths={colWidths} columns={flatColumns} />
+          <Colgroup colWidths={colWidths} columns={columnsWithWidth} />
           <Thead
             bordered
             checked={checked}

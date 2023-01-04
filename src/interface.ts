@@ -80,11 +80,12 @@ export interface ColumnsType<T> {
   /** 列头显示文字 */
   title: React.ReactNode;
   /** 列宽度 */
-  width?: string | number;
-  /** 最大可拖动列宽 todo */
-  maxWidth?: string | number;
-  /** 最小列宽 todo */
-  minWidth?: string | number;
+  width?: number | string;
+  // width?: string | number;
+  /** 最大列宽 不支持百分比 todo */
+  maxWidth?: number | string;
+  /** 最小列宽 不支持百分比 todo */
+  minWidth?: number | string;
   /** 超过宽度将自动省略
    * todo 好像需要设置宽度 是获取的tbody 中td 内容宽度来渲染thead th的宽度 如果不设置宽度 tbody 是不是永远不会超出 */
   ellipsis?: boolean | { showTitle: boolean };

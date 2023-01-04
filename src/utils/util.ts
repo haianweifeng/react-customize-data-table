@@ -70,10 +70,13 @@ export function parseValue(value: string | number | undefined | null) {
   return null;
 }
 
-export function toPoint(value: string | number) {
+export function toPoint(value: string | number | null) {
   if (typeof value === 'number') return value;
-  const val = value.replace('%', '');
-  return Number(val) / 100;
+  if (typeof value === 'string') {
+    const val = value.replace('%', '');
+    return Number(val) / 100;
+  }
+  return null;
 }
 
 export function getParent(el: HTMLElement, target: HTMLElement | string | null) {
