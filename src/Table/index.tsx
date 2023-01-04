@@ -495,80 +495,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return getFlatColumns(columnsWithFixed);
   }, [getFlatColumns, columnsWithFixed]);
 
-  // todo 考虑如果后面要是把滚动条改动后 tbodyWidth 这个计算要优化
-  const columnsWithWidth = useMemo(() => {
-    if (tbodyRef.current) {
-      let widthSum = 0;
-      let count = 0;
-      const noMaxColumns: ColumnsWithType<T>[] = [];
-      const tbodyWidth = width || virtualContainerWidth;
-
-      flatColumns.map((c) => {
-        if (c.width) {
-          let parseWidth = parseValue(c.width);
-          if (typeof parseWidth === 'string') {
-            parseWidth = toPoint(parseWidth);
-            parseWidth = parseWidth! * tbodyWidth;
-          }
-          widthSum += Number(parseWidth);
-        } else {
-          count++;
-          if (!c.maxWidth) {
-            noMaxColumns.push(c);
-          }
-        }
-      });
-
-      let remainWidth = tbodyWidth - widthSum;
-      let averageWidth = 0;
-      if (count > 0) {
-        averageWidth = remainWidth / count;
-      }
-
-      let widthColumns = flatColumns.map((c) => {
-        if (c.width) {
-          let parseWidth = parseValue(c.width);
-          if (typeof parseWidth === 'string') {
-            parseWidth = toPoint(parseWidth);
-            parseWidth = parseWidth! * tbodyWidth;
-          }
-          return Object.assign({}, c, { width: parseWidth });
-        }
-        let colWidth = averageWidth;
-        if (c.minWidth) {
-          colWidth = Math.max(averageWidth, Number(parseValue(c.minWidth)));
-        }
-        if (c.maxWidth) {
-          colWidth = Math.min(averageWidth, Number(parseValue(c.maxWidth)));
-        }
-        remainWidth -= colWidth;
-        count--;
-        const diff = averageWidth - colWidth;
-        if (diff) {
-          if (count > 0) {
-            averageWidth = remainWidth / count;
-          }
-        }
-        return Object.assign({}, c, { width: colWidth });
-      });
-
-      if (remainWidth > 0) {
-        averageWidth = remainWidth / noMaxColumns.length;
-        widthColumns = widthColumns.map((c) => {
-          const item = noMaxColumns.find((col) => col.dataIndex === c.dataIndex);
-          if (item) {
-            let colWidth = Number(parseValue(c.width)) + averageWidth;
-            return Object.assign({}, c, { width: colWidth });
-          }
-          return c;
-        });
-      }
-      return widthColumns;
-    }
-    return flatColumns;
-  }, [flatColumns, virtualContainerWidth, width]);
-  console.log(columnsWithWidth);
-
   const [currentPage, setCurrentPage] = useState(() => {
     return pagination?.current || pagination?.defaultCurrent || 1;
   });
@@ -719,6 +645,124 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     },
     [rowKey, treeExpandKeys],
   );
+
+  const getSumHeight = useCallback(
+    (start: number, end: number) => {
+      let sumHeight = 0;
+      for (let i = start; i < end; i++) {
+        sumHeight += cachePosition[i]?.height || rowHeight;
+      }
+      return sumHeight;
+    },
+    [cachePosition, rowHeight],
+  );
+
+  const list = useMemo(() => {
+    const records: T[] = [];
+
+    currentPageData.forEach((d) => {
+      records.push(d);
+      const childrenRecords = getTreeChildrenData(d);
+      records.push(...childrenRecords);
+    });
+
+    return records;
+  }, [currentPageData, getTreeChildrenData]);
+
+  // todo 点击扩展行后引起cachePosition 变化后 scrollTop 的更新计算 setRowHeight
+  // todo 滚动到底部了但是改变了列宽引起的高度变化 scrollTop 的更新计算 width: 150 -> 180
+  // todo 考虑点击树形的第一行和最后一行折叠icon 虚拟滚动会不会出现空白 等到handleUpdateRowHeight 修复了
+  // todo 待测试如果是可变行高会不会触发重新计算
+  const scrollHeight = useMemo(() => {
+    return getSumHeight(0, list.length);
+  }, [getSumHeight, list]);
+
+  const showScrollbarY = useMemo(() => {
+    if (height) {
+      if (!virtualContainerHeight) return false;
+      return virtualContainerHeight < scrollHeight;
+    }
+    return false;
+  }, [scrollHeight, height, virtualContainerHeight]);
+
+  // 1.如果所有列设置了宽度 表格总宽度计算
+  // todo 2.单元格word-break 样式更改
+  // todo 考虑如果后面要是把滚动条改动后 tbodyWidth 这个计算要优化 现在没有扣除BAR_WIDTH
+  const columnsWithWidth = useMemo(() => {
+    const allColumnHasWidth = flatColumns.every((c) => typeof parseValue(c.width) === 'number');
+    if (allColumnHasWidth) return flatColumns;
+    if (tbodyRef.current) {
+      let widthSum = 0;
+      let count = 0;
+      const noMaxColumns: ColumnsWithType<T>[] = [];
+      // const tbodyWidth = Number(parseValue(width)) || (virtualContainerWidth - (showScrollbarY ? BAR_WIDTH : 0));
+      const tbodyWidth = Number(parseValue(width)) || virtualContainerWidth;
+
+      flatColumns.map((c) => {
+        if (c.width) {
+          let parseWidth = parseValue(c.width);
+          if (typeof parseWidth === 'string') {
+            parseWidth = toPoint(parseWidth);
+            parseWidth = parseWidth! * tbodyWidth;
+          }
+          widthSum += Number(parseWidth);
+        } else {
+          count++;
+          if (!c.maxWidth) {
+            noMaxColumns.push(c);
+          }
+        }
+      });
+
+      let remainWidth = tbodyWidth - widthSum;
+      let averageWidth = 0;
+      if (count > 0) {
+        averageWidth = parseInt(`${remainWidth / count}`, 10);
+      }
+
+      let widthColumns = flatColumns.map((c) => {
+        if (c.width) {
+          let parseWidth = parseValue(c.width);
+          if (typeof parseWidth === 'string') {
+            parseWidth = toPoint(parseWidth);
+            parseWidth = parseWidth! * tbodyWidth;
+          }
+          return Object.assign({}, c, { width: parseWidth });
+        }
+        let colWidth = averageWidth;
+        if (c.minWidth) {
+          colWidth = Math.max(averageWidth, Number(parseValue(c.minWidth)));
+        }
+        if (c.maxWidth) {
+          colWidth = Math.min(averageWidth, Number(parseValue(c.maxWidth)));
+        }
+        remainWidth -= colWidth;
+        count--;
+        const diff = averageWidth - colWidth;
+        if (diff) {
+          if (count > 0) {
+            averageWidth = parseInt(`${remainWidth / count}`, 10);
+          }
+        }
+        return Object.assign({}, c, { width: colWidth });
+      });
+
+      if (remainWidth > 0) {
+        averageWidth = parseInt(`${remainWidth / noMaxColumns.length}`, 10);
+        widthColumns = widthColumns.map((c) => {
+          const item = noMaxColumns.find((col) => col.dataIndex === c.dataIndex);
+          if (item) {
+            let colWidth = Number(parseValue(c.width)) + averageWidth;
+            return Object.assign({}, c, { width: colWidth });
+          }
+          return c;
+        });
+      }
+      return widthColumns;
+    }
+    return flatColumns;
+  }, [flatColumns, virtualContainerWidth, width, showScrollbarY]);
+  console.log(columnsWithWidth);
 
   const converToPixel = useCallback((val: string | number | undefined) => {
     if (typeof val === 'number' || val === undefined) return val;
@@ -1021,16 +1065,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   };
 
-  const getSumHeight = useCallback(
-    (start: number, end: number) => {
-      let sumHeight = 0;
-      for (let i = start; i < end; i++) {
-        sumHeight += cachePosition[i]?.height || rowHeight;
-      }
-      return sumHeight;
-    },
-    [cachePosition, rowHeight],
-  );
   // console.log(`startRowIndex: ${startRowIndex}`);
   // console.log(`scrollTop: ${scrollTop}`);
 
@@ -1122,49 +1156,28 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return isSame ? true : isExist ? 'indeterminate' : false;
   }, [selectedKeys, currPageKeys]);
 
-  const list = useMemo(() => {
-    const records: T[] = [];
-
-    currentPageData.forEach((d) => {
-      records.push(d);
-      const childrenRecords = getTreeChildrenData(d);
-      records.push(...childrenRecords);
-    });
-
-    return records;
-  }, [currentPageData, getTreeChildrenData]);
-
   const isTree = useMemo(() => {
     const data = list.filter((d) => d?.children && d.children.length);
     return data.length > 0;
   }, [list]);
 
-  // todo 点击扩展行后引起cachePosition 变化后 scrollTop 的更新计算 setRowHeight
-  // todo 滚动到底部了但是改变了列宽引起的高度变化 scrollTop 的更新计算 width: 150 -> 180
-  // todo 考虑点击树形的第一行和最后一行折叠icon 虚拟滚动会不会出现空白 等到handleUpdateRowHeight 修复了
-  // todo 待测试如果是可变行高会不会触发重新计算
-  const scrollHeight = useMemo(() => {
-    return getSumHeight(0, list.length);
-  }, [getSumHeight, list]);
-
-  const getScrollWidth = useCallback(() => {
+  const scrollWidth = useMemo(() => {
     if (width) return width;
-    if (tbodyRef.current) return tbodyRef.current.offsetWidth;
-    return 0;
-  }, [width]);
+    return columnsWithWidth.reduce((total, col) => {
+      return total + Number(parseValue(col.width));
+    }, 0);
+  }, [width, columnsWithWidth]);
 
-  const showScrollbarY = useMemo(() => {
-    if (height) {
-      if (!virtualContainerHeight) return false;
-      return virtualContainerHeight < scrollHeight;
-    }
-    return false;
-  }, [scrollHeight, height, virtualContainerHeight]);
+  // const getScrollWidth = useCallback(() => {
+  //   if (width) return width;
+  //   if (tbodyRef.current) return tbodyRef.current.offsetWidth;
+  //   return 0;
+  // }, [width]);
 
   const showScrollbarX = useMemo(() => {
-    const scrollWidth = getScrollWidth();
+    // const scrollWidth = getScrollWidth();
     return scrollWidth > virtualContainerWidth;
-  }, [getScrollWidth, virtualContainerWidth]);
+  }, [scrollWidth, virtualContainerWidth]);
 
   const handleMount = (vWidth: number, vHeight: number) => {
     setVirtualContainerWidth(vWidth);
@@ -1173,12 +1186,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   // todo offsetRight 需要优化成有需要fixed='right'时候才更新
   const offsetRight = useMemo(() => {
-    const scrollWidth = getScrollWidth();
+    // const scrollWidth = getScrollWidth();
     const availableWidth =
       virtualContainerWidth === 0 ? 0 : virtualContainerWidth - (showScrollbarY ? BAR_WIDTH : 0);
     const maxScrollWidth = scrollWidth - availableWidth;
     return maxScrollWidth - scrollLeft;
-  }, [getScrollWidth, virtualContainerWidth, showScrollbarY, scrollLeft]);
+  }, [scrollWidth, virtualContainerWidth, showScrollbarY, scrollLeft]);
 
   // 考虑renderMaxRows 小于容器高度时候会出现底部空白
   const getRenderMaxRows = useCallback(() => {
@@ -1228,7 +1241,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const renderBody = () => {
     return (
       <VirtualList
-        scrollWidth={getScrollWidth()}
+        scrollWidth={scrollWidth}
+        // scrollWidth={getScrollWidth()}
         scrollHeight={scrollHeight}
         scrollTop={scrollTop}
         scrollLeft={scrollLeft}
@@ -1242,12 +1256,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           className="table-tbody"
           ref={tbodyRef}
           style={{
-            width,
+            width: scrollWidth,
             marginTop: `${startOffset}px`,
             transform: `translate(-${scrollLeft}px, -${scrollTop}px)`,
           }}
         >
-          <table style={{ width }}>
+          <table style={{ width: scrollWidth }}>
             <Colgroup colWidths={colWidths} columns={columnsWithWidth} />
             <Tbody
               {...props}
@@ -1285,7 +1299,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       >
         <table
           style={{
-            width,
+            width: scrollWidth,
             transform: `translate(-${scrollLeft}px, 0)`,
           }}
         >
