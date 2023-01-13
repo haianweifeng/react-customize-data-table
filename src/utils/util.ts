@@ -85,6 +85,7 @@ export function getParent(el: HTMLElement, target: HTMLElement | string | null) 
   let temp: HTMLElement | null = el;
   while (temp) {
     if (typeof target === 'string') {
+      // 当前DOW节点是否能完全匹配对应的css选择器
       if (temp.matches && temp.matches(target)) {
         return temp;
       }

@@ -253,6 +253,7 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
         type,
         lastLeftFixed,
         fistRightFixed,
+        ellipsis,
       } = column;
 
       const cellProps = {
@@ -263,6 +264,7 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
         colSpan: 1,
         rowSpan: 1,
         content: '',
+        ellipsis,
       };
       switch (type) {
         case 'checkbox':

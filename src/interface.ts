@@ -73,7 +73,7 @@ export interface ColumnsType<T> {
   className?: string;
   /** 列对应字段名 */
   dataIndex: string;
-  /** 列固定 如果相邻的多列需要锁定，只需指定最外侧的column即可 todo 需要配合横向滚动才生效 */
+  /** 列固定 如果相邻的多列需要锁定，只需指定最外侧的column即可，需要配合横向滚动才生效 */
   fixed?: 'left' | 'right';
   /** 生成复杂数据的渲染函数 */
   render?: (text: string, record: T, index: number) => React.ReactNode;
@@ -86,8 +86,7 @@ export interface ColumnsType<T> {
   maxWidth?: number | string;
   /** 最小列宽 不支持百分比 todo */
   minWidth?: number | string;
-  /** 超过宽度将自动省略
-   * todo 好像需要设置宽度 是获取的tbody 中td 内容宽度来渲染thead th的宽度 如果不设置宽度 tbody 是不是永远不会超出 */
+  /** 超过宽度将自动省略 showTitle 只会提示单元格里内容是字符串类型 todo*/
   ellipsis?: boolean | { showTitle: boolean };
   /** 表头列合并 */
   headerColSpan?: number;
@@ -199,6 +198,8 @@ export interface CellProps {
   lastLeftFixed?: boolean;
   /** 是否是向右固定的第一列 */
   fistRightFixed?: boolean;
+  /** 超过宽度将自动省略 */
+  ellipsis?: boolean | { showTitle: boolean };
 }
 
 export type CellType = { colSpan?: number; rowSpan?: number };

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import classnames from 'classnames';
 import '../style/index.less';
 import type { CellProps } from '../interface';
@@ -19,12 +19,14 @@ function Td(props: TdProps) {
     scrollLeft,
     offsetRight,
     ignoreRightBorder,
+    ellipsis,
   } = props;
 
   const fixedLeft = fixed === 'left';
   const fixedRight = fixed === 'right';
 
   const cls = classnames({
+    'cell-ellipsis': !!ellipsis,
     'cell-fixed-left': fixedLeft,
     'cell-fixed-right': fixedRight,
     'cell-fixed-last-left': !!lastLeftFixed && !!scrollLeft,
@@ -42,9 +44,25 @@ function Td(props: TdProps) {
     styles.transform = `translate(-${offsetRight}px, 0)`;
   }
 
+  const showTitle = useMemo(() => {
+    if (typeof ellipsis === 'boolean') return ellipsis;
+    if (typeof ellipsis === 'object') {
+      return ellipsis.showTitle;
+    }
+    return false;
+  }, [ellipsis]);
+
+  const cellContent = typeof content === 'function' ? content() : content;
+
   return (
-    <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles}>
-      {typeof content === 'function' ? content() : content}
+    <td
+      colSpan={colSpan}
+      rowSpan={rowSpan}
+      className={cls}
+      style={styles}
+      title={showTitle && typeof cellContent === 'string' ? cellContent : undefined}
+    >
+      {cellContent}
     </td>
   );
 }
