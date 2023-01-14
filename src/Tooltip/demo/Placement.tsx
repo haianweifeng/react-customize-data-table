@@ -33,7 +33,7 @@ const App = () => {
                   return `${arg2.toUpperCase()}`;
                 });
                 return (
-                  <Tooltip tip={`${p}提示文字`} placement={placement} key={p} trigger="click">
+                  <Tooltip tip={`${p}提示文字`} placement={placement} key={p}>
                     <div style={borderStyle}>{p}</div>
                   </Tooltip>
                 );

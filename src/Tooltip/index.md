@@ -30,7 +30,7 @@ group:
 
 ### 指定渲染容器
 
-<code src="./demo/PopupContainer.tsx" desc='设置 getPopupContainer 指定渲染的目标容器'></code>
+<code src="./demo/PopupContainer.tsx" desc='设置 getPopupContainer 指定渲染的目标容器, 默认开启autoAdjustPlacement属性自动调整弹层位置防止被遮挡'></code>
 
 ### 受控
 

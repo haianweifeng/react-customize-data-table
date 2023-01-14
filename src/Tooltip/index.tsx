@@ -68,6 +68,7 @@ const Tooltip = (props: TooltipProps) => {
   } = props;
 
   const timer = useRef<number>();
+  // const scroller = useRef<any>();
   const mountedRef = useRef<boolean>(false);
   const triggerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -76,7 +77,7 @@ const Tooltip = (props: TooltipProps) => {
 
   const [showPopper, setShowPopper] = useState<boolean>(!!visible);
 
-  const [tooltipMounted, setTooltipMounted] = useState<boolean>(false);
+  // const [tooltipMounted, setTooltipMounted] = useState<boolean>(false);
 
   const [finalPlacement, setFinalPlacement] = useState<TooltipPlacement>(placement);
 
@@ -91,18 +92,18 @@ const Tooltip = (props: TooltipProps) => {
 
   const isManual = trigger === 'click';
 
-  const reversePosition = useCallback((position: string) => {
-    if (/top/.test(position)) {
-      return position.replace('top', 'bottom') as TooltipPlacement;
-    }
-    if (/bottom/.test(position)) {
-      return position.replace('bottom', 'top') as TooltipPlacement;
-    }
-    if (/left/.test(position)) {
-      return position.replace('left', 'right') as TooltipPlacement;
-    }
-    if (/right/.test(position)) {
-      return position.replace('right', 'left') as TooltipPlacement;
+  const reversePosition = useCallback((position: string, isHorizontal = false) => {
+    if (isHorizontal) {
+      if (/left/i.test(position)) {
+        return position.replace('left', 'right').replace('Left', 'Right') as TooltipPlacement;
+      }
+      if (/right/i.test(position)) {
+        return position.replace('right', 'left').replace('Right', 'Left') as TooltipPlacement;
+      }
+    } else if (/top/i.test(position)) {
+      return position.replace('top', 'bottom').replace('Top', 'Bottom') as TooltipPlacement;
+    } else if (/bottom/i.test(position)) {
+      return position.replace('bottom', 'top').replace('Bottom', 'Top') as TooltipPlacement;
     }
     return position as TooltipPlacement;
   }, []);
@@ -636,11 +637,11 @@ const Tooltip = (props: TooltipProps) => {
 
       // 纵向显示弹出层时候 topRight -> topLeft bottomRight -> bottomLeft
       const changePopupRightToLeft =
-        restRightInPopup > tooltipRect.width && restLeftInPopup < tooltipRect.width;
+        restRightInPopup < tooltipRect.width && restLeftInPopup > tooltipRect.width;
 
       // 纵向显示弹出层时候 topLeft -> topRight bottomLeft -> bottomRight
       const changePopupLeftToRight =
-        restRightInPopup < tooltipRect.width && restLeftInPopup > tooltipRect.width;
+        restRightInPopup > tooltipRect.width && restLeftInPopup < tooltipRect.width;
 
       // 横向显示弹出层时候 leftTop -> leftBottom  rightTop -> rightBottom
       const changePopupTopToBottom =
@@ -791,6 +792,10 @@ const Tooltip = (props: TooltipProps) => {
       //   isViewXLeftOverLimitWithTriggerWidth,
       //   changeViewRightToLeft,
       // );
+      console.log(
+        `isPopupXLeftOverLimitWithTriggerWidth: ${isPopupXLeftOverLimitWithTriggerWidth}`,
+      );
+      console.log(`changePopupRightToLeft: ${changePopupRightToLeft}`);
       const shouldChangeRightToLeft = isNeedReverse(
         isPopupXLeftOverLimitWithTriggerWidth,
         changePopupRightToLeft, // topRight -> topLeft
@@ -892,7 +897,7 @@ const Tooltip = (props: TooltipProps) => {
           }
           // shouldReverseLeftSide 从左转到右
           if (shouldChangeLeftToRight && isWidthGreater) {
-            position = reversePosition(position);
+            position = reversePosition(position, true);
             // position = 'bottomRight';
           }
 
@@ -911,7 +916,7 @@ const Tooltip = (props: TooltipProps) => {
             position = reversePosition(position);
           }
           if (shouldChangeRightToLeft && isWidthGreater) {
-            position = reversePosition(position);
+            position = reversePosition(position, true);
           }
           // if (isXOverLimit && (isViewXEnoughWithHalfSide || isPopupXEnoughWithHalfSide)) {
           //   position = removeLastPosition(position);
@@ -928,7 +933,7 @@ const Tooltip = (props: TooltipProps) => {
             position = reversePosition(position);
           }
           if (shouldChangeLeftToRight && isWidthGreater) {
-            position = reversePosition(position);
+            position = reversePosition(position, true);
           }
           // if (isXOverLimit && (isViewXEnoughWithHalfSide || isPopupXEnoughWithHalfSide)) {
           //   position = removeLastPosition(position);
@@ -942,8 +947,11 @@ const Tooltip = (props: TooltipProps) => {
           if (shouldReverseBottom) {
             position = reversePosition(position);
           }
+          console.log(`shouldChangeRightToLeft: ${shouldChangeRightToLeft}`);
+          console.log(`isWidthGreater: ${isWidthGreater}`);
           if (shouldChangeRightToLeft && isWidthGreater) {
-            position = reversePosition(position);
+            console.log('hahahah');
+            position = reversePosition(position, true);
           }
           // if (isXOverLimit && (isViewXEnoughWithHalfSide || isPopupXEnoughWithHalfSide)) {
           //   position = removeLastPosition(position);
@@ -955,7 +963,7 @@ const Tooltip = (props: TooltipProps) => {
         }
         case 'leftTop': {
           if (shouldReverseLeft) {
-            position = reversePosition(position);
+            position = reversePosition(position, true);
           }
           if (shouldChangeTopToBottom && isHeightGreater) {
             position = reversePosition(position);
@@ -970,7 +978,7 @@ const Tooltip = (props: TooltipProps) => {
         }
         case 'leftBottom': {
           if (shouldReverseLeft) {
-            position = reversePosition(position);
+            position = reversePosition(position, true);
           }
           if (shouldChangeBottomToTop && isHeightGreater) {
             position = reversePosition(position);
@@ -984,9 +992,11 @@ const Tooltip = (props: TooltipProps) => {
           break;
         }
         case 'rightTop': {
+          // console.log(`shouldReverseRight: ${shouldReverseRight}`);
           if (shouldReverseRight) {
-            position = reversePosition(position);
+            position = reversePosition(position, true);
           }
+
           if (shouldChangeTopToBottom && isHeightGreater) {
             position = reversePosition(position);
           }
@@ -1000,7 +1010,7 @@ const Tooltip = (props: TooltipProps) => {
         }
         case 'rightBottom': {
           if (shouldReverseRight) {
-            position = reversePosition(position);
+            position = reversePosition(position, true);
           }
           if (shouldChangeBottomToTop && isHeightGreater) {
             position = reversePosition(position);
@@ -1112,12 +1122,15 @@ const Tooltip = (props: TooltipProps) => {
     },
     [popupContainer],
   );
+  // console.log(pos)
 
   const calcPosition = useCallback(() => {
     const finalPlace = getPlacement() as TooltipPlacement;
     const position = getPosition(finalPlace);
+    // console.log(`finalPlace: ${finalPlace}`)
+    // console.log(position)
     if (!(pos.left === position.left && pos.top === position.top)) {
-      console.log('calcposi');
+      // console.log('calcposi');
       setPos(position);
       setFinalPlacement(finalPlace);
     }
@@ -1127,6 +1140,7 @@ const Tooltip = (props: TooltipProps) => {
     (e: any) => {
       if (triggerRef.current) {
         const isContain = e.target.contains(triggerRef.current);
+        // console.log(`isContain: ${isContain}`);
         if (isContain) {
           calcPosition();
         }
@@ -1141,17 +1155,26 @@ const Tooltip = (props: TooltipProps) => {
 
   const handleHide = () => {
     if (isEnter.current || !mountedRef.current) return;
-    if (timer.current) {
-      clearTimeout(timer.current);
-      if (!('visible' in props)) {
-        setShowPopper(false);
-      }
-      // setTooltipMounted(false);
-      onVisibleChange && onVisibleChange(false);
-      if (isManual) {
-        document.removeEventListener('click', debounceHide);
-      }
+    if (timer.current) clearTimeout(timer.current);
+    if (!('visible' in props)) {
+      setShowPopper(false);
     }
+    // setTooltipMounted(false);
+    onVisibleChange && onVisibleChange(false);
+    if (isManual) {
+      document.removeEventListener('click', debounceHide);
+    }
+    // if (timer.current) {
+    //   clearTimeout(timer.current);
+    //   if (!('visible' in props)) {
+    //     setShowPopper(false);
+    //   }
+    //   // setTooltipMounted(false);
+    //   onVisibleChange && onVisibleChange(false);
+    //   if (isManual) {
+    //     document.removeEventListener('click', debounceHide);
+    //   }
+    // }
   };
 
   const debounceScroll = throttle(handleScroll, 100);
@@ -1160,12 +1183,25 @@ const Tooltip = (props: TooltipProps) => {
 
   const handleShow = () => {
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
+    if (delay) {
+      timer.current = setTimeout(() => {
+        if (!('visible' in props)) {
+          setShowPopper(true);
+        }
+        onVisibleChange && onVisibleChange(true);
+      }, delay);
+    } else {
       if (!('visible' in props)) {
         setShowPopper(true);
       }
       onVisibleChange && onVisibleChange(true);
-    }, delay);
+    }
+    // timer.current = setTimeout(() => {
+    //   if (!('visible' in props)) {
+    //     setShowPopper(true);
+    //   }
+    //   onVisibleChange && onVisibleChange(true);
+    // }, delay);
     window.addEventListener('scroll', debounceScroll, true);
     window.addEventListener('resize', debounceResize);
   };
