@@ -18,7 +18,7 @@ group:
 
 ### 弹出位置
 
-<code src="./demo/Placement.tsx"></code>
+<code src="./demo/Placement.tsx" desc='提供了12个方向来显示tooltip'></code>
 
 ### 主题
 
@@ -35,3 +35,19 @@ group:
 ### 受控
 
 <code src="./demo/Controlled.tsx" desc='通过visible配合onVisibleChange控制浮层显示'></code>
+
+### API
+
+| 属性 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| className | string | - | 扩展 className |
+| style | CSSProperties | - | 样式对象 |
+| trigger | `'hover'` \| `'click'` | 'hover' | 触发行为 |
+| theme | `'dark'` \| `'light'` | 'dark' | 主题 |
+| tip | `string` \| `React.ReactNode` \| `(() => React.ReactNode)` | - | 显示的文字 |
+| placement | `top` \| `bottom` \| `left` \| `right` \| `topLeft` \| `topRight` \| `bottomLeft` \| `bottomRight` \| `leftTop` \| `leftBottom` \| `rightTop` \| `rightBottom` | 'top' | 气泡框位置 |
+| delay | number | 0 | 延迟显示，单位毫秒 |
+| getPopupContainer | function():HTMLElement | () => HTMLElement | 浮层渲染父节点，默认渲染到 body 上 |
+| visible | boolean | false | 用于手动控制浮层显隐 |
+| autoAdjustPlacement | boolean | true | 气泡被遮挡时自动调整位置 |
+| onVisibleChange | (visible) => void | - | 显示隐藏的回调 |
