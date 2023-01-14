@@ -68,7 +68,6 @@ const Tooltip = (props: TooltipProps) => {
   } = props;
 
   const timer = useRef<number>();
-  // const scroller = useRef<any>();
   const mountedRef = useRef<boolean>(false);
   const triggerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -76,8 +75,6 @@ const Tooltip = (props: TooltipProps) => {
   const isEnter = useRef<boolean>(false);
 
   const [showPopper, setShowPopper] = useState<boolean>(!!visible);
-
-  // const [tooltipMounted, setTooltipMounted] = useState<boolean>(false);
 
   const [finalPlacement, setFinalPlacement] = useState<TooltipPlacement>(placement);
 
@@ -123,436 +120,10 @@ const Tooltip = (props: TooltipProps) => {
     return space >= size && reverseSpace >= size;
   }, []);
 
-  // const isNeedReverse = useCallback(
-  //   (
-  //     viewOverLimit: boolean,
-  //     popupOverLimit: boolean,
-  //     needReverseView: boolean,
-  //     needReversePopup: boolean,
-  //   ) => {
-  //     // 1.视口上下空间不足且容器中有一侧空间充足
-  //     // 2.视口上下空间中有一侧空间充足且容器上下空间不足
-  //     // 3.视口上下空间中有一侧空间充足且容器上下空间中有一侧充足
-  //     return (
-  //       (viewOverLimit && needReversePopup) ||
-  //       (needReverseView && popupOverLimit) ||
-  //       (needReverseView && needReversePopup)
-  //     );
-  //   },
-  //   [],
-  // );
-
+  // 需要翻转的前提是已经超出了原空间同时反向空间足够
   const isNeedReverse = useCallback((viewOverLimit: boolean, needReverseView: boolean) => {
     return viewOverLimit && needReverseView;
   }, []);
-
-  const getPlacement1 = useCallback(() => {
-    if (!autoAdjustPlacement) return placement;
-
-    const triggerEl = triggerRef.current;
-    const tooltipEl = tooltipRef.current;
-
-    if (triggerEl && tooltipEl && popupContainer) {
-      let position = placement;
-      const { innerWidth, innerHeight } = window;
-      const triggerRect = triggerEl.getBoundingClientRect();
-      const tooltipRect = tooltipEl.getBoundingClientRect();
-      const popupRect = popupContainer.getBoundingClientRect();
-
-      const isBody =
-        popupContainer === document.body || popupContainer === document.documentElement;
-
-      const restLeft = innerWidth - triggerRect.left;
-      const restTop = innerHeight - triggerRect.top;
-      const restRight = innerWidth - triggerRect.right;
-      const restBottom = innerHeight - triggerRect.bottom;
-
-      // 基于视口判断是否需要调整
-      const needViewReverseTop =
-        triggerRect.top < tooltipRect.height && restBottom > tooltipRect.height;
-
-      const needViewReverseBottom =
-        restBottom < tooltipRect.height && triggerRect.top > tooltipRect.height;
-
-      const needViewReverseLeft =
-        triggerRect.left < tooltipRect.width && restRight > tooltipRect.width;
-
-      const needViewReverseRight =
-        restRight < tooltipRect.width && triggerRect.left > tooltipRect.width;
-
-      // 纵向显示弹出层时候 topRight -> topLeft bottomRight -> bottomLeft
-      const changeViewRightToLeft =
-        triggerRect.right > tooltipRect.width && restLeft < tooltipRect.width;
-
-      // 纵向显示弹出层时候 topLeft -> topRight bottomLeft -> bottomRight
-      const changeViewLeftToRight =
-        triggerRect.right < tooltipRect.width && restLeft > tooltipRect.width;
-
-      // 横向显示弹出层时候 leftTop -> leftBottom  rightTop -> rightBottom
-      const changeViewTopToBottom =
-        restTop > tooltipRect.height && triggerRect.top < tooltipRect.height;
-
-      // 横向显示弹出层时候 leftBottom -> leftTop  rightBottom -> rightTop
-      const changeViewBottomToTop =
-        restTop < tooltipRect.height && triggerRect.top > tooltipRect.height;
-
-      // 基于容器判断是否需要调整
-      const offsetTop = triggerRect.top - (isBody ? 0 : popupRect.top);
-      const offsetLeft = triggerRect.left - (isBody ? 0 : popupRect.left);
-      const offsetBottom = (isBody ? innerHeight : popupRect.bottom) - triggerRect.bottom;
-      const offsetRight = (isBody ? innerWidth : popupRect.right) - triggerRect.right;
-
-      const restBottomInPopup = offsetTop + triggerRect.height;
-      const restRightInPopup = offsetLeft + triggerRect.width;
-      const restLeftInPopup = offsetRight + triggerRect.width;
-      const restTopInPopup = offsetBottom + triggerRect.height;
-
-      // 容器中原空间不足,反向空间充足可以反转
-      const needPopupReverseTop =
-        offsetTop < tooltipRect.height && offsetBottom > tooltipRect.height;
-
-      const needPopupReverseBottom =
-        offsetTop > tooltipRect.height && offsetBottom < tooltipRect.height;
-
-      const needPopupReverseLeft =
-        offsetLeft < tooltipRect.width && offsetRight > tooltipRect.width;
-
-      const needPopupReverseRight =
-        offsetLeft > tooltipRect.width && offsetRight < tooltipRect.width;
-
-      // 纵向显示弹出层时候 topRight -> topLeft bottomRight -> bottomLeft
-      const changePopupRightToLeft =
-        restRightInPopup > tooltipRect.width && restLeftInPopup < tooltipRect.width;
-
-      // 纵向显示弹出层时候 topLeft -> topRight bottomLeft -> bottomRight
-      const changePopupLeftToRight =
-        restRightInPopup < tooltipRect.width && restLeftInPopup > tooltipRect.width;
-
-      // 横向显示弹出层时候 leftTop -> leftBottom  rightTop -> rightBottom
-      const changePopupTopToBottom =
-        restBottomInPopup < tooltipRect.height && restTopInPopup > tooltipRect.height;
-
-      // 横向显示弹出层时候 leftBottom -> leftTop  rightBottom -> rightTop
-      const changePopupBottomToTop =
-        restBottomInPopup > tooltipRect.height && restTopInPopup < tooltipRect.height;
-
-      const halfWidth = triggerRect.width / 2;
-      const halfHeight = triggerRect.height / 2;
-
-      // 判断视口中原空间以及反向空间是否都不足
-      const isViewYOverLimit = isOverLimit(triggerRect.top, restBottom, tooltipRect.height);
-
-      const isViewXOverLimit = isOverLimit(triggerRect.left, restRight, tooltipRect.width);
-
-      const isViewYOverLimitWithTriggerHeight = isOverLimit(
-        triggerRect.bottom,
-        restTop,
-        tooltipRect.height,
-      );
-
-      const isViewXOverLimitWithTriggerWidth = isOverLimit(
-        triggerRect.right,
-        restLeft,
-        tooltipRect.width,
-      );
-
-      // 如果placement: 'top' | 'bottom' | 'left' | 'right' 假如是top 判断是否需要转换成topLeft topRight
-      // 箭头居中但是会超出视图
-      const isViewYOverLimitWithSideHalf = isOverLimit(
-        triggerRect.bottom - halfHeight,
-        restTop - halfHeight,
-        tooltipRect.height / 2,
-      );
-
-      const isViewXOverLimitWithSideHalf = isOverLimit(
-        triggerRect.right - halfWidth,
-        restLeft - halfWidth,
-        tooltipRect.width / 2,
-      );
-
-      // 判断正负半边两侧空间是否都能容纳
-      const isViewYEnoughWithHalfSide = isHalfAllEnough(
-        triggerRect.bottom - halfHeight,
-        restTop - halfHeight,
-        tooltipRect.height / 2,
-      );
-
-      const isViewXEnoughWithHalfSide = isHalfAllEnough(
-        triggerRect.right - halfWidth,
-        restLeft - halfWidth,
-        tooltipRect.width / 2,
-      );
-
-      // 判断容器中原空间以及反向空间是否都不足
-      const isPopupYOverLimit = isOverLimit(offsetTop, offsetBottom, tooltipRect.height);
-
-      const isPopupXOverLimit = isOverLimit(offsetLeft, offsetRight, tooltipRect.width);
-
-      const isPopupYOverLimitWithTriggerHeight = isOverLimit(
-        restBottomInPopup,
-        restTopInPopup,
-        tooltipRect.height,
-      );
-
-      const isPopupXOverLimitWithTriggerWidth = isOverLimit(
-        restRightInPopup,
-        restLeftInPopup,
-        tooltipRect.width,
-      );
-
-      const isPopupYOverLimitWithSideHalf = isOverLimit(
-        restBottomInPopup - halfHeight,
-        restTopInPopup - halfHeight,
-        tooltipRect.height / 2,
-      );
-
-      const isPopupXOverLimitWithSideHalf = isOverLimit(
-        restRightInPopup - halfWidth,
-        restLeftInPopup - halfWidth,
-        tooltipRect.width / 2,
-      );
-
-      const isPopupYEnoughWithHalfSide = isHalfAllEnough(
-        restBottomInPopup - halfHeight,
-        restTopInPopup - halfHeight,
-        tooltipRect.height / 2,
-      );
-
-      const isPopupXEnoughWithHalfSide = isHalfAllEnough(
-        restRightInPopup - halfWidth,
-        restLeftInPopup - halfWidth,
-        tooltipRect.width / 2,
-      );
-
-      // 判断是否满足视口和容器都放不下才能调整弹出位置
-      // 调整位置的前提是弹出容器的大小超出能能容纳它的容器大小，只有满足了条件才会调整位置
-      // console.log(`isViewYOverLimit: ${isViewYOverLimit}`);
-      // console.log(`isPopupYOverLimit: ${isPopupYOverLimit}`);
-      // console.log(`needViewReverseTop: ${needViewReverseTop}`);
-      // console.log(`needPopupReverseTop: ${needPopupReverseTop}`);
-      // console.log(`needViewReverseBottom: ${needViewReverseBottom}`);
-      // console.log(`needPopupReverseBottom: ${needPopupReverseBottom}`);
-
-      // console.log(`isViewXOverLimit: ${isViewXOverLimit}`);
-      // console.log(`isPopupXOverLimit: ${isPopupXOverLimit}`);
-      console.log(`needPopupReverseLeft: ${needPopupReverseLeft}`);
-      const shouldReverseTop = isNeedReverse(
-        isViewYOverLimit,
-        isPopupYOverLimit,
-        needViewReverseTop,
-        needPopupReverseTop,
-      );
-      const shouldReverseBottom = isNeedReverse(
-        isViewYOverLimit,
-        isPopupYOverLimit,
-        needViewReverseBottom,
-        needPopupReverseBottom,
-      );
-      const shouldReverseLeft = isNeedReverse(
-        isViewXOverLimit,
-        isPopupXOverLimit,
-        needViewReverseLeft,
-        needPopupReverseLeft,
-      );
-      const shouldReverseRight = isNeedReverse(
-        isViewXOverLimit,
-        isPopupXOverLimit,
-        needViewReverseRight,
-        needPopupReverseRight,
-      );
-
-      // 判断leftTop leftBottom rightTop rightBottom topLeft topBottom bottomLeft bottomRight 这种不是居中的是否需要调整位置
-      const shouldChangeRightToLeft = isNeedReverse(
-        isViewXOverLimitWithTriggerWidth,
-        isPopupXOverLimitWithTriggerWidth,
-        changeViewRightToLeft,
-        changePopupRightToLeft,
-      );
-      const shouldChangeLeftToRight = isNeedReverse(
-        isViewXOverLimitWithTriggerWidth,
-        isPopupXOverLimitWithTriggerWidth,
-        changeViewLeftToRight,
-        changePopupLeftToRight,
-      );
-      const shouldChangeTopToBottom = isNeedReverse(
-        isViewYOverLimitWithTriggerHeight,
-        isPopupYOverLimitWithTriggerHeight,
-        changeViewTopToBottom,
-        changePopupTopToBottom,
-      );
-      const shouldChangeBottomToTop = isNeedReverse(
-        isViewYOverLimitWithTriggerHeight,
-        isPopupYOverLimitWithTriggerHeight,
-        changeViewBottomToTop,
-        changePopupBottomToTop,
-      );
-
-      const isWidthGreater = tooltipRect.width > triggerRect.width;
-      const isHeightGreater = tooltipRect.height > triggerRect.height;
-
-      const isXOverLimitSideHalf = isViewXOverLimitWithSideHalf && isPopupXOverLimitWithSideHalf;
-      const isYOverLimitSideHalf = isViewYOverLimitWithSideHalf && isPopupYOverLimitWithSideHalf;
-
-      const isXOverLimit = isViewXOverLimit && isPopupXOverLimit;
-      const isYOverLimit = isViewYOverLimit && isPopupYOverLimit;
-
-      switch (placement) {
-        case 'top': {
-          if (shouldReverseTop) {
-            position = 'bottom';
-            if (isXOverLimitSideHalf && (shouldChangeRightToLeft || shouldChangeLeftToRight)) {
-              position += shouldChangeRightToLeft ? 'Left' : 'Right';
-            }
-          }
-          break;
-        }
-        case 'bottom': {
-          console.log(`shouldReverseBottom: ${shouldReverseBottom}`);
-          if (shouldReverseBottom) {
-            position = 'top';
-            if (isXOverLimitSideHalf && (shouldChangeRightToLeft || shouldChangeLeftToRight)) {
-              position += shouldChangeRightToLeft ? 'Left' : 'Right';
-            }
-          }
-          break;
-        }
-        case 'left': {
-          if (shouldReverseLeft) {
-            position = 'right';
-            if (isYOverLimitSideHalf && (shouldChangeTopToBottom || shouldChangeBottomToTop)) {
-              position += shouldChangeTopToBottom ? 'bottom' : 'top';
-            }
-          }
-          break;
-        }
-        case 'right': {
-          if (shouldReverseRight) {
-            position = 'left';
-            if (isYOverLimitSideHalf && (shouldChangeTopToBottom || shouldChangeBottomToTop)) {
-              position += shouldChangeTopToBottom ? 'bottom' : 'top';
-            }
-          }
-          break;
-        }
-        case 'topLeft': {
-          // console.log(`shouldReverseTop: ${shouldReverseTop}`);
-          if (shouldReverseTop) {
-            position = reversePosition(position);
-            // position = 'bottomLeft';
-          }
-          // shouldReverseLeftSide 从左转到右
-          if (shouldChangeLeftToRight && isWidthGreater) {
-            position = reversePosition(position);
-            // position = 'bottomRight';
-          }
-
-          if (isXOverLimit && (isViewXEnoughWithHalfSide || isPopupXEnoughWithHalfSide)) {
-            position = removeLastPosition(position);
-          }
-          break;
-        }
-        case 'topRight': {
-          if (shouldReverseTop) {
-            position = reversePosition(position);
-          }
-          if (shouldChangeRightToLeft && isWidthGreater) {
-            position = reversePosition(position);
-          }
-          if (isXOverLimit && (isViewXEnoughWithHalfSide || isPopupXEnoughWithHalfSide)) {
-            position = removeLastPosition(position);
-          }
-          break;
-        }
-        case 'bottomLeft': {
-          if (shouldReverseBottom) {
-            position = reversePosition(position);
-          }
-          if (shouldChangeLeftToRight && isWidthGreater) {
-            position = reversePosition(position);
-          }
-          if (isXOverLimit && (isViewXEnoughWithHalfSide || isPopupXEnoughWithHalfSide)) {
-            position = removeLastPosition(position);
-          }
-          break;
-        }
-        case 'bottomRight': {
-          if (shouldReverseBottom) {
-            position = reversePosition(position);
-          }
-          if (shouldChangeRightToLeft && isWidthGreater) {
-            position = reversePosition(position);
-          }
-          if (isXOverLimit && (isViewXEnoughWithHalfSide || isPopupXEnoughWithHalfSide)) {
-            position = removeLastPosition(position);
-          }
-          break;
-        }
-        case 'leftTop': {
-          if (shouldReverseLeft) {
-            position = reversePosition(position);
-          }
-          if (shouldChangeTopToBottom && isHeightGreater) {
-            position = reversePosition(position);
-          }
-          if (isYOverLimit && (isViewYEnoughWithHalfSide || isPopupYEnoughWithHalfSide)) {
-            position = removeLastPosition(position);
-          }
-          break;
-        }
-        case 'leftBottom': {
-          if (shouldReverseLeft) {
-            position = reversePosition(position);
-          }
-          if (shouldChangeBottomToTop && isHeightGreater) {
-            position = reversePosition(position);
-          }
-          if (isYOverLimit && (isViewYEnoughWithHalfSide || isPopupYEnoughWithHalfSide)) {
-            position = removeLastPosition(position);
-          }
-          break;
-        }
-        case 'rightTop': {
-          if (shouldReverseRight) {
-            position = reversePosition(position);
-          }
-          if (shouldChangeTopToBottom && isHeightGreater) {
-            position = reversePosition(position);
-          }
-          if (isYOverLimit && (isViewYEnoughWithHalfSide || isPopupYEnoughWithHalfSide)) {
-            position = removeLastPosition(position);
-          }
-          break;
-        }
-        case 'rightBottom': {
-          if (shouldReverseRight) {
-            position = reversePosition(position);
-          }
-          if (shouldChangeBottomToTop && isHeightGreater) {
-            position = reversePosition(position);
-          }
-          if (isYOverLimit && (isViewYEnoughWithHalfSide || isPopupYEnoughWithHalfSide)) {
-            position = removeLastPosition(position);
-          }
-          break;
-        }
-      }
-
-      // const isTopPlacement = placement === 'top' || placement === 'topLeft' || placement === 'topRight';
-      // const isBottomPlacement = placement === 'bottom' || placement === 'bottomLeft' || placement === 'bottomRight';
-
-      return position;
-    }
-    return placement;
-  }, [
-    autoAdjustPlacement,
-    placement,
-    popupContainer,
-    isOverLimit,
-    isHalfAllEnough,
-    isNeedReverse,
-    reversePosition,
-    removeLastPosition,
-  ]);
 
   const getPlacement = useCallback(() => {
     if (!autoAdjustPlacement) return placement;
@@ -567,62 +138,21 @@ const Tooltip = (props: TooltipProps) => {
       const tooltipRect = tooltipEl.getBoundingClientRect();
       const popupRect = popupContainer.getBoundingClientRect();
 
-      // document.documentElement.scrollTop+document.body.scrollTop
-
       const isBody =
         popupContainer === document.body || popupContainer === document.documentElement;
 
-      // const restLeft = innerWidth - triggerRect.left;
-      // const restTop = innerHeight - triggerRect.top;
-      // const restRight = innerWidth - triggerRect.right;
-      // const restBottom = innerHeight - triggerRect.bottom;
-
-      // 基于视口判断是否需要调整
-      // const needViewReverseTop =
-      //   triggerRect.top < tooltipRect.height && restBottom > tooltipRect.height;
-      //
-      // const needViewReverseBottom =
-      //   restBottom < tooltipRect.height && triggerRect.top > tooltipRect.height;
-      //
-      // const needViewReverseLeft =
-      //   triggerRect.left < tooltipRect.width && restRight > tooltipRect.width;
-      //
-      // const needViewReverseRight =
-      //   restRight < tooltipRect.width && triggerRect.left > tooltipRect.width;
-
-      // 纵向显示弹出层时候 topRight -> topLeft bottomRight -> bottomLeft
-      // const changeViewRightToLeft =
-      //   triggerRect.right > tooltipRect.width && restLeft < tooltipRect.width;
-      //
-      // // 纵向显示弹出层时候 topLeft -> topRight bottomLeft -> bottomRight
-      // const changeViewLeftToRight =
-      //   triggerRect.right < tooltipRect.width && restLeft > tooltipRect.width;
-      //
-      // // 横向显示弹出层时候 leftTop -> leftBottom  rightTop -> rightBottom
-      // const changeViewTopToBottom =
-      //   restTop > tooltipRect.height && triggerRect.top < tooltipRect.height;
-      //
-      // // 横向显示弹出层时候 leftBottom -> leftTop  rightBottom -> rightTop
-      // const changeViewBottomToTop =
-      //   restTop < tooltipRect.height && triggerRect.top > tooltipRect.height;
-
-      // 基于容器判断是否需要调整
+      // 基于挂载容器判断是否需要调整
       const offsetTop = triggerRect.top - (isBody ? 0 : popupRect.top);
       const offsetLeft = triggerRect.left - (isBody ? 0 : popupRect.left);
       const offsetBottom = (isBody ? innerHeight : popupRect.bottom) - triggerRect.bottom;
       const offsetRight = (isBody ? innerWidth : popupRect.right) - triggerRect.right;
 
-      // const offsetTop = triggerRect.top - popupRect.top;
-      // const offsetLeft = triggerRect.left - popupRect.left;
-      // const offsetBottom = popupRect.bottom - triggerRect.bottom;
-      // const offsetRight = popupRect.right - triggerRect.right;
-      //
       const restBottomInPopup = offsetTop + triggerRect.height;
       const restRightInPopup = offsetLeft + triggerRect.width;
       const restLeftInPopup = offsetRight + triggerRect.width;
       const restTopInPopup = offsetBottom + triggerRect.height;
 
-      // 容器中原空间不足,反向空间充足可以反转
+      // 挂载容器中原空间不足,反向空间充足可以反转
       const needPopupReverseTop =
         offsetTop < tooltipRect.height && offsetBottom > tooltipRect.height;
 
@@ -654,68 +184,7 @@ const Tooltip = (props: TooltipProps) => {
       const halfWidth = triggerRect.width / 2;
       const halfHeight = triggerRect.height / 2;
 
-      // 判断视口中原空间是否不足以显示弹层
-      // const isViewYBottomOverLimit = restBottom < tooltipRect.height;
-      //
-      // const isViewYTopOverLimit = triggerRect.top < tooltipRect.height;
-      //
-      // const isViewXLeftOverLimit = triggerRect.left < tooltipRect.width;
-      //
-      // const isViewXRightOverLimit = restRight < tooltipRect.width;
-      //
-      // const isViewXLeftOverLimitWithTriggerWidth = triggerRect.right < tooltipRect.width;
-      //
-      // const isViewXRightOverLimitWithTriggerWidth = restLeft < tooltipRect.width;
-      //
-      // const isViewYTopOverLimitWithTriggerHeight = triggerRect.bottom < tooltipRect.width;
-      //
-      // const isViewYBottomOverLimitWithTriggerHeight = restTop < tooltipRect.width;
-
-      // 视口中原空间以及反向空间是否都不足以显示弹层
-      // const isViewYOverLimit = isOverLimit(triggerRect.top, restBottom, tooltipRect.height);
-      //
-      // const isViewXOverLimit = isOverLimit(triggerRect.left, restRight, tooltipRect.width);
-
-      // const isViewYOverLimitWithTriggerHeight = isOverLimit(
-      //   triggerRect.bottom,
-      //   restTop,
-      //   tooltipRect.height,
-      // );
-      //
-      // const isViewXOverLimitWithTriggerWidth = isOverLimit(
-      //   triggerRect.right,
-      //   restLeft,
-      //   tooltipRect.width,
-      // );
-
-      // 如果placement: 'top' | 'bottom' | 'left' | 'right' 假如是top 判断是否需要转换成topLeft topRight
-      // 箭头居中但是会超出视图
-      // const isViewYOverLimitWithSideHalf = isOverLimit(
-      //   triggerRect.bottom - halfHeight,
-      //   restTop - halfHeight,
-      //   tooltipRect.height / 2,
-      // );
-      //
-      // const isViewXOverLimitWithSideHalf = isOverLimit(
-      //   triggerRect.right - halfWidth,
-      //   restLeft - halfWidth,
-      //   tooltipRect.width / 2,
-      // );
-
-      // 判断正负半边两侧空间是否都能容纳
-      // const isViewYEnoughWithHalfSide = isHalfAllEnough(
-      //   triggerRect.bottom - halfHeight,
-      //   restTop - halfHeight,
-      //   tooltipRect.height / 2,
-      // );
-      //
-      // const isViewXEnoughWithHalfSide = isHalfAllEnough(
-      //   triggerRect.right - halfWidth,
-      //   restLeft - halfWidth,
-      //   tooltipRect.width / 2,
-      // );
-
-      // 判断容器中原空间以及反向空间是否都不足
+      // 判断挂载容器中提示框的大小是否超出原空间
       const isPopupYTopOverLimit = offsetTop < tooltipRect.height;
       const isPopupYBottomOverLimit = offsetBottom < tooltipRect.height;
       const isPopupXLeftOverLimit = offsetLeft < tooltipRect.width;
@@ -738,92 +207,40 @@ const Tooltip = (props: TooltipProps) => {
       );
 
       const isPopupYOverLimit = isOverLimit(offsetTop, offsetBottom, tooltipRect.height);
-      //
+
       const isPopupXOverLimit = isOverLimit(offsetLeft, offsetRight, tooltipRect.width);
-      //
-      // const isPopupYOverLimitWithTriggerHeight = isOverLimit(restBottomInPopup, restTopInPopup, tooltipRect.height);
-      //
-      // const isPopupXOverLimitWithTriggerWidth = isOverLimit(restRightInPopup, restLeftInPopup, tooltipRect.width);
-      //
-      // const isPopupYOverLimitWithSideHalf = isOverLimit(restBottomInPopup - halfHeight, restTopInPopup - halfHeight, tooltipRect.height / 2);
-      //
-      // const isPopupXOverLimitWithSideHalf = isOverLimit(restRightInPopup - halfWidth, restLeftInPopup - halfWidth, tooltipRect.width / 2);
-      //
+
       const isPopupYEnoughWithHalfSide = isHalfAllEnough(
         restBottomInPopup - halfHeight,
         restTopInPopup - halfHeight,
         tooltipRect.height / 2,
       );
-      //
+
       const isPopupXEnoughWithHalfSide = isHalfAllEnough(
         restRightInPopup - halfWidth,
         restLeftInPopup - halfWidth,
         tooltipRect.width / 2,
       );
 
-      // 判断是否满足视口和容器都放不下才能调整弹出位置
-      // 调整位置的前提是弹出容器的大小超出能能容纳它的容器大小，只有满足了条件才会调整位置
-      // console.log(`isViewYOverLimit: ${isViewYOverLimit}`);
-      // console.log(`isPopupYOverLimit: ${isPopupYOverLimit}`);
-      // console.log(`needViewReverseBottom: ${needViewReverseBottom}`);
-      // console.log(`needPopupReverseBottom: ${needPopupReverseBottom}`);
-      // const shouldReverseTop = isNeedReverse(isViewYOverLimit, isPopupYOverLimit, needViewReverseTop, needPopupReverseTop);
-      // const shouldReverseBottom = isNeedReverse(isViewYOverLimit, isPopupYOverLimit, needViewReverseBottom, needPopupReverseBottom);
-      // const shouldReverseLeft = isNeedReverse(isViewXOverLimit, isPopupXOverLimit, needViewReverseLeft, needPopupReverseLeft);
-      // const shouldReverseRight = isNeedReverse(isViewXOverLimit, isPopupXOverLimit, needViewReverseRight, needPopupReverseRight);
-
-      // const shouldReverseTop = isNeedReverse(isViewYTopOverLimit, needViewReverseTop);
-      // const shouldReverseBottom = isNeedReverse(isViewYBottomOverLimit, needViewReverseBottom);
-      // const shouldReverseLeft = isNeedReverse(isViewXLeftOverLimit, needViewReverseLeft);
-      // const shouldReverseRight = isNeedReverse(isViewXRightOverLimit, needViewReverseRight);
-
       const shouldReverseTop = isNeedReverse(isPopupYTopOverLimit, needPopupReverseTop);
       const shouldReverseBottom = isNeedReverse(isPopupYBottomOverLimit, needPopupReverseBottom);
       const shouldReverseLeft = isNeedReverse(isPopupXLeftOverLimit, needPopupReverseLeft);
       const shouldReverseRight = isNeedReverse(isPopupXRightOverLimit, needPopupReverseRight);
 
-      // 判断leftTop leftBottom rightTop rightBottom topLeft topBottom bottomLeft bottomRight 这种不是居中的是否需要调整位置
-      // const shouldChangeRightToLeft = isNeedReverse(isViewXOverLimitWithTriggerWidth, isPopupXOverLimitWithTriggerWidth, changeViewRightToLeft, changePopupRightToLeft);
-      // const shouldChangeLeftToRight = isNeedReverse(isViewXOverLimitWithTriggerWidth, isPopupXOverLimitWithTriggerWidth, changeViewLeftToRight, changePopupLeftToRight);
-      // const shouldChangeTopToBottom = isNeedReverse(isViewYOverLimitWithTriggerHeight, isPopupYOverLimitWithTriggerHeight, changeViewTopToBottom, changePopupTopToBottom);
-      // const shouldChangeBottomToTop = isNeedReverse(isViewYOverLimitWithTriggerHeight, isPopupYOverLimitWithTriggerHeight, changeViewBottomToTop, changePopupBottomToTop);
-
-      // const shouldChangeRightToLeft = isNeedReverse(
-      //   isViewXLeftOverLimitWithTriggerWidth,
-      //   changeViewRightToLeft,
-      // );
-      console.log(
-        `isPopupXLeftOverLimitWithTriggerWidth: ${isPopupXLeftOverLimitWithTriggerWidth}`,
-      );
-      console.log(`changePopupRightToLeft: ${changePopupRightToLeft}`);
       const shouldChangeRightToLeft = isNeedReverse(
         isPopupXLeftOverLimitWithTriggerWidth,
-        changePopupRightToLeft, // topRight -> topLeft
+        changePopupRightToLeft,
       );
-
-      // const shouldChangeLeftToRight = isNeedReverse(
-      //   isViewXRightOverLimitWithTriggerWidth,
-      //   changeViewLeftToRight,
-      // );
 
       const shouldChangeLeftToRight = isNeedReverse(
         isPopupXRightOverLimitWithTriggerWidth,
         changePopupLeftToRight,
       );
 
-      // const shouldChangeTopToBottom = isNeedReverse(
-      //   isViewYBottomOverLimitWithTriggerHeight,
-      //   changeViewTopToBottom,
-      // );
       const shouldChangeTopToBottom = isNeedReverse(
         isPopupYBottomOverLimitWithTriggerHeight,
         changePopupTopToBottom,
       );
-
-      // const shouldChangeBottomToTop = isNeedReverse(
-      //   isViewYTopOverLimitWithTriggerHeight,
-      //   changeViewBottomToTop,
-      // );
 
       const shouldChangeBottomToTop = isNeedReverse(
         isPopupYTopOverLimitWithTriggerHeight,
@@ -833,40 +250,26 @@ const Tooltip = (props: TooltipProps) => {
       const isWidthGreater = tooltipRect.width > triggerRect.width;
       const isHeightGreater = tooltipRect.height > triggerRect.height;
 
-      // const isXOverLimitSideHalf = isViewXOverLimitWithSideHalf && isPopupXOverLimitWithSideHalf;
-      // const isYOverLimitSideHalf = isViewYOverLimitWithSideHalf && isPopupYOverLimitWithSideHalf;
-
-      // const isXOverLimitSideHalf = isViewXOverLimitWithSideHalf;
-      // const isYOverLimitSideHalf = isViewYOverLimitWithSideHalf;
-
-      const isXOverLimitSideHalf = isPopupXOverLimitWithSideHalf;
-      const isYOverLimitSideHalf = isPopupYOverLimitWithSideHalf;
-
-      // const isXOverLimit = isViewXOverLimit && isPopupXOverLimit;
-      // const isYOverLimit = isViewYOverLimit && isPopupYOverLimit;
-
-      // const isXOverLimit = isViewXOverLimit;
-      // const isYOverLimit = isViewYOverLimit;
-
-      const isXOverLimit = isPopupXOverLimit;
-      const isYOverLimit = isPopupYOverLimit;
-
       switch (placement) {
         case 'top': {
-          console.log(`shouldReverseTop: ${shouldReverseTop}`);
           if (shouldReverseTop) {
             position = 'bottom';
-            if (isXOverLimitSideHalf && (shouldChangeRightToLeft || shouldChangeLeftToRight)) {
+            if (
+              isPopupXOverLimitWithSideHalf &&
+              (shouldChangeRightToLeft || shouldChangeLeftToRight)
+            ) {
               position += shouldChangeRightToLeft ? 'Left' : 'Right';
             }
           }
           break;
         }
         case 'bottom': {
-          // console.log(`shouldReverseBottom: ${shouldReverseBottom}`);
           if (shouldReverseBottom) {
             position = 'top';
-            if (isXOverLimitSideHalf && (shouldChangeRightToLeft || shouldChangeLeftToRight)) {
+            if (
+              isPopupXOverLimitWithSideHalf &&
+              (shouldChangeRightToLeft || shouldChangeLeftToRight)
+            ) {
               position += shouldChangeRightToLeft ? 'Left' : 'Right';
             }
           }
@@ -875,7 +278,10 @@ const Tooltip = (props: TooltipProps) => {
         case 'left': {
           if (shouldReverseLeft) {
             position = 'right';
-            if (isYOverLimitSideHalf && (shouldChangeTopToBottom || shouldChangeBottomToTop)) {
+            if (
+              isPopupYOverLimitWithSideHalf &&
+              (shouldChangeTopToBottom || shouldChangeBottomToTop)
+            ) {
               position += shouldChangeTopToBottom ? 'bottom' : 'top';
             }
           }
@@ -884,7 +290,10 @@ const Tooltip = (props: TooltipProps) => {
         case 'right': {
           if (shouldReverseRight) {
             position = 'left';
-            if (isYOverLimitSideHalf && (shouldChangeTopToBottom || shouldChangeBottomToTop)) {
+            if (
+              isPopupYOverLimitWithSideHalf &&
+              (shouldChangeTopToBottom || shouldChangeBottomToTop)
+            ) {
               position += shouldChangeTopToBottom ? 'bottom' : 'top';
             }
           }
@@ -893,22 +302,13 @@ const Tooltip = (props: TooltipProps) => {
         case 'topLeft': {
           if (shouldReverseTop) {
             position = reversePosition(position);
-            // position = 'bottomLeft';
           }
-          // shouldReverseLeftSide 从左转到右
           if (shouldChangeLeftToRight && isWidthGreater) {
             position = reversePosition(position, true);
-            // position = 'bottomRight';
           }
-
-          // if (isXOverLimit && (isViewXEnoughWithHalfSide || isPopupXEnoughWithHalfSide)) {
-          //   position = removeLastPosition(position);
-          // }
-
-          if (isXOverLimit && isPopupXEnoughWithHalfSide) {
+          if (isPopupXOverLimit && isPopupXEnoughWithHalfSide) {
             position = removeLastPosition(position);
           }
-
           break;
         }
         case 'topRight': {
@@ -918,11 +318,7 @@ const Tooltip = (props: TooltipProps) => {
           if (shouldChangeRightToLeft && isWidthGreater) {
             position = reversePosition(position, true);
           }
-          // if (isXOverLimit && (isViewXEnoughWithHalfSide || isPopupXEnoughWithHalfSide)) {
-          //   position = removeLastPosition(position);
-          // }
-
-          if (isXOverLimit && isPopupXEnoughWithHalfSide) {
+          if (isPopupXOverLimit && isPopupXEnoughWithHalfSide) {
             position = removeLastPosition(position);
           }
 
@@ -935,10 +331,7 @@ const Tooltip = (props: TooltipProps) => {
           if (shouldChangeLeftToRight && isWidthGreater) {
             position = reversePosition(position, true);
           }
-          // if (isXOverLimit && (isViewXEnoughWithHalfSide || isPopupXEnoughWithHalfSide)) {
-          //   position = removeLastPosition(position);
-          // }
-          if (isXOverLimit && isPopupXEnoughWithHalfSide) {
+          if (isPopupXOverLimit && isPopupXEnoughWithHalfSide) {
             position = removeLastPosition(position);
           }
           break;
@@ -947,16 +340,10 @@ const Tooltip = (props: TooltipProps) => {
           if (shouldReverseBottom) {
             position = reversePosition(position);
           }
-          console.log(`shouldChangeRightToLeft: ${shouldChangeRightToLeft}`);
-          console.log(`isWidthGreater: ${isWidthGreater}`);
           if (shouldChangeRightToLeft && isWidthGreater) {
-            console.log('hahahah');
             position = reversePosition(position, true);
           }
-          // if (isXOverLimit && (isViewXEnoughWithHalfSide || isPopupXEnoughWithHalfSide)) {
-          //   position = removeLastPosition(position);
-          // }
-          if (isXOverLimit && isPopupXEnoughWithHalfSide) {
+          if (isPopupXOverLimit && isPopupXEnoughWithHalfSide) {
             position = removeLastPosition(position);
           }
           break;
@@ -968,10 +355,7 @@ const Tooltip = (props: TooltipProps) => {
           if (shouldChangeTopToBottom && isHeightGreater) {
             position = reversePosition(position);
           }
-          // if (isYOverLimit && (isViewYEnoughWithHalfSide || isPopupYEnoughWithHalfSide)) {
-          //   position = removeLastPosition(position);
-          // }
-          if (isYOverLimit && isPopupYEnoughWithHalfSide) {
+          if (isPopupYOverLimit && isPopupYEnoughWithHalfSide) {
             position = removeLastPosition(position);
           }
           break;
@@ -983,16 +367,12 @@ const Tooltip = (props: TooltipProps) => {
           if (shouldChangeBottomToTop && isHeightGreater) {
             position = reversePosition(position);
           }
-          // if (isYOverLimit && (isViewYEnoughWithHalfSide || isPopupYEnoughWithHalfSide)) {
-          //   position = removeLastPosition(position);
-          // }
-          if (isYOverLimit && isPopupYEnoughWithHalfSide) {
+          if (isPopupYOverLimit && isPopupYEnoughWithHalfSide) {
             position = removeLastPosition(position);
           }
           break;
         }
         case 'rightTop': {
-          // console.log(`shouldReverseRight: ${shouldReverseRight}`);
           if (shouldReverseRight) {
             position = reversePosition(position, true);
           }
@@ -1000,10 +380,7 @@ const Tooltip = (props: TooltipProps) => {
           if (shouldChangeTopToBottom && isHeightGreater) {
             position = reversePosition(position);
           }
-          // if (isYOverLimit && (isViewYEnoughWithHalfSide || isPopupYEnoughWithHalfSide)) {
-          //   position = removeLastPosition(position);
-          // }
-          if (isYOverLimit && isPopupYEnoughWithHalfSide) {
+          if (isPopupYOverLimit && isPopupYEnoughWithHalfSide) {
             position = removeLastPosition(position);
           }
           break;
@@ -1015,19 +392,12 @@ const Tooltip = (props: TooltipProps) => {
           if (shouldChangeBottomToTop && isHeightGreater) {
             position = reversePosition(position);
           }
-          // if (isYOverLimit && (isViewYEnoughWithHalfSide || isPopupYEnoughWithHalfSide)) {
-          //   position = removeLastPosition(position);
-          // }
-          if (isYOverLimit && isPopupYEnoughWithHalfSide) {
+          if (isPopupYOverLimit && isPopupYEnoughWithHalfSide) {
             position = removeLastPosition(position);
           }
           break;
         }
       }
-
-      // const isTopPlacement = placement === 'top' || placement === 'topLeft' || placement === 'topRight';
-      // const isBottomPlacement = placement === 'bottom' || placement === 'bottomLeft' || placement === 'bottomRight';
-
       return position;
     }
     return placement;
@@ -1122,15 +492,11 @@ const Tooltip = (props: TooltipProps) => {
     },
     [popupContainer],
   );
-  // console.log(pos)
 
   const calcPosition = useCallback(() => {
     const finalPlace = getPlacement() as TooltipPlacement;
     const position = getPosition(finalPlace);
-    // console.log(`finalPlace: ${finalPlace}`)
-    // console.log(position)
     if (!(pos.left === position.left && pos.top === position.top)) {
-      // console.log('calcposi');
       setPos(position);
       setFinalPlacement(finalPlace);
     }
@@ -1140,10 +506,7 @@ const Tooltip = (props: TooltipProps) => {
     (e: any) => {
       if (triggerRef.current) {
         const isContain = e.target.contains(triggerRef.current);
-        // console.log(`isContain: ${isContain}`);
-        if (isContain) {
-          calcPosition();
-        }
+        if (isContain) calcPosition();
       }
     },
     [calcPosition],
@@ -1159,22 +522,10 @@ const Tooltip = (props: TooltipProps) => {
     if (!('visible' in props)) {
       setShowPopper(false);
     }
-    // setTooltipMounted(false);
     onVisibleChange && onVisibleChange(false);
     if (isManual) {
       document.removeEventListener('click', debounceHide);
     }
-    // if (timer.current) {
-    //   clearTimeout(timer.current);
-    //   if (!('visible' in props)) {
-    //     setShowPopper(false);
-    //   }
-    //   // setTooltipMounted(false);
-    //   onVisibleChange && onVisibleChange(false);
-    //   if (isManual) {
-    //     document.removeEventListener('click', debounceHide);
-    //   }
-    // }
   };
 
   const debounceScroll = throttle(handleScroll, 100);
@@ -1196,12 +547,6 @@ const Tooltip = (props: TooltipProps) => {
       }
       onVisibleChange && onVisibleChange(true);
     }
-    // timer.current = setTimeout(() => {
-    //   if (!('visible' in props)) {
-    //     setShowPopper(true);
-    //   }
-    //   onVisibleChange && onVisibleChange(true);
-    // }, delay);
     window.addEventListener('scroll', debounceScroll, true);
     window.addEventListener('resize', debounceResize);
   };
@@ -1233,14 +578,9 @@ const Tooltip = (props: TooltipProps) => {
 
   useEffect(() => {
     if (showPopper && tooltipRef.current) {
-      // setTooltipMounted(true);
       calcPosition();
     }
   }, [showPopper, calcPosition]);
-
-  // useEffect(() => {
-  //   debounceResize();
-  // }, [debounceResize]);
 
   useEffect(() => {
     return () => {
@@ -1259,7 +599,6 @@ const Tooltip = (props: TooltipProps) => {
   }, []);
 
   const renderToolTip = () => {
-    // const position = getPosition();
     const popperContainer = (
       <div className="tooltip-popper-placeholder">
         <div
@@ -1273,8 +612,6 @@ const Tooltip = (props: TooltipProps) => {
           })}
           style={{
             ...style,
-            // left: tooltipMounted ? position.left : -9999,
-            // top: tooltipMounted ? position.top : -9999
             left: pos.left,
             top: pos.top,
           }}
@@ -1308,15 +645,6 @@ const Tooltip = (props: TooltipProps) => {
   return (
     <>
       {cloneElement(children, newProps)}
-      {/*<div*/}
-      {/*  onMouseEnter={handleMouseEnter}*/}
-      {/*  onMouseLeave={handleMouseLeave}*/}
-      {/*  onClick={handleClick}*/}
-      {/*  ref={containerRef}*/}
-      {/*  className='tooltip-rel'*/}
-      {/*>*/}
-      {/*  {children}*/}
-      {/*</div>*/}
       {showPopper ? renderToolTip() : null}
     </>
   );
