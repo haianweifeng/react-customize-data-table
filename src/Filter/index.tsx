@@ -26,6 +26,7 @@ const Filter = (props: FilterProps) => {
 
   const filterContainerRef = useRef<HTMLDivElement>(null);
   const popperRef = useRef<HTMLDivElement>(null);
+  const popperClass = useRef<string>();
 
   const [visible, setVisible] = useState<boolean>(false);
   const [isFocus, setIsFocus] = useState<boolean>(false);
@@ -82,10 +83,14 @@ const Filter = (props: FilterProps) => {
   };
 
   const createPopper = () => {
-    let popperPlaceholder = document.querySelector('.popper-placeholder');
+    let popperPlaceholder =
+      popperClass.current && document.querySelector(`.${popperClass.current}`);
     if (!popperPlaceholder) {
       const div = document.createElement('div');
-      div.classList.add('popper-placeholder');
+      const date = new Date();
+      const uid = date.getTime().toString(36);
+      popperClass.current = `popper-placeholder-${uid}`;
+      div.classList.add(popperClass.current);
       div.setAttribute('style', 'position: absolute; top: 0; left: 0; width: 100%;');
       document.body.appendChild(div);
       popperPlaceholder = div;
@@ -146,7 +151,7 @@ const Filter = (props: FilterProps) => {
 
   useEffect(() => {
     const removePopper = () => {
-      const popperPlaceholder = document.querySelector('.popper-placeholder');
+      const popperPlaceholder = document.querySelector(`.${popperClass.current}`);
       popperPlaceholder && document.body.removeChild(popperPlaceholder);
     };
 
