@@ -97,6 +97,14 @@ export function getParent(el: HTMLElement, target: HTMLElement | string | null) 
   return null;
 }
 
+export function getPropertyValueSum(el: HTMLElement, names: string[]) {
+  const styles = window.getComputedStyle(el);
+  return names.reduce((prev, prop) => {
+    const val = parseInt(styles.getPropertyValue(prop));
+    return prev + val;
+  }, 0);
+}
+
 // const getChildrenKeys = (data: T[] = [], all = true) => {
 //   const keys: (number | string)[] = [];
 //   data.map((c) => {

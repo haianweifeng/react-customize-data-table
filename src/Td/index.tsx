@@ -1,7 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import classnames from 'classnames';
-import '../style/index.less';
 import type { CellProps } from '../interface';
+import Tooltip from '../Tooltip';
+import { getPropertyValueSum } from '../utils/util';
+import '../style/index.less';
 
 type TdProps = CellProps & { scrollLeft: number; offsetRight: number; ignoreRightBorder: boolean };
 
@@ -21,6 +23,32 @@ function Td(props: TdProps) {
     ignoreRightBorder,
     ellipsis,
   } = props;
+
+  const cellRef = useRef<HTMLTableCellElement>(null);
+
+  const [isOverflow, setIsOverflow] = useState<boolean>(false);
+
+  useEffect(() => {
+    const cellEl = cellRef.current;
+    if (cellEl && ellipsis) {
+      const firstChild = cellEl.firstElementChild;
+      if (firstChild) {
+        const values = getPropertyValueSum(cellEl, [
+          'padding-left',
+          'padding-right',
+          'border-left-width',
+          'border-right-width',
+        ]);
+        const range = document.createRange();
+        range.setStart(firstChild, 0);
+        range.setEnd(firstChild, firstChild.childNodes.length);
+        const { width: rangeWidth } = range.getBoundingClientRect();
+        const { width: cellWidth } = cellEl.getBoundingClientRect();
+        const realWidth = cellWidth - values;
+        setIsOverflow(rangeWidth > realWidth);
+      }
+    }
+  }, [ellipsis, content]);
 
   const fixedLeft = fixed === 'left';
   const fixedRight = fixed === 'right';
@@ -44,25 +72,33 @@ function Td(props: TdProps) {
     styles.transform = `translate(-${offsetRight}px, 0)`;
   }
 
-  const showTitle = useMemo(() => {
-    if (typeof ellipsis === 'boolean') return ellipsis;
-    if (typeof ellipsis === 'object') {
-      return ellipsis.showTitle;
-    }
-    return false;
-  }, [ellipsis]);
-
   const cellContent = typeof content === 'function' ? content() : content;
 
+  const showTooltip = typeof ellipsis === 'object' && ellipsis?.tooltip;
+
+  const renderTooltip = () => {
+    if (typeof ellipsis === 'object') {
+      const triggerEl = <span className="cell-tooltip-content">{cellContent}</span>;
+      if (ellipsis.renderTooltip) {
+        return ellipsis.renderTooltip(triggerEl, cellContent);
+      }
+      return (
+        <Tooltip tip={cellContent} theme={ellipsis?.tooltipTheme}>
+          {triggerEl}
+        </Tooltip>
+      );
+    }
+  };
+
   return (
-    <td
-      colSpan={colSpan}
-      rowSpan={rowSpan}
-      className={cls}
-      style={styles}
-      title={showTitle && typeof cellContent === 'string' ? cellContent : undefined}
-    >
-      {cellContent}
+    <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles} ref={cellRef}>
+      {showTooltip && isOverflow ? (
+        renderTooltip()
+      ) : !!ellipsis ? (
+        <span className="cell-tooltip-content">{cellContent}</span>
+      ) : (
+        cellContent
+      )}
     </td>
   );
 }

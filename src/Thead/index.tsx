@@ -13,6 +13,8 @@ import Checkbox from '../Checkbox';
 import Sorter from '../Sorter';
 import Filter from '../Filter';
 import { getParent } from '../utils/util';
+import Tooltip from '../Tooltip';
+import Th from '../Th';
 
 interface TheadProps<T> {
   bordered: boolean;
@@ -231,6 +233,8 @@ function Thead<T>(props: TheadProps<T>) {
     ) => {
       const totalLevel = trs.length;
       const colClassName = col.className || '';
+      const showTooltip = typeof col?.ellipsis === 'object' && col.ellipsis?.tooltip;
+      const tooltipTheme = typeof col?.ellipsis === 'object' ? col?.ellipsis?.tooltipTheme : 'dark';
       const classes = {
         'cell-fixed-left': col.fixed === 'left',
         'cell-fixed-right': col.fixed === 'right',
@@ -239,6 +243,7 @@ function Thead<T>(props: TheadProps<T>) {
         'cell-ignore-right-border': col.ignoreRightBorder,
         [colClassName]: !!col.className,
       };
+
       const cls = classnames({
         'cell-align-center': col.align === 'center',
         'cell-align-right': col.align === 'right',
@@ -254,72 +259,176 @@ function Thead<T>(props: TheadProps<T>) {
       switch (col.type) {
         case 'checkbox':
         case 'radio':
-          return trs[level].push(renderSelection(index, totalLevel, cls, styles));
+          return trs[level].push(
+            <Th
+              col={col}
+              key={index}
+              index={index}
+              checked={checked}
+              rowSpan={totalLevel}
+              selectionTitle={rowSelection?.columnTitle}
+              // scrollLeft={scrollLeft}
+              // offsetRight={offsetRight}
+              className={cls}
+              style={styles}
+              onSelectAll={handleChange}
+              sorterState={sorterState}
+              renderSorter={renderSorter}
+              onSort={onSort}
+              filterState={filterState}
+              onFilterChange={onFilterChange}
+              bordered={bordered}
+              level={level}
+              onMouseDown={onMouseDown}
+            />,
+          );
+        // return trs[level].push(renderSelection(index, totalLevel, cls, styles));
         case 'expanded':
-          return trs[level].push(renderExpand(index, totalLevel, cls, styles));
+          return trs[level].push(
+            <Th
+              col={col}
+              key={index}
+              index={index}
+              checked={checked}
+              rowSpan={totalLevel}
+              expandableTitle={expandable?.columnTitle}
+              // scrollLeft={scrollLeft}
+              // offsetRight={offsetRight}
+              className={cls}
+              style={styles}
+              sorterState={sorterState}
+              renderSorter={renderSorter}
+              onSort={onSort}
+              filterState={filterState}
+              onFilterChange={onFilterChange}
+              bordered={bordered}
+              level={level}
+              onMouseDown={onMouseDown}
+            />,
+          );
+        // return trs[level].push(renderExpand(index, totalLevel, cls, styles));
         default: {
           if (isColumnGroup(col)) {
+            // trs[level].push(
+            //   <th
+            //     key={index}
+            //     colSpan={col.colSpan}
+            //     className={classnames({
+            //       'cell-align-center': true,
+            //       'cell-ellipsis': !!col.ellipsis,
+            //       ...classes,
+            //     })}
+            //     style={styles}
+            //   >
+            //     {col.title}
+            //   </th>,
+            // );
             trs[level].push(
-              <th
+              <Th
+                col={col}
+                index={index}
                 key={index}
-                colSpan={col.colSpan}
+                checked={checked}
+                rowSpan={1}
+                // scrollLeft={scrollLeft}
+                // offsetRight={offsetRight}
                 className={classnames({
                   'cell-align-center': true,
+                  'cell-ellipsis': !!col.ellipsis,
                   ...classes,
                 })}
                 style={styles}
-              >
-                {col.title}
-              </th>,
+                sorterState={sorterState}
+                renderSorter={renderSorter}
+                onSort={onSort}
+                filterState={filterState}
+                onFilterChange={onFilterChange}
+                bordered={bordered}
+                level={level}
+                onMouseDown={onMouseDown}
+              />,
             );
             (col as any).children.forEach((c: any, i: number) => {
               renderTh(c, trs, level + 1, `${index}_${i}`);
             });
           } else {
+            // trs[level].push(
+            //   <th
+            //     colSpan={col.colSpan}
+            //     rowSpan={totalLevel - level}
+            //     key={index}
+            //     className={cls}
+            //     style={styles}
+            //   >
+            //     <div className="cell-header">
+            //       <span
+            //         className={classnames({ 'column-title': true, 'column-title-ellipsis': !!col.ellipsis })}
+            //       >
+            //         {/*{*/}
+            //         {/*  showTooltip ? (*/}
+            //         {/*    <Tooltip tip={col.title} theme={tooltipTheme}>*/}
+            //         {/*      { <span className='cell-tooltip-content'>{col.title}</span> }*/}
+            //         {/*    </Tooltip>*/}
+            //         {/*  ) : col.title*/}
+            //         {/*}*/}
+            //         {col.title}
+            //       </span>
+            //       {col.sorter || col.filters ? (
+            //         <div className="sorter-filter">
+            //           {col.sorter
+            //             ? renderSorterContent(
+            //                 col as ColumnsWithType<T> & {
+            //                   colSpan: number;
+            //                   ignoreRightBorder: boolean;
+            //                 },
+            //               )
+            //             : null}
+            //           {col.filters
+            //             ? renderFilterContent(
+            //                 col as ColumnsWithType<T> & {
+            //                   colSpan: number;
+            //                   ignoreRightBorder: boolean;
+            //                 },
+            //               )
+            //             : null}
+            //         </div>
+            //       ) : null}
+            //     </div>
+            //     {level === 0 &&
+            //     bordered &&
+            //     !('children' in col) &&
+            //     !col.ignoreRightBorder &&
+            //     col?.resizable ? (
+            //       <div
+            //         className="cell-header-resizable"
+            //         onMouseDown={(event) => {
+            //           handleMouseDown(event, col, Number(index));
+            //         }}
+            //       />
+            //     ) : null}
+            //   </th>,
+            // );
+
             trs[level].push(
-              <th
-                colSpan={col.colSpan}
-                rowSpan={totalLevel - level}
+              <Th
+                col={col}
+                index={index}
                 key={index}
+                checked={checked}
+                rowSpan={totalLevel - level}
+                // scrollLeft={scrollLeft}
+                // offsetRight={offsetRight}
                 className={cls}
                 style={styles}
-              >
-                <div className="cell-header">
-                  <span className="column-title">{col.title}</span>
-                  {col.sorter || col.filters ? (
-                    <div className="sorter-filter">
-                      {col.sorter
-                        ? renderSorterContent(
-                            col as ColumnsWithType<T> & {
-                              colSpan: number;
-                              ignoreRightBorder: boolean;
-                            },
-                          )
-                        : null}
-                      {col.filters
-                        ? renderFilterContent(
-                            col as ColumnsWithType<T> & {
-                              colSpan: number;
-                              ignoreRightBorder: boolean;
-                            },
-                          )
-                        : null}
-                    </div>
-                  ) : null}
-                </div>
-                {level === 0 &&
-                bordered &&
-                !('children' in col) &&
-                !col.ignoreRightBorder &&
-                col?.resizable ? (
-                  <div
-                    className="cell-header-resizable"
-                    onMouseDown={(event) => {
-                      handleMouseDown(event, col, Number(index));
-                    }}
-                  />
-                ) : null}
-              </th>,
+                sorterState={sorterState}
+                renderSorter={renderSorter}
+                onSort={onSort}
+                filterState={filterState}
+                onFilterChange={onFilterChange}
+                bordered={bordered}
+                level={level}
+                onMouseDown={onMouseDown}
+              />,
             );
           }
         }

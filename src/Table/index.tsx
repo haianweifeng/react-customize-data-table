@@ -768,7 +768,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
     return flatColumns;
   }, [flatColumns, virtualContainerWidth, width, showScrollbarY]);
-  // console.log(columnsWithWidth);
 
   const converToPixel = useCallback((val: string | number | undefined) => {
     if (typeof val === 'number' || val === undefined) return val;

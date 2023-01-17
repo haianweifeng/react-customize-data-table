@@ -35,9 +35,9 @@ interface TooltipProps {
   /** 显示的文字 */
   tip: string | React.ReactNode | (() => React.ReactNode);
   /** Tooltip 出现位置 */
-  placement: TooltipPlacement;
+  placement?: TooltipPlacement;
   /** 子元素 */
-  children: React.ReactElement;
+  children: React.ReactNode;
   /** 主题 */
   theme?: 'dark' | 'light';
   /** 延迟显示，单位毫秒 */
@@ -81,7 +81,7 @@ const Tooltip = (props: TooltipProps) => {
   const [pos, setPos] = useState<{ left: number; top: number }>({ left: -9999, top: -9999 });
 
   if (!isValidElement(children)) {
-    console.error(new Error('Tooltip expect a single ReactElement as children.'));
+    console.error(new Error('Tooltip expect a valid ReactElement as children.'));
     return null;
   }
 

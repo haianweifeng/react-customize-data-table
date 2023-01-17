@@ -62,6 +62,12 @@
 
     .column-title {
       margin-right: 5px;
+      &.column-title-ellipsis {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        word-break: keep-all;
+      }
     }
 
     .sorter-filter {
@@ -171,6 +177,13 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     word-break: keep-all;
+  }
+
+  .cell-tooltip-content {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 }
 

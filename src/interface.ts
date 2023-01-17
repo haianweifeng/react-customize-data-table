@@ -1,6 +1,7 @@
 import type React from 'react';
 
 // todo 把column 增加type?: string 可选属性 expanded checkbox radio
+// todo 待测试rowSelection.columnTitle 的ellipsis 需要改造后
 // rowSelection 中不再设置type
 // expandable 也需要修改
 export interface RowSelectionType<T> {
@@ -66,6 +67,15 @@ export type FilterInfoType = Record<string, string[]>;
 //   [key: string]: string[];
 // }
 
+export type TooltipType = {
+  /** tooltip 用 Tooltip 组件显示完整内容 */
+  tooltip: boolean;
+  /** tooltipTheme 配置 Tooltip 的主题 */
+  tooltipTheme: 'dark' | 'light';
+  /** 自定义渲染tooltip 气泡框 */
+  renderTooltip: (trigger: React.ReactNode, tip: React.ReactNode) => React.ReactNode;
+};
+
 export interface ColumnsType<T> {
   /** 设置列的对齐方式 */
   align?: 'left' | 'center' | 'right';
@@ -82,15 +92,15 @@ export interface ColumnsType<T> {
   /** 列宽度 */
   width?: number | string;
   // width?: string | number;
-  /** 最大列宽 不支持百分比 todo */
+  /** 最大列宽 不支持百分比 如果是表头分组的话只支持设置在底层的列宽 todo */
   maxWidth?: number | string;
-  /** 最小列宽 不支持百分比 todo */
+  /** 最小列宽 不支持百分比 如果是表头分组的话只支持设置在底层的列宽 todo */
   minWidth?: number | string;
-  /** 超过宽度将自动省略 showTitle 只会提示单元格里内容是字符串类型 todo*/
-  ellipsis?: boolean | { showTitle: boolean };
+  /** 超过宽度将自动省略 todo*/
+  ellipsis?: boolean | TooltipType;
   /** 表头列合并 */
   headerColSpan?: number;
-  /** 是否允许拖拽调整宽度 需开启 border 属性，且设置 width todo */
+  /** 是否允许拖拽调整宽度 需开启 border 属性，且设置 width 不支持表头分组的调整宽度 */
   resizable?: boolean;
   /** 设置单元格属性 */
   onCell?: (record: T, rowIndex: number) => CellType;
@@ -199,7 +209,7 @@ export interface CellProps {
   /** 是否是向右固定的第一列 */
   fistRightFixed?: boolean;
   /** 超过宽度将自动省略 */
-  ellipsis?: boolean | { showTitle: boolean };
+  ellipsis?: boolean | TooltipType;
 }
 
 export type CellType = { colSpan?: number; rowSpan?: number };
