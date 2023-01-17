@@ -96,7 +96,7 @@ export interface ColumnsType<T> {
   maxWidth?: number | string;
   /** 最小列宽 不支持百分比 如果是表头分组的话只支持设置在底层的列宽 todo */
   minWidth?: number | string;
-  /** 超过宽度将自动省略 todo*/
+  /** 超过宽度将自动省略 */
   ellipsis?: boolean | TooltipType;
   /** 表头列合并 */
   headerColSpan?: number;

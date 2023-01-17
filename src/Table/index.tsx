@@ -1169,7 +1169,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const scrollWidth = useMemo(() => {
     if (width) return width;
     return columnsWithWidth.reduce((total, col) => {
-      return total + Number(parseValue(col.width));
+      return total + (Number(parseValue(col.width)) || 0);
     }, 0);
   }, [width, columnsWithWidth]);
 
