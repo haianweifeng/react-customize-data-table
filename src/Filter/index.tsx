@@ -56,17 +56,54 @@ const Filter = (props: FilterProps) => {
     }
   };
 
+  const elementContains = useCallback((elem: HTMLElement, target: any) => {
+    let result = false;
+    let parent = target.parentNode;
+    while (parent) {
+      if (parent === elem) {
+        result = true;
+        return result;
+      }
+      parent = parent.parentNode;
+    }
+    return result;
+  }, []);
+
+  const handleDocumentClick = useCallback(
+    (event: Event) => {
+      const { target } = event;
+      if (
+        !filterContainerRef.current ||
+        elementContains(filterContainerRef.current, target) ||
+        !popperRef.current ||
+        elementContains(popperRef.current, target)
+      ) {
+        return;
+      }
+      if (!isEqual(checkedValue, filteredValue)) {
+        onChange(checkedValue);
+      }
+      setSearchValue('');
+      setVisible(false);
+      document.removeEventListener('click', handleDocumentClick);
+      event.stopPropagation();
+    },
+    [checkedValue, filteredValue, onChange, elementContains],
+  );
+
   const handleReset = () => {
     onReset();
     setSearchValue('');
     setCheckedValue([]);
     setVisible(false);
+    document.removeEventListener('click', handleDocumentClick);
   };
 
   const handleFilter = () => {
     onChange(checkedValue);
     setSearchValue('');
     setVisible(false);
+    document.removeEventListener('click', handleDocumentClick);
   };
 
   const getPosition = () => {
@@ -114,41 +151,6 @@ const Filter = (props: FilterProps) => {
     setVisible((prev) => !prev);
   };
 
-  const elementContains = useCallback((elem: HTMLElement, target: any) => {
-    let result = false;
-    let parent = target.parentNode;
-    while (parent) {
-      if (parent === elem) {
-        result = true;
-        return result;
-      }
-      parent = parent.parentNode;
-    }
-    return result;
-  }, []);
-
-  const handleDocumentClick = useCallback(
-    (event: Event) => {
-      const { target } = event;
-      if (
-        !filterContainerRef.current ||
-        elementContains(filterContainerRef.current, target) ||
-        !popperRef.current ||
-        elementContains(popperRef.current, target)
-      ) {
-        return;
-      }
-
-      if (!isEqual(checkedValue, filteredValue)) {
-        onChange(checkedValue);
-      }
-      setSearchValue('');
-      setVisible(false);
-      event.stopPropagation();
-    },
-    [checkedValue, filteredValue, onChange, elementContains],
-  );
-
   useEffect(() => {
     const removePopper = () => {
       const popperPlaceholder = document.querySelector(`.${popperClass.current}`);
@@ -165,8 +167,6 @@ const Filter = (props: FilterProps) => {
   useEffect(() => {
     if (visible) {
       document.addEventListener('click', handleDocumentClick);
-    } else {
-      document.removeEventListener('click', handleDocumentClick);
     }
   }, [visible, handleDocumentClick]);
 
