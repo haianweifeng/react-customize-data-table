@@ -9,12 +9,8 @@ import type {
   FilterStateType,
   ResizeInfoType,
 } from '../interface';
-import Checkbox from '../Checkbox';
-import Sorter from '../Sorter';
-import Filter from '../Filter';
-import { getParent } from '../utils/util';
-import Tooltip from '../Tooltip';
 import Th from '../Th';
+import type { ThProps } from '../Th';
 
 interface TheadProps<T> {
   bordered: boolean;
@@ -56,13 +52,6 @@ function Thead<T>(props: TheadProps<T>) {
     onMouseDown,
   } = props;
 
-  const isColumnGroup = useCallback((col: ColumnsWithType<T> | ColumnsGroupWithType<T>) => {
-    if (typeof (col as ColumnsGroupWithType<T>).children !== 'undefined') {
-      return true;
-    }
-    return false;
-  }, []);
-
   const getFormatColumns = useCallback(
     (
       cols: (ColumnsWithType<T> | ColumnsGroupWithType<T>)[],
@@ -76,7 +65,7 @@ function Thead<T>(props: TheadProps<T>) {
 
       cols.map((col, index: number) => {
         const isLastColumn = index === cols.length - 1;
-        if (isColumnGroup(col)) {
+        if ('children' in col && col?.children.length) {
           const obj = {
             ...col,
             colSpan: 0,
@@ -106,7 +95,7 @@ function Thead<T>(props: TheadProps<T>) {
 
       return formatColumns;
     },
-    [isColumnGroup],
+    [],
   );
 
   const computeTrs = useCallback((cols: any, level = 0, trs: React.ReactNode[][]) => {
@@ -121,28 +110,6 @@ function Thead<T>(props: TheadProps<T>) {
     }
   }, []);
 
-  const handleMouseDown = (
-    event: any,
-    col: ColumnsWithType<T> & {
-      colSpan?: number;
-      ignoreRightBorder?: boolean;
-    },
-    colIndex: number,
-  ) => {
-    const { target } = event;
-    const resizingTh = getParent(target, 'th');
-    if (resizingTh) {
-      const resizingRect = resizingTh.getBoundingClientRect();
-      const resizeInfo: ResizeInfoType = {
-        startPosX: event.clientX,
-        resizingRect,
-      };
-      delete col['colSpan'];
-      delete col.ignoreRightBorder;
-      onMouseDown && onMouseDown(resizeInfo, col, colIndex);
-    }
-  };
-
   const handleChange = useCallback(
     (selected: boolean) => {
       onSelectAll(selected);
@@ -150,76 +117,9 @@ function Thead<T>(props: TheadProps<T>) {
     [onSelectAll],
   );
 
-  const handleSortChange = useCallback(
-    (col: ColumnsWithType<T> & { colSpan: number }, order: 'asc' | 'desc') => {
-      onSort(col, order);
-    },
-    [onSort],
-  );
-
-  const renderSelection = useCallback(
-    (key: string, rowSpan: number, cls: string, styles: React.CSSProperties) => {
-      return (
-        <th key={key} rowSpan={rowSpan} className={cls} style={styles}>
-          {rowSelection?.columnTitle ||
-            (rowSelection?.type === 'radio' ? null : (
-              <Checkbox checked={checked} onChange={handleChange} />
-            ))}
-        </th>
-      );
-    },
-    [checked, rowSelection, handleChange],
-  );
-
-  const renderExpand = useCallback(
-    (key: string, rowSpan: number, cls: string, styles: React.CSSProperties) => {
-      return (
-        <th key={key} rowSpan={rowSpan} className={cls} style={styles}>
-          {expandable?.columnTitle || null}
-        </th>
-      );
-    },
-    [expandable],
-  );
-
-  const renderSorterContent = useCallback(
-    (col: ColumnsWithType<T> & { colSpan: number; ignoreRightBorder: boolean }) => {
-      const item = sorterState.find((s) => s.dataIndex === col.dataIndex);
-      return (
-        <Sorter
-          activeAsc={item?.order === 'asc'}
-          activeDesc={item?.order === 'desc'}
-          renderSorter={renderSorter}
-          onChange={(order) => {
-            handleSortChange(col, order);
-          }}
-        />
-      );
-    },
-    [sorterState, renderSorter, handleSortChange],
-  );
-
-  const renderFilterContent = useCallback(
-    (col: ColumnsWithType<T> & { colSpan: number; ignoreRightBorder: boolean }) => {
-      const curr = filterState.find((f) => f.dataIndex === col.dataIndex);
-      return (
-        <Filter
-          filters={col.filters!}
-          filterIcon={col.filterIcon}
-          filterMultiple={col.filterMultiple !== false}
-          filteredValue={curr?.filteredValue || []}
-          filterSearch={col?.filterSearch}
-          onReset={() => {
-            onFilterChange(col, []);
-          }}
-          onChange={(checkedValue: string[]) => {
-            onFilterChange(col, checkedValue);
-          }}
-        />
-      );
-    },
-    [onFilterChange, filterState],
-  );
+  const createTh = useCallback((thProps: ThProps<T>) => {
+    return <Th {...thProps} key={thProps.index} />;
+  }, []);
 
   const renderTh = useCallback(
     (
@@ -233,8 +133,7 @@ function Thead<T>(props: TheadProps<T>) {
     ) => {
       const totalLevel = trs.length;
       const colClassName = col.className || '';
-      const showTooltip = typeof col?.ellipsis === 'object' && col.ellipsis?.tooltip;
-      const tooltipTheme = typeof col?.ellipsis === 'object' ? col?.ellipsis?.tooltipTheme : 'dark';
+
       const classes = {
         'cell-fixed-left': col.fixed === 'left',
         'cell-fixed-right': col.fixed === 'right',
@@ -256,185 +155,73 @@ function Thead<T>(props: TheadProps<T>) {
       if (col.fixed === 'left') styles.transform = `translate(${scrollLeft}px, 0px)`;
       if (col.fixed === 'right') styles.transform = `translate(-${offsetRight}px, 0px)`;
 
+      let baseProps: ThProps<T> = {
+        col,
+        index,
+        level,
+        checked,
+        bordered,
+        style: styles,
+        sorterState,
+        renderSorter,
+        filterState,
+      } as ThProps<T>;
+
       switch (col.type) {
         case 'checkbox':
         case 'radio':
-          return trs[level].push(
-            <Th
-              col={col}
-              key={index}
-              index={index}
-              checked={checked}
-              rowSpan={totalLevel}
-              selectionTitle={rowSelection?.columnTitle}
-              // scrollLeft={scrollLeft}
-              // offsetRight={offsetRight}
-              className={cls}
-              style={styles}
-              onSelectAll={handleChange}
-              sorterState={sorterState}
-              renderSorter={renderSorter}
-              onSort={onSort}
-              filterState={filterState}
-              onFilterChange={onFilterChange}
-              bordered={bordered}
-              level={level}
-              onMouseDown={onMouseDown}
-            />,
-          );
-        // return trs[level].push(renderSelection(index, totalLevel, cls, styles));
         case 'expanded':
-          return trs[level].push(
-            <Th
-              col={col}
-              key={index}
-              index={index}
-              checked={checked}
-              rowSpan={totalLevel}
-              expandableTitle={expandable?.columnTitle}
-              // scrollLeft={scrollLeft}
-              // offsetRight={offsetRight}
-              className={cls}
-              style={styles}
-              sorterState={sorterState}
-              renderSorter={renderSorter}
-              onSort={onSort}
-              filterState={filterState}
-              onFilterChange={onFilterChange}
-              bordered={bordered}
-              level={level}
-              onMouseDown={onMouseDown}
-            />,
-          );
-        // return trs[level].push(renderExpand(index, totalLevel, cls, styles));
+          baseProps = Object.assign({}, baseProps, {
+            rowSpan: totalLevel,
+            selectionTitle: rowSelection?.columnTitle,
+            expandableTitle: expandable?.columnTitle,
+            className: cls,
+            onSelectAll: handleChange,
+          });
+          return trs[level].push(createTh(baseProps));
         default: {
-          if (isColumnGroup(col)) {
-            // trs[level].push(
-            //   <th
-            //     key={index}
-            //     colSpan={col.colSpan}
-            //     className={classnames({
-            //       'cell-align-center': true,
-            //       'cell-ellipsis': !!col.ellipsis,
-            //       ...classes,
-            //     })}
-            //     style={styles}
-            //   >
-            //     {col.title}
-            //   </th>,
-            // );
-            trs[level].push(
-              <Th
-                col={col}
-                index={index}
-                key={index}
-                checked={checked}
-                rowSpan={1}
-                // scrollLeft={scrollLeft}
-                // offsetRight={offsetRight}
-                className={classnames({
-                  'cell-align-center': true,
-                  'cell-ellipsis': !!col.ellipsis,
-                  ...classes,
-                })}
-                style={styles}
-                sorterState={sorterState}
-                renderSorter={renderSorter}
-                onSort={onSort}
-                filterState={filterState}
-                onFilterChange={onFilterChange}
-                bordered={bordered}
-                level={level}
-                onMouseDown={onMouseDown}
-              />,
-            );
+          if ('children' in col && col?.children.length) {
+            baseProps = Object.assign({}, baseProps, {
+              rowSpan: 1,
+              className: classnames({
+                'cell-align-center': true,
+                'cell-ellipsis': !!col.ellipsis,
+                ...classes,
+              }),
+            });
+            trs[level].push(createTh(baseProps));
             (col as any).children.forEach((c: any, i: number) => {
               renderTh(c, trs, level + 1, `${index}_${i}`);
             });
           } else {
-            // trs[level].push(
-            //   <th
-            //     colSpan={col.colSpan}
-            //     rowSpan={totalLevel - level}
-            //     key={index}
-            //     className={cls}
-            //     style={styles}
-            //   >
-            //     <div className="cell-header">
-            //       <span
-            //         className={classnames({ 'column-title': true, 'column-title-ellipsis': !!col.ellipsis })}
-            //       >
-            //         {/*{*/}
-            //         {/*  showTooltip ? (*/}
-            //         {/*    <Tooltip tip={col.title} theme={tooltipTheme}>*/}
-            //         {/*      { <span className='cell-tooltip-content'>{col.title}</span> }*/}
-            //         {/*    </Tooltip>*/}
-            //         {/*  ) : col.title*/}
-            //         {/*}*/}
-            //         {col.title}
-            //       </span>
-            //       {col.sorter || col.filters ? (
-            //         <div className="sorter-filter">
-            //           {col.sorter
-            //             ? renderSorterContent(
-            //                 col as ColumnsWithType<T> & {
-            //                   colSpan: number;
-            //                   ignoreRightBorder: boolean;
-            //                 },
-            //               )
-            //             : null}
-            //           {col.filters
-            //             ? renderFilterContent(
-            //                 col as ColumnsWithType<T> & {
-            //                   colSpan: number;
-            //                   ignoreRightBorder: boolean;
-            //                 },
-            //               )
-            //             : null}
-            //         </div>
-            //       ) : null}
-            //     </div>
-            //     {level === 0 &&
-            //     bordered &&
-            //     !('children' in col) &&
-            //     !col.ignoreRightBorder &&
-            //     col?.resizable ? (
-            //       <div
-            //         className="cell-header-resizable"
-            //         onMouseDown={(event) => {
-            //           handleMouseDown(event, col, Number(index));
-            //         }}
-            //       />
-            //     ) : null}
-            //   </th>,
-            // );
-
-            trs[level].push(
-              <Th
-                col={col}
-                index={index}
-                key={index}
-                checked={checked}
-                rowSpan={totalLevel - level}
-                // scrollLeft={scrollLeft}
-                // offsetRight={offsetRight}
-                className={cls}
-                style={styles}
-                sorterState={sorterState}
-                renderSorter={renderSorter}
-                onSort={onSort}
-                filterState={filterState}
-                onFilterChange={onFilterChange}
-                bordered={bordered}
-                level={level}
-                onMouseDown={onMouseDown}
-              />,
-            );
+            baseProps = Object.assign({}, baseProps, {
+              rowSpan: totalLevel - level,
+              className: cls,
+              onSort,
+              onFilterChange,
+              onMouseDown,
+            });
+            trs[level].push(createTh(baseProps));
           }
         }
       }
     },
-    [renderSelection, renderExpand, renderSorterContent, renderFilterContent, isColumnGroup],
+    [
+      scrollLeft,
+      offsetRight,
+      checked,
+      bordered,
+      sorterState,
+      renderSorter,
+      filterState,
+      rowSelection,
+      expandable,
+      handleChange,
+      createTh,
+      onSort,
+      onFilterChange,
+      onMouseDown,
+    ],
   );
 
   const headerTrs = useMemo(() => {

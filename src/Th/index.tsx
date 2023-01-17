@@ -13,7 +13,7 @@ import { getParent, getPropertyValueSum } from '../utils/util';
 import Sorter from '../Sorter';
 import Filter from '../Filter';
 
-interface ThProps<T> {
+export interface ThProps<T> {
   index: string;
   checked: boolean | 'indeterminate';
   rowSpan: number;
@@ -25,11 +25,10 @@ interface ThProps<T> {
   };
   // scrollLeft: number;
   // offsetRight: number;
-  onSelectAll?: (selected: boolean) => void;
   className: string;
   style: React.CSSProperties;
-  bordered: boolean;
   level: number;
+  bordered: boolean;
   sorterState: SorterStateType<T>[];
   renderSorter: (params: {
     activeAsc: boolean;
@@ -37,32 +36,33 @@ interface ThProps<T> {
     triggerAsc: () => void;
     triggerDesc: () => void;
   }) => React.ReactNode;
-  onSort: (col: ColumnsWithType<T> & { colSpan: number }, order: 'asc' | 'desc') => void;
+  onSort?: (col: ColumnsWithType<T> & { colSpan: number }, order: 'asc' | 'desc') => void;
   filterState: FilterStateType<T>[];
-  onFilterChange: (col: ColumnsWithType<T> & { colSpan: number }, filteredValue: string[]) => void;
-  onMouseDown: (resizeInfo: ResizeInfoType, col: ColumnsWithType<T>, colIndex: number) => void;
+  onFilterChange?: (col: ColumnsWithType<T> & { colSpan: number }, filteredValue: string[]) => void;
+  onSelectAll?: (selected: boolean) => void;
+  onMouseDown?: (resizeInfo: ResizeInfoType, col: ColumnsWithType<T>, colIndex: number) => void;
 }
 
 function Th<T>(props: ThProps<T>) {
   const {
-    index,
     col,
+    index,
     checked,
     rowSpan,
+    level,
+    bordered,
     selectionTitle,
     expandableTitle,
     // scrollLeft,
     // offsetRight,
-    onSelectAll,
-    className,
-    style,
+    style = {},
+    className = '',
     sorterState,
     renderSorter,
-    onSort,
     filterState,
+    onSort,
     onFilterChange,
-    bordered,
-    level,
+    onSelectAll,
     onMouseDown,
   } = props;
 
@@ -156,13 +156,14 @@ function Th<T>(props: ThProps<T>) {
   const renderSorterContent = useCallback(
     (col: ColumnsWithType<T> & { colSpan: number; ignoreRightBorder: boolean }) => {
       const item = sorterState.find((s) => s.dataIndex === col.dataIndex);
+
       return (
         <Sorter
           activeAsc={item?.order === 'asc'}
           activeDesc={item?.order === 'desc'}
           renderSorter={renderSorter}
           onChange={(order) => {
-            onSort(col, order);
+            onSort && onSort(col, order);
           }}
         />
       );
@@ -181,10 +182,10 @@ function Th<T>(props: ThProps<T>) {
           filteredValue={curr?.filteredValue || []}
           filterSearch={col?.filterSearch}
           onReset={() => {
-            onFilterChange(col, []);
+            onFilterChange && onFilterChange(col, []);
           }}
           onChange={(checkedValue: string[]) => {
-            onFilterChange(col, checkedValue);
+            onFilterChange && onFilterChange(col, checkedValue);
           }}
         />
       );
