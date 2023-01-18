@@ -9,6 +9,7 @@ import { ReactComponent as QueryIcon } from '@/assets/query.svg';
 import { ReactComponent as EmptyIcon } from '@/assets/empty.svg';
 import type { FilterMenusType } from '../interface';
 import './index.less';
+import { generateUUID } from '../utils/util';
 
 interface FilterProps {
   filters: FilterMenusType[];
@@ -124,9 +125,7 @@ const Filter = (props: FilterProps) => {
       popperClass.current && document.querySelector(`.${popperClass.current}`);
     if (!popperPlaceholder) {
       const div = document.createElement('div');
-      const date = new Date();
-      const uid = date.getTime().toString(36);
-      popperClass.current = `popper-placeholder-${uid}`;
+      popperClass.current = `popper-placeholder-${generateUUID()}`;
       div.classList.add(popperClass.current);
       div.setAttribute('style', 'position: absolute; top: 0; left: 0; width: 100%;');
       document.body.appendChild(div);
