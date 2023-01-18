@@ -54,6 +54,14 @@
   border-bottom: 1px solid @table-border-color;
 }
 
+.table-small thead > tr > th {
+  padding: @table-cell-small-padding-vertical @table-cell-small-padding-horizontal;
+}
+
+.table-large thead > tr > th {
+  padding: @table-cell-large-padding-vertical @table-cell-large-padding-horizontal;
+}
+
 .table-container thead > tr > th {
   .cell-header {
     display: flex;
@@ -146,6 +154,14 @@
   &.cell-align-right {
     text-align: right;
   }
+}
+
+.table-small tbody td {
+  padding: @table-cell-small-padding-vertical @table-cell-small-padding-horizontal;
+}
+
+.table-large tbody td {
+  padding: @table-cell-large-padding-vertical @table-cell-large-padding-horizontal;
 }
 
 .table-container thead > tr > th,

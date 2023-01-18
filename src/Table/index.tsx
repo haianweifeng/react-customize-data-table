@@ -53,8 +53,8 @@ export interface TableProps<T> {
   loading?: boolean | React.ReactNode;
   /** 是否显示表头  todo header */
   showHeader?: boolean;
-  /** 表格大小 todo */
-  size?: 'default' | 'small';
+  /** 表格大小 */
+  size?: 'default' | 'small' | 'large';
   /** 表格行的类名 */
   rowClassName?: (record: T, index: number) => string;
   /** 设置头部行属性 todo 和 onRow 用法一样是事件集合器 需要确定是不是需要 header 存在这个api 感觉没必要存在 */
@@ -120,7 +120,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     style = {},
     width,
     height,
-    // size = 'default',
+    size = 'default',
     showHeader = true,
     bordered,
     rowKey = 'key',
@@ -1350,7 +1350,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // todo
   const tableWrapClass = classnames({
     'table-container': true,
-    size: true,
+    'table-small': size === 'small',
+    'table-large': size === 'large',
     'table-bordered': bordered,
     [className]: !!className,
   });
