@@ -114,6 +114,32 @@
     }
   }
 
+  &.row-even {
+    td {
+      background-color: @table-even-td-bg;
+    }
+
+    &:hover {
+      background-color: @table-bg-hover;
+      td {
+        background-color: @table-bg-hover;
+      }
+    }
+  }
+
+  &.row-odd {
+    td {
+      background-color: @table-odd-td-bg;
+    }
+
+    &:hover {
+      background-color: @table-bg-hover;
+      td {
+        background-color: @table-bg-hover;
+      }
+    }
+  }
+
   &.row-selected {
     &:hover {
       background-color: @table-selected-row-hover-bg;
@@ -127,13 +153,13 @@
   }
 }
 
-.table-container tbody tr.row-even td {
-  background-color: @table-even-td-bg;
-}
-
-.table-container tbody tr.row-odd td {
-  background-color: @table-odd-td-bg;
-}
+//.table-container tbody tr.row-even td {
+//  background-color: @table-even-td-bg;
+//}
+//
+//.table-container tbody tr.row-odd td {
+//  background-color: @table-odd-td-bg;
+//}
 
 .table-container tbody td {
   position: relative;
