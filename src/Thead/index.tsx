@@ -8,6 +8,7 @@ import type {
   SorterStateType,
   FilterStateType,
   ResizeInfoType,
+  LocalType,
 } from '../interface';
 import Th from '../Th';
 import type { ThProps } from '../Th';
@@ -18,6 +19,7 @@ interface TheadProps<T> {
   offsetRight: number;
   sorterState: SorterStateType<T>[];
   filterState: FilterStateType<T>[];
+  locale: LocalType;
   checked: boolean | 'indeterminate';
   expandable?: ExpandableType<T>;
   rowSelection?: RowSelectionType<T>;
@@ -36,6 +38,7 @@ interface TheadProps<T> {
 
 function Thead<T>(props: TheadProps<T>) {
   const {
+    locale,
     bordered,
     checked,
     columns,
@@ -159,6 +162,7 @@ function Thead<T>(props: TheadProps<T>) {
         col,
         index,
         level,
+        locale,
         checked,
         bordered,
         style: styles,

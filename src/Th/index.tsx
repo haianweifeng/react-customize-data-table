@@ -3,6 +3,7 @@ import {
   ColumnsGroupWithType,
   ColumnsWithType,
   FilterStateType,
+  LocalType,
   ResizeInfoType,
   SorterStateType,
 } from '../interface';
@@ -17,6 +18,7 @@ export interface ThProps<T> {
   index: string;
   checked: boolean | 'indeterminate';
   rowSpan: number;
+  locale: LocalType;
   selectionTitle?: React.ReactNode;
   expandableTitle?: React.ReactNode;
   col: (ColumnsWithType<T> | ColumnsGroupWithType<T>) & {
@@ -48,6 +50,7 @@ function Th<T>(props: ThProps<T>) {
     col,
     index,
     checked,
+    locale,
     rowSpan,
     level,
     bordered,
@@ -176,6 +179,7 @@ function Th<T>(props: ThProps<T>) {
       const curr = filterState.find((f) => f.dataIndex === col.dataIndex);
       return (
         <Filter
+          locale={locale}
           filters={col.filters!}
           filterIcon={col.filterIcon}
           filterMultiple={col.filterMultiple !== false}

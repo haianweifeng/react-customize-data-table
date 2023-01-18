@@ -24,6 +24,7 @@ import type {
   FilterInfoType,
   CachePositionType,
   ResizeInfoType,
+  LocalType,
 } from '../interface';
 import VirtualList from '../VirtualList';
 import type { PaginationProps } from '../index';
@@ -63,10 +64,12 @@ export interface TableProps<T> {
   onRowEvents?: (columns: any, index: number) => any;
   /** 分页 */
   pagination?: PaginationProps;
-  /** disabled 为 true，禁用全部选项 todo 好像不需要 */
-  disabled?: (data: any) => boolean | boolean;
+  // /** disabled 为 true，禁用全部选项 todo 好像不需要 */
+  // disabled?: (data: any) => boolean | boolean;
   /** 空数据文案 */
   empty?: string | React.ReactNode;
+  /** 默认文案设置 */
+  locale?: LocalType;
   /** 单行表格的预期高度 todo */
   rowHeight?: number;
   /** 单次render的最大行数 如果单次渲染的行数不足以撑开容器的高度则renderMaxRows 自动取值为容器可容纳的行数值 todo */
@@ -140,6 +143,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     virtual,
     empty = 'No data',
     onColumnResize,
+    locale = {
+      filterSearchPlaceholder: '在筛选项中搜索',
+      filterEmptyText: '无筛选项',
+      filterResult: '未发现',
+      filterConfirm: '筛选',
+      filterReset: '重置',
+    },
   } = props;
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 44;
@@ -1315,6 +1325,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           <Thead
             bordered
             checked={checked}
+            locale={locale}
             columns={columnsWithFixed}
             scrollLeft={scrollLeft}
             offsetRight={offsetRight}

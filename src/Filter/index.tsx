@@ -7,11 +7,12 @@ import Icon from '../Icon';
 import { ReactComponent as FilterIcon } from '@/assets/filter.svg';
 import { ReactComponent as QueryIcon } from '@/assets/query.svg';
 import { ReactComponent as EmptyIcon } from '@/assets/empty.svg';
-import type { FilterMenusType } from '../interface';
+import type { FilterMenusType, LocalType } from '../interface';
 import './index.less';
 import { generateUUID } from '../utils/util';
 
 interface FilterProps {
+  locale: LocalType;
   filters: FilterMenusType[];
   filterMultiple: boolean;
   filteredValue: string[];
@@ -22,8 +23,16 @@ interface FilterProps {
 }
 
 const Filter = (props: FilterProps) => {
-  const { filters, filterMultiple, filteredValue, onReset, onChange, filterIcon, filterSearch } =
-    props;
+  const {
+    locale,
+    filters,
+    filterMultiple,
+    filteredValue,
+    onReset,
+    onChange,
+    filterIcon,
+    filterSearch,
+  } = props;
 
   const filterContainerRef = useRef<HTMLDivElement>(null);
   const popperRef = useRef<HTMLDivElement>(null);
@@ -218,7 +227,7 @@ const Filter = (props: FilterProps) => {
               </div>
               <input
                 type="text"
-                placeholder="在筛选项中搜索"
+                placeholder={locale?.filterSearchPlaceholder || '在筛选项中搜索'}
                 className="search-input"
                 value={searchValue}
                 onFocus={handleFocus}
@@ -232,12 +241,12 @@ const Filter = (props: FilterProps) => {
           {!filters.length && (
             <div className="filter-empty">
               <Icon component={EmptyIcon} className="filter-empty-icon" />
-              <span>No filters</span>
+              <span>{locale?.filterEmptyText || 'No filters'}</span>
             </div>
           )}
           {filters.length > 0 && !filterOptions.length && !!filterSearch && (
             <div className="filter-empty">
-              <span>Not Found</span>
+              <span>{locale?.filterResult || 'Not Found'}</span>
             </div>
           )}
           {filterOptions.map((f) => {
@@ -274,7 +283,7 @@ const Filter = (props: FilterProps) => {
             })}
             onClick={handleFilter}
           >
-            筛选
+            {locale?.filterConfirm || '筛选'}
           </div>
           <div
             className={classnames({
@@ -283,7 +292,7 @@ const Filter = (props: FilterProps) => {
             })}
             onClick={handleReset}
           >
-            重置
+            {locale?.filterReset || '重置'}
           </div>
         </div>
       </div>

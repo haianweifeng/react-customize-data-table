@@ -91,6 +91,19 @@ const data: DataType[] = [
 ];
 
 const App = () => {
-  return <Table columns={columns} dataSource={data} bordered />;
+  return (
+    <Table
+      columns={columns}
+      dataSource={data}
+      bordered
+      locale={{
+        filterSearchPlaceholder: 'Search in filter',
+        filterEmptyText: 'No filters',
+        filterResult: 'Not Found',
+        filterConfirm: 'filter',
+        filterReset: 'reset',
+      }}
+    />
+  );
 };
 export default App;
