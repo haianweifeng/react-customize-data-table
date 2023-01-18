@@ -138,6 +138,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     renderMaxRows = 20,
     rowHeight = 46,
     virtual,
+    empty = 'No data',
     onColumnResize,
   } = props;
 
@@ -1270,6 +1271,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             <Colgroup colWidths={colWidths} columns={columnsWithWidth} />
             <Tbody
               {...props}
+              bordered
+              empty={empty}
               isTree={isTree}
               scrollLeft={scrollLeft}
               offsetRight={offsetRight}

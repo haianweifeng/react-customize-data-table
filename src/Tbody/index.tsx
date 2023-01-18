@@ -34,6 +34,8 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     isTree,
     dataSource = [],
     columns,
+    empty,
+    bordered,
     startRowIndex,
     rowKey = 'key',
     treeLevelMap,
@@ -405,7 +407,19 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
   };
 
   return (
-    <tbody ref={tbodyRef}>{dataSource.map((d, i: number) => renderTr(d, i + startRowIndex))}</tbody>
+    <tbody ref={tbodyRef}>
+      {!dataSource.length ? (
+        <tr key="empty-placeholder" className="row-placeholder">
+          <td
+            colSpan={columns.length}
+            className={classnames({ 'cell-ignore-right-border': bordered })}
+          >
+            {empty}
+          </td>
+        </tr>
+      ) : null}
+      {dataSource.map((d, i: number) => renderTr(d, i + startRowIndex))}
+    </tbody>
   );
 }
 export default Tbody;
