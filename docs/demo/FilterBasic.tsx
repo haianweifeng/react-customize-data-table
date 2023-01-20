@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { ColumnsType, FilterMenusType } from 'react-data-table';
-import { Table } from 'react-data-table';
+import { Table, LocalProvider } from 'react-data-table';
 
 interface DataType {
   key: React.Key;
@@ -91,19 +91,66 @@ const data: DataType[] = [
 ];
 
 const App = () => {
+  const [language, setLanguage] = useState('en-US');
+  const locale =
+    language === 'en-US'
+      ? {
+          table: {
+            filterSearchPlaceholder: 'Search in filter',
+            filterEmptyText: 'No filters',
+            filterResult: 'Not Found',
+            filterConfirm: 'filter',
+            filterReset: 'reset',
+          },
+        }
+      : {
+          table: {
+            filterSearchPlaceholder: '在筛选项中搜索1',
+            filterEmptyText: '无筛选项1',
+            filterResult: '未发现1',
+            filterConfirm: '筛选1',
+            filterReset: '重置1',
+          },
+        };
   return (
-    <Table
-      columns={columns}
-      dataSource={data}
-      bordered
-      locale={{
-        filterSearchPlaceholder: 'Search in filter',
-        filterEmptyText: 'No filters',
-        filterResult: 'Not Found',
-        filterConfirm: 'filter',
-        filterReset: 'reset',
-      }}
-    />
+    <div>
+      <div style={{ display: 'flex', marginBottom: '20px' }}>
+        <div style={{ width: '80px', cursor: 'pointer' }} onClick={() => setLanguage('en-US')}>
+          English
+        </div>
+        <div style={{ width: '80px', cursor: 'pointer' }} onClick={() => setLanguage('zh-CN')}>
+          Chinese
+        </div>
+      </div>
+      {/*<LocalProvider locale={locale}>*/}
+      {/*  <Table*/}
+      {/*    language={language}*/}
+      {/*    columns={columns}*/}
+      {/*    dataSource={data}*/}
+      {/*    bordered*/}
+      {/*    // locale={{*/}
+      {/*    //   filterSearchPlaceholder: 'Search in filter',*/}
+      {/*    //   filterEmptyText: 'No filters',*/}
+      {/*    //   filterResult: 'Not Found',*/}
+      {/*    //   filterConfirm: 'filter',*/}
+      {/*    //   filterReset: 'reset',*/}
+      {/*    // }}*/}
+      {/*  />*/}
+      {/*</LocalProvider>*/}
+      <Table
+        language={language}
+        columns={columns}
+        dataSource={data}
+        bordered
+        // locale={{
+        //   filterSearchPlaceholder: 'Search in filter',
+        //   filterEmptyText: 'No filters',
+        //   filterResult: 'Not Found',
+        //   filterConfirm: 'filter',
+        //   filterReset: 'reset',
+        // }}
+      />
+    </div>
   );
 };
 export default App;

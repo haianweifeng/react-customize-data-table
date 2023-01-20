@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useRef, useState, useEffect, useCallback, useContext } from 'react';
 import classnames from 'classnames';
 import Thead from '../Thead';
 import Tbody from '../Tbody';
@@ -31,6 +31,7 @@ import type { PaginationProps } from '../index';
 import '../style/index.less';
 import { getRowKey, toPoint, findParentByKey, parseValue } from '../utils/util';
 import { BAR_WIDTH } from '../utils/constant';
+import LocaleContext from '../LocalProvider/context';
 // import styles from './index.less';
 
 export interface TableProps<T> {
@@ -118,6 +119,8 @@ export interface TableProps<T> {
 // todo bug 如果dataIndex 在data 中找不到对应字段数据 是不是要加个key 给用户自己设置
 // 设置colgroup 列的宽度  然后获取每个单元格最后渲染的宽度 重新设置 colgroup 的宽度
 function Table<T extends { key?: number | string; children?: T[] }>(props: TableProps<T>) {
+  const localeContext = useContext(LocaleContext);
+
   const {
     className = '',
     style = {},
@@ -143,13 +146,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     virtual,
     empty = 'No data',
     onColumnResize,
-    locale = {
-      filterSearchPlaceholder: '在筛选项中搜索',
-      filterEmptyText: '无筛选项',
-      filterResult: '未发现',
-      filterConfirm: '筛选',
-      filterReset: '重置',
-    },
+    locale = localeContext.table,
   } = props;
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 44;

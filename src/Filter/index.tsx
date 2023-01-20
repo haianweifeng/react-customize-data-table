@@ -227,7 +227,7 @@ const Filter = (props: FilterProps) => {
               </div>
               <input
                 type="text"
-                placeholder={locale?.filterSearchPlaceholder || '在筛选项中搜索'}
+                placeholder={locale?.filterSearchPlaceholder}
                 className="search-input"
                 value={searchValue}
                 onFocus={handleFocus}
@@ -241,12 +241,12 @@ const Filter = (props: FilterProps) => {
           {!filters.length && (
             <div className="filter-empty">
               <Icon component={EmptyIcon} className="filter-empty-icon" />
-              <span>{locale?.filterEmptyText || 'No filters'}</span>
+              <span>{locale?.filterEmptyText}</span>
             </div>
           )}
           {filters.length > 0 && !filterOptions.length && !!filterSearch && (
             <div className="filter-empty">
-              <span>{locale?.filterResult || 'Not Found'}</span>
+              <span>{locale?.filterResult}</span>
             </div>
           )}
           {filterOptions.map((f) => {
@@ -283,7 +283,7 @@ const Filter = (props: FilterProps) => {
             })}
             onClick={handleFilter}
           >
-            {locale?.filterConfirm || '筛选'}
+            {locale?.filterConfirm}
           </div>
           <div
             className={classnames({
@@ -292,7 +292,7 @@ const Filter = (props: FilterProps) => {
             })}
             onClick={handleReset}
           >
-            {locale?.filterReset || '重置'}
+            {locale?.filterReset}
           </div>
         </div>
       </div>

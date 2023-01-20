@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef, isValidElement } from 'react';
+import React, { useState, useMemo, useEffect, useRef, isValidElement, useContext } from 'react';
 import classnames from 'classnames';
 import Pager from './Pager';
 import Icon from '../Icon';
@@ -7,6 +7,7 @@ import { ReactComponent as LeftArrow } from '@/assets/arrow-left.svg';
 import { ReactComponent as RightArrow } from '@/assets/arrow-right.svg';
 import { ReactComponent as LeftDoubleArrow } from '@/assets/left-double-arrow.svg';
 import { ReactComponent as RightDoubleArrow } from '@/assets/right-double-arrow.svg';
+import LocaleContext from '../LocalProvider/context';
 import './index.less';
 
 export interface PaginationProps {
@@ -45,6 +46,9 @@ const Pagination = (props: PaginationProps) => {
     itemRender,
     onChange,
   } = props;
+
+  const localeContext = useContext(LocaleContext);
+  const locale = localeContext.pagination;
 
   const selectRef = useRef<any>(null);
   const inputRef = useRef<any>(null);
@@ -264,7 +268,7 @@ const Pagination = (props: PaginationProps) => {
             'pagination-select-disabled': disabled,
           })}
         >
-          <span className="pagination-select-result">{`${pageSize}条/页`}</span>
+          <span className="pagination-select-result">{`${pageSize}${locale.items_per_page}`}</span>
           <Icon component={DownIcon} className="pagination-down-icon" />
         </div>
         <div
@@ -283,7 +287,7 @@ const Pagination = (props: PaginationProps) => {
                 key={p}
                 onClick={() => handleSelect(p)}
               >
-                {`${p}条/页`}
+                {`${p}${locale.items_per_page}`}
               </div>
             );
           })}
@@ -352,7 +356,7 @@ const Pagination = (props: PaginationProps) => {
           'pagination-jumper-disabled': disabled,
         })}
       >
-        跳至
+        {locale.jump_to}
         <input
           ref={inputRef}
           type="text"
@@ -360,7 +364,7 @@ const Pagination = (props: PaginationProps) => {
           onKeyDown={handleKeyDown}
           onBlur={handleBlur}
         />
-        页
+        {locale.page}
       </div>
     );
   };

@@ -15,6 +15,8 @@ export { default as Spin } from './Spin';
 
 export { default as Tooltip } from './Tooltip';
 
+export { default as LocalProvider } from './LocalProvider';
+
 export type { ColumnsType, FilterInfoType, FilterMenusType, SortInfoType } from './interface';
 
 export * from './index.less';

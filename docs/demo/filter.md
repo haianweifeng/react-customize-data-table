@@ -1,3 +1,3 @@
-### 受控筛选
+### Controlled Screening
 
-<code src='./Filter.tsx' desc='设置 column.filteredValue 属性表示筛选会变成受控的'></code>
+<code src='./Filter.tsx' desc='Setting the column.filteredValue property means that filtering will become controlled'></code>
