@@ -3,7 +3,6 @@ import {
   ColumnsGroupWithType,
   ColumnsWithType,
   FilterStateType,
-  LocalType,
   ResizeInfoType,
   SorterStateType,
 } from '../interface';
@@ -18,9 +17,7 @@ export interface ThProps<T> {
   index: string;
   checked: boolean | 'indeterminate';
   rowSpan: number;
-  locale: LocalType;
-  selectionTitle?: React.ReactNode;
-  expandableTitle?: React.ReactNode;
+  locale: Record<string, string>;
   col: (ColumnsWithType<T> | ColumnsGroupWithType<T>) & {
     colSpan: number;
     ignoreRightBorder: boolean;
@@ -54,8 +51,8 @@ function Th<T>(props: ThProps<T>) {
     rowSpan,
     level,
     bordered,
-    selectionTitle,
-    expandableTitle,
+    // selectionTitle,
+    // expandableTitle,
     // scrollLeft,
     // offsetRight,
     style = {},
@@ -125,13 +122,13 @@ function Th<T>(props: ThProps<T>) {
   const renderSelection = () => {
     return (
       <th key={index} rowSpan={rowSpan} className={className} style={style} ref={cellRef}>
-        {selectionTitle ? (
+        {col.title ? (
           showTooltip && isOverflow ? (
-            renderTooltip(selectionTitle)
+            renderTooltip(col.title)
           ) : !!col.ellipsis ? (
-            <span className="cell-tooltip-content">{selectionTitle}</span>
+            <span className="cell-tooltip-content">{col.title}</span>
           ) : (
-            selectionTitle
+            col.title
           )
         ) : col.type === 'radio' ? null : (
           <Checkbox checked={checked} onChange={handleChange} />
@@ -143,13 +140,13 @@ function Th<T>(props: ThProps<T>) {
   const renderExpand = () => {
     return (
       <th key={index} rowSpan={rowSpan} className={className} style={style} ref={cellRef}>
-        {expandableTitle ? (
+        {col.title ? (
           showTooltip && isOverflow ? (
-            renderTooltip(expandableTitle)
+            renderTooltip(col.title)
           ) : !!col.ellipsis ? (
-            <span className="cell-tooltip-content">{expandableTitle}</span>
+            <span className="cell-tooltip-content">{col.title}</span>
           ) : (
-            expandableTitle
+            col.title
           )
         ) : null}
       </th>

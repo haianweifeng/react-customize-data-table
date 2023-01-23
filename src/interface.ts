@@ -98,7 +98,7 @@ export interface ColumnsType<T> {
   minWidth?: number | string;
   /** 超过宽度将自动省略 */
   ellipsis?: boolean | TooltipType;
-  /** 表头列合并 */
+  /** 表头列合并 todo 是不是要换成 onHeaderCell */
   headerColSpan?: number;
   /** 是否允许拖拽调整宽度 需开启 border 属性，且设置 width 不支持表头分组的调整宽度 */
   resizable?: boolean;

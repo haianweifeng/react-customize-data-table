@@ -8,7 +8,6 @@ import type {
   SorterStateType,
   FilterStateType,
   ResizeInfoType,
-  LocalType,
 } from '../interface';
 import Th from '../Th';
 import type { ThProps } from '../Th';
@@ -19,7 +18,7 @@ interface TheadProps<T> {
   offsetRight: number;
   sorterState: SorterStateType<T>[];
   filterState: FilterStateType<T>[];
-  locale: LocalType;
+  locale: Record<string, string>;
   checked: boolean | 'indeterminate';
   expandable?: ExpandableType<T>;
   rowSelection?: RowSelectionType<T>;
@@ -177,8 +176,6 @@ function Thead<T>(props: TheadProps<T>) {
         case 'expanded':
           baseProps = Object.assign({}, baseProps, {
             rowSpan: totalLevel,
-            selectionTitle: rowSelection?.columnTitle,
-            expandableTitle: expandable?.columnTitle,
             className: cls,
             onSelectAll: handleChange,
           });

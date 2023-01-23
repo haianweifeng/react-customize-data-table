@@ -53,7 +53,7 @@ export interface TableProps<T> {
   bordered?: boolean;
   /** 页面是否加载中 */
   loading?: boolean | React.ReactNode;
-  /** 是否显示表头  todo header */
+  /** 是否显示表头 */
   showHeader?: boolean;
   /** 表格大小 */
   size?: 'default' | 'small' | 'large';
@@ -114,7 +114,6 @@ export interface TableProps<T> {
   treeProps?: TreeExpandableType<T>;
 }
 // todo 还未测试列宽设为百分比的情况
-// todo 如果没有筛选到数据时候提示文本
 // todo bug columnWidth: '160' 不起作用
 // todo bug 如果dataIndex 在data 中找不到对应字段数据 是不是要加个key 给用户自己设置
 // 设置colgroup 列的宽度  然后获取每个单元格最后渲染的宽度 重新设置 colgroup 的宽度
@@ -391,7 +390,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       cols.unshift({
         type: rowSelection.type || 'checkbox',
         dataIndex: 'checkbox',
-        title: '',
+        title: rowSelection?.columnTitle || '',
         width: rowSelection?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
       });
 
@@ -404,7 +403,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       cols.splice(insertIndex, 0, {
         type: 'expanded',
         dataIndex: 'expanded',
-        title: '',
+        title: expandable?.columnTitle || '',
         width: expandable?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
       });
     }
@@ -1358,7 +1357,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return null;
   };
 
-  // todo
   const tableWrapClass = classnames({
     'table-container': true,
     'table-small': size === 'small',

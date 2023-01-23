@@ -7,12 +7,12 @@ import Icon from '../Icon';
 import { ReactComponent as FilterIcon } from '@/assets/filter.svg';
 import { ReactComponent as QueryIcon } from '@/assets/query.svg';
 import { ReactComponent as EmptyIcon } from '@/assets/empty.svg';
-import type { FilterMenusType, LocalType } from '../interface';
+import type { FilterMenusType } from '../interface';
 import './index.less';
 import { generateUUID } from '../utils/util';
 
 interface FilterProps {
-  locale: LocalType;
+  locale: Record<string, string>;
   filters: FilterMenusType[];
   filterMultiple: boolean;
   filteredValue: string[];
