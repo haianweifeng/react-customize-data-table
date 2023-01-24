@@ -1,9 +1,10 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import classnames from 'classnames';
 import { isEqual } from 'lodash';
 import type { CellProps } from '../interface';
 import type { TableProps } from '../Table';
 import Td from '../Td';
+import { getParent } from '../utils/util';
 
 interface TrProps<T> extends TableProps<T> {
   scrollLeft: number;
@@ -29,6 +30,7 @@ function Tr<T>(props: TrProps<T>) {
     striped,
     bordered,
     rowClassName,
+    onRow,
     onUpdateRowHeight,
   } = props;
 
@@ -137,9 +139,22 @@ function Tr<T>(props: TrProps<T>) {
 
   const cls = classnames(clsInfo);
 
+  const rowProps = useMemo(() => {
+    if (typeof onRow === 'function') {
+      return onRow(rowData, rowIndex);
+    }
+    return {};
+  }, [rowData, rowIndex, onRow]);
+
+  const handleRowClick = (event: any) => {
+    const parent = getParent(event.target, '.selection-expand-column');
+    if (parent) return;
+    rowProps?.onClick(event);
+  };
+
   return (
     <>
-      <tr key="0" className={cls} ref={trRef}>
+      <tr key="0" className={cls} ref={trRef} {...rowProps} onClick={handleRowClick}>
         {renderTds()}
       </tr>
       {renderExpandRow()}

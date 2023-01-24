@@ -114,6 +114,24 @@ const App = () => {
           });
         },
       }}
+      onRow={(record: DataType, rowIndex: number) => {
+        return {
+          onClick: () => {
+            console.log('click row');
+            // console.log(record);
+            // console.log(`rowIndex: ${rowIndex}`);
+          },
+          onDoubleClick: () => {
+            console.log('double click');
+          },
+          // onMouseEnter: () => {
+          //   console.log('mouse enter');
+          // },
+          // onMouseLeave: () => {
+          //   console.log('mouse leave');
+          // }
+        };
+      }}
     />
   );
 };

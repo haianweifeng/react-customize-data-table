@@ -174,6 +174,7 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
         checked={checked}
         onChange={(selected: boolean, event: Event) => {
           handleSelect(isRadio, checked == true, rowData, rowIndex, selected, event);
+          event.stopPropagation();
         }}
       />
     ) : (
@@ -182,6 +183,7 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
         checked={checked}
         onChange={(selected: boolean, event: Event) => {
           handleSelect(isRadio, checked == true, rowData, rowIndex, selected, event);
+          event.stopPropagation();
         }}
       />
     );
@@ -212,8 +214,9 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
           'expand-icon': true,
           'expand-icon-divider': expanded,
         })}
-        onClick={() => {
+        onClick={(event) => {
           handleExpand(!expanded, rowData, recordKey);
+          event.stopPropagation();
         }}
       />
     );

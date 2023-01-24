@@ -51,8 +51,6 @@ function Th<T>(props: ThProps<T>) {
     rowSpan,
     level,
     bordered,
-    // selectionTitle,
-    // expandableTitle,
     // scrollLeft,
     // offsetRight,
     style = {},
@@ -122,17 +120,19 @@ function Th<T>(props: ThProps<T>) {
   const renderSelection = () => {
     return (
       <th key={index} rowSpan={rowSpan} className={className} style={style} ref={cellRef}>
-        {col.title ? (
-          showTooltip && isOverflow ? (
-            renderTooltip(col.title)
-          ) : !!col.ellipsis ? (
-            <span className="cell-tooltip-content">{col.title}</span>
-          ) : (
-            col.title
-          )
-        ) : col.type === 'radio' ? null : (
-          <Checkbox checked={checked} onChange={handleChange} />
-        )}
+        {/*{col.title ? (*/}
+        {/*  showTooltip && isOverflow ? (*/}
+        {/*    renderTooltip(col.title)*/}
+        {/*  ) : !!col.ellipsis ? (*/}
+        {/*    <span className="cell-tooltip-content">{col.title}</span>*/}
+        {/*  ) : (*/}
+        {/*    col.title*/}
+        {/*  )*/}
+        {/*) : col.type === 'radio' ? null : (*/}
+        {/*  <Checkbox checked={checked} onChange={handleChange} />*/}
+        {/*)}*/}
+        {col.title ||
+          (col.type === 'radio' ? null : <Checkbox checked={checked} onChange={handleChange} />)}
       </th>
     );
   };
@@ -140,15 +140,16 @@ function Th<T>(props: ThProps<T>) {
   const renderExpand = () => {
     return (
       <th key={index} rowSpan={rowSpan} className={className} style={style} ref={cellRef}>
-        {col.title ? (
-          showTooltip && isOverflow ? (
-            renderTooltip(col.title)
-          ) : !!col.ellipsis ? (
-            <span className="cell-tooltip-content">{col.title}</span>
-          ) : (
-            col.title
-          )
-        ) : null}
+        {/*{col.title ? (*/}
+        {/*  showTooltip && isOverflow ? (*/}
+        {/*    renderTooltip(col.title)*/}
+        {/*  ) : !!col.ellipsis ? (*/}
+        {/*    <span className="cell-tooltip-content">{col.title}</span>*/}
+        {/*  ) : (*/}
+        {/*    col.title*/}
+        {/*  )*/}
+        {/*) : null}*/}
+        {col.title || null}
       </th>
     );
   };

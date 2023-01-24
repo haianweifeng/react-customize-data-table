@@ -8,6 +8,7 @@ import type {
   SorterStateType,
   FilterStateType,
   ResizeInfoType,
+  ColumnsType,
 } from '../interface';
 import Th from '../Th';
 import type { ThProps } from '../Th';
