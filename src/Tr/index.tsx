@@ -1,6 +1,5 @@
-import React, { useRef, useEffect, useMemo } from 'react';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
 import classnames from 'classnames';
-import { isEqual } from 'lodash';
 import type { CellProps } from '../interface';
 import type { TableProps } from '../Table';
 import Td from '../Td';
@@ -36,48 +35,27 @@ function Tr<T>(props: TrProps<T>) {
 
   const trRef = useRef<HTMLTableRowElement>(null);
   const expandTrRef = useRef<HTMLTableRowElement>(null);
-  const lastRowHeight = useRef<number>(0);
-  const lastExpandHeight = useRef<number>(0);
-  const lastIndex = useRef<number>();
-  const lastCols = useRef<CellProps[]>();
-  // console.log(`lastCols: ${lastCols.current}`);
+  const [rowHeight, setRowHeight] = useState<number>(0);
 
   // todo
   // 1.待验证如果是动态改变数据长度 是否能触发 现在是监听了rowIndex 如果数据长度改变相当于rowIndex 改变了
   // 2. 待验证如果列改变是否能触发
-  // useEffect(() => {
-  //   if (!trRef.current) return;
-  //   const { height } = trRef.current.getBoundingClientRect();
-  //   let expandHeight = 0;
-  //   if (expanded && expandTrRef.current) {
-  //     expandHeight = expandTrRef.current.clientHeight;
-  //   }
-  //   onUpdateRowHeight(trRef.current, height + expandHeight, rowIndex);
-  // }, [cols, expanded, onUpdateRowHeight, rowIndex]);
-
   useEffect(() => {
     if (!trRef.current) return;
-    const colChange = lastCols.current && !isEqual(lastCols.current, cols);
     let { height } = trRef.current.getBoundingClientRect();
-    if (Number.isNaN(height)) height = lastRowHeight.current || 0;
+    if (Number.isNaN(height)) height = 0;
     let expandHeight = 0;
     if (expandTrRef.current) {
       expandHeight = expandTrRef.current.clientHeight;
     }
-    if (
-      height === lastRowHeight.current &&
-      expandHeight === lastExpandHeight.current &&
-      !colChange &&
-      lastIndex.current === rowIndex
-    )
-      return;
-    lastRowHeight.current = height;
-    lastIndex.current = rowIndex;
-    lastExpandHeight.current = expandHeight;
-    lastCols.current = cols;
-    // onUpdateRowHeight(height + expandHeight, rowIndex);
-    // setRowHeight(height + this.expandHeight, this.props.index, expand)
-  }, [rowIndex, cols, onUpdateRowHeight]);
+    const newHeight = height + expandHeight;
+    if (newHeight !== rowHeight) {
+      // console.log(`lastRowHeight: ${rowHeight}`);
+      // console.log(`rowIndex: ${rowIndex}`);
+      setRowHeight(newHeight);
+      onUpdateRowHeight(newHeight, rowIndex);
+    }
+  }, [rowIndex, cols, expanded, rowHeight, onUpdateRowHeight]);
 
   const renderTds = () => {
     const tds = [];
@@ -110,6 +88,7 @@ function Tr<T>(props: TrProps<T>) {
       (expandable?.rowExpandable && !expandable?.rowExpandable(rowData))
     )
       return;
+
     const cls =
       expandable?.expandedRowClassName && expandable.expandedRowClassName(rowData, rowIndex);
     const existFixed = cols.some((c) => c.fixed === 'left' || c.fixed === 'right');
@@ -149,7 +128,9 @@ function Tr<T>(props: TrProps<T>) {
   const handleRowClick = (event: any) => {
     const parent = getParent(event.target, '.selection-expand-column');
     if (parent) return;
-    rowProps?.onClick(event);
+    if (typeof rowProps?.onClick === 'function') {
+      rowProps?.onClick(event);
+    }
   };
 
   return (

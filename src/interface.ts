@@ -210,6 +210,8 @@ export interface CellProps {
   fistRightFixed?: boolean;
   /** 超过宽度将自动省略 */
   ellipsis?: boolean | TooltipType;
+  /** 列宽度 */
+  width?: number | string;
 }
 
 export type CellType = { colSpan?: number; rowSpan?: number };

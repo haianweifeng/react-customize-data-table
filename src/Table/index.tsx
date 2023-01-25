@@ -146,7 +146,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     empty = 'No data',
     onColumnResize,
     locale = localeContext.table,
-    onHeaderRow,
   } = props;
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 44;
@@ -828,27 +827,29 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   );
   // console.log(colWidths);
 
-  // todo 参数height 名字要更改
-  const handleUpdateRowHeight = (height: number, rowIndex: number) => {
-    // console.log(`height: ${height}`);
-    const copyCachePosition = [...cachePosition];
-    const index = copyCachePosition.findIndex((c) => c.index === rowIndex);
-    if (index >= 0) {
-      const item = { ...copyCachePosition[index] };
-      const diff = item.height - height;
-      if (diff) {
-        // todo 如果存在差距的话得更新下scrollTop  startOffset
-        item.height = height;
-        item.bottom = item.bottom - diff;
-        for (let j = index + 1; j < copyCachePosition.length; j++) {
-          copyCachePosition[j].top = copyCachePosition[j - 1].bottom;
-          copyCachePosition[j].bottom = copyCachePosition[j].bottom - diff;
+  const handleUpdateRowHeight = useCallback(
+    (rowHeight: number, rowIndex: number) => {
+      console.log(`rowHeight: ${rowHeight}`);
+      const copyCachePosition = [...cachePosition];
+      const index = copyCachePosition.findIndex((c) => c.index === rowIndex);
+      if (index >= 0) {
+        const item = { ...copyCachePosition[index] };
+        const diff = item.height - rowHeight;
+        if (diff) {
+          // todo 如果存在差距的话得更新下scrollTop  startOffset
+          item.height = rowHeight;
+          item.bottom = item.bottom - diff;
+          for (let j = index + 1; j < copyCachePosition.length; j++) {
+            copyCachePosition[j].top = copyCachePosition[j - 1].bottom;
+            copyCachePosition[j].bottom = copyCachePosition[j].bottom - diff;
+          }
+          copyCachePosition.splice(index, 1, item);
+          setCachePosition(copyCachePosition);
         }
       }
-      copyCachePosition.splice(index, 1, item);
-    }
-    setCachePosition(copyCachePosition);
-  };
+    },
+    [cachePosition],
+  );
   // console.log(cachePosition);
 
   const handleSelect = (
@@ -1205,7 +1206,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return maxScrollWidth - scrollLeft;
   }, [scrollWidth, virtualContainerWidth, showScrollbarY, scrollLeft]);
 
-  // 考虑renderMaxRows 小于容器高度时候会出现底部空白
+  // 考虑renderMaxRows 小于容器高度时候会出现底部空白 这时候取的renderMaxRows刚好为能撑开容器高度那一行的行号
   const getRenderMaxRows = useCallback(() => {
     if (renderMaxRows <= 0 || renderMaxRows > list.length || !showScrollbarY) {
       return list.length;
