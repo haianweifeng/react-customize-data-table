@@ -157,6 +157,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const treeLevel = useRef<TreeLevelType>({} as TreeLevelType);
   const levelRecord = useRef<LevelRecordType<T>>({} as LevelRecordType<T>);
 
+  const lastStartRowIndex = useRef<number>(0);
+
   // const cachePosition = useRef<CachePositionType[]>([]);
   const [cachePosition, setCachePosition] = useState<CachePositionType[]>(() => {
     return dataSource.map((d, index) => {
@@ -829,7 +831,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const handleUpdateRowHeight = useCallback(
     (rowHeight: number, rowIndex: number) => {
-      console.log(`rowHeight: ${rowHeight}`);
+      // console.log(`rowHeight: ${rowHeight}`);
       const copyCachePosition = [...cachePosition];
       const index = copyCachePosition.findIndex((c) => c.index === rowIndex);
       if (index >= 0) {
@@ -1081,14 +1083,33 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // console.log(`startRowIndex: ${startRowIndex}`);
   // console.log(`scrollTop: ${scrollTop}`);
 
-  const handleScrollVertical = (offset: number) => {
-    const item = cachePosition.find((p) => p.bottom >= offset);
-    if (item) {
-      setStartOffset(item.top);
-      setStartRowIndex(item.index);
-      setScrollTop(offset);
-    }
+  const handleScrollVertical = (offset: number, availableSize: number) => {
+    setScrollTop((prev) => {
+      let newOffset = prev + offset;
+      newOffset = Math.max(0, newOffset);
+      newOffset = Math.min(newOffset, scrollHeight - availableSize);
+      if (prev !== newOffset) {
+        const item = cachePosition.find((p) => p.bottom >= newOffset);
+        if (item && item.index !== lastStartRowIndex.current) {
+          // console.log(`item.index: ${item.index}`);
+          lastStartRowIndex.current = item.index;
+          setStartOffset(item.top);
+          setStartRowIndex(item.index);
+        }
+      }
+      return newOffset;
+    });
+    // const item = cachePosition.find((p) => p.bottom >= offset);
+    // if (item && item.index !== startRowIndex) {
+    //   // console.log(`item.index: ${item.index}`);
+    //   setStartOffset(item.top);
+    //   setStartRowIndex(item.index);
+    // }
+    // if (offset !== scrollTop) {
+    //   setScrollTop(offset);
+    // }
   };
+  // console.log(`startRowIndex: ${startRowIndex}`);
   // console.log(`scrollTop: ${scrollTop}`)
 
   const handleScrollHorizontal = (offset: number) => {

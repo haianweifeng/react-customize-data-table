@@ -105,6 +105,19 @@ export function getPropertyValueSum(el: HTMLElement, names: string[]) {
   }, 0);
 }
 
+export function rafThrottle(func: Function) {
+  let lock = false;
+  return function (...args: any) {
+    console.log(this);
+    if (lock) return;
+    lock = true;
+    window.requestAnimationFrame(() => {
+      func.apply(this, args);
+      lock = false;
+    });
+  };
+}
+
 // const getChildrenKeys = (data: T[] = [], all = true) => {
 //   const keys: (number | string)[] = [];
 //   data.map((c) => {
