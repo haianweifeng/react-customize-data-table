@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState, useEffect, useCallback, useContext } 
 import classnames from 'classnames';
 import Thead from '../Thead';
 import Tbody from '../Tbody';
+import VirtualBody from '../VirtualBody';
 import Colgroup from '../Colgroup';
 import Pagination from '../Pagination';
 import Spin from '../Spin';
@@ -29,9 +30,12 @@ import type {
 import VirtualList from '../VirtualList';
 import type { PaginationProps } from '../index';
 import '../style/index.less';
-import { getRowKey, toPoint, findParentByKey, parseValue } from '../utils/util';
+import { getRowKey, toPoint, findParentByKey, parseValue, getParent } from '../utils/util';
 import { BAR_WIDTH } from '../utils/constant';
 import LocaleContext from '../LocalProvider/context';
+import ScrollBar from '../ScrollBar';
+import VirtualScrollBar from '../VirtualScrollBar';
+import normalizeWheel from 'normalize-wheel';
 // import styles from './index.less';
 
 export interface TableProps<T> {
@@ -81,7 +85,7 @@ export interface TableProps<T> {
   /** 表格高度，默认为自动高度，如果表格内容大于此值，会固定表头 */
   height?: number;
   /** 是否开启虚拟列表 todo */
-  virtual?: boolean;
+  virtualized?: boolean;
   // /** 表格是否可以滚动 超过最大宽高时候就可以滚动 todo */
   // scroll?: ScrollType;
   /** 滚动条滚动后回调函数 todo */
@@ -142,7 +146,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     loading,
     renderMaxRows = 20,
     rowHeight = 46,
-    virtual,
+    virtualized,
     empty = 'No data',
     onColumnResize,
     locale = localeContext.table,
@@ -158,6 +162,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const levelRecord = useRef<LevelRecordType<T>>({} as LevelRecordType<T>);
 
   const lastStartRowIndex = useRef<number>(0);
+
+  const virtualContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollBarRef = useRef<HTMLDivElement>(null);
+
+  const lastScrollTop = useRef<number>(0);
 
   // const cachePosition = useRef<CachePositionType[]>([]);
   const [cachePosition, setCachePosition] = useState<CachePositionType[]>(() => {
@@ -1109,7 +1119,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     //   setScrollTop(offset);
     // }
   };
-  // console.log(`startRowIndex: ${startRowIndex}`);
+  console.log(`startRowIndex: ${startRowIndex}`);
   // console.log(`scrollTop: ${scrollTop}`)
 
   const handleScrollHorizontal = (offset: number) => {
@@ -1228,35 +1238,43 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   }, [scrollWidth, virtualContainerWidth, showScrollbarY, scrollLeft]);
 
   // 考虑renderMaxRows 小于容器高度时候会出现底部空白 这时候取的renderMaxRows刚好为能撑开容器高度那一行的行号
+  // const getRenderMaxRows = useCallback(() => {
+  //   if (renderMaxRows <= 0 || renderMaxRows > list.length || !showScrollbarY) {
+  //     return list.length;
+  //   }
+  //   if (virtualContainerHeight) {
+  //     const virtualContainerAvailableHeight =
+  //       virtualContainerHeight - (showScrollbarX ? BAR_WIDTH : 0);
+  //     const start = (currentPage - 1) * pageSize + startRowIndex;
+  //     const sumHeight = getSumHeight(start, start + renderMaxRows);
+  //     if (sumHeight > virtualContainerAvailableHeight) {
+  //       return renderMaxRows;
+  //     } else {
+  //       const item = cachePosition.find((c) => c.top >= virtualContainerAvailableHeight);
+  //       return item?.index ?? renderMaxRows;
+  //     }
+  //   }
+  //   return renderMaxRows;
+  // }, [
+  //   renderMaxRows,
+  //   list,
+  //   showScrollbarY,
+  //   virtualContainerHeight,
+  //   showScrollbarX,
+  //   cachePosition,
+  //   startRowIndex,
+  //   getSumHeight,
+  //   currentPage,
+  //   pageSize,
+  // ]);
+
   const getRenderMaxRows = useCallback(() => {
-    if (renderMaxRows <= 0 || renderMaxRows > list.length || !showScrollbarY) {
-      return list.length;
-    }
-    if (virtualContainerHeight) {
-      const virtualContainerAvailableHeight =
-        virtualContainerHeight - (showScrollbarX ? BAR_WIDTH : 0);
-      const start = (currentPage - 1) * pageSize + startRowIndex;
-      const sumHeight = getSumHeight(start, start + renderMaxRows);
-      if (sumHeight > virtualContainerAvailableHeight) {
-        return renderMaxRows;
-      } else {
-        const item = cachePosition.find((c) => c.top >= virtualContainerAvailableHeight);
-        return item?.index ?? renderMaxRows;
-      }
+    const item = cachePosition.find((c) => c.top >= virtualContainerHeight);
+    if (item) {
+      return renderMaxRows >= item.index ? renderMaxRows : item.index;
     }
     return renderMaxRows;
-  }, [
-    renderMaxRows,
-    list,
-    showScrollbarY,
-    virtualContainerHeight,
-    showScrollbarX,
-    cachePosition,
-    startRowIndex,
-    getSumHeight,
-    currentPage,
-    pageSize,
-  ]);
+  }, [virtualContainerHeight, renderMaxRows, cachePosition]);
 
   // 已修复bug 分页滚动到底部 切换到最后一页发现是空白的 在于 startRowIndex 大于数据开始行数
   // 考虑分页后最后一列的数据的高度小于容器的高度 滚动条是否会出现
@@ -1270,59 +1288,271 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   }, [list, startRowIndex]);
 
+  useEffect(() => {
+    if (virtualContainerRef.current) {
+      const { height: containerHeight } = virtualContainerRef.current.getBoundingClientRect();
+      setVirtualContainerHeight(containerHeight);
+    }
+  }, []);
+
+  useEffect(() => {
+    let ticking = false;
+
+    let y = 0;
+    let pixelX = 0;
+    let pixelY = 0;
+
+    const updateScrollbarPosition = (offset: number) => {
+      if (scrollBarRef.current) {
+        const thumbSize = scrollBarRef.current.clientHeight;
+        const ratio =
+          (scrollHeight - virtualContainerHeight) / (virtualContainerHeight - thumbSize);
+        scrollBarRef.current.style.transform = `translateY(${offset / ratio}px)`;
+      }
+    };
+
+    const handleWheel = (event: any) => {
+      const target = getParent(event.target, virtualContainerRef.current);
+      if (target !== virtualContainerRef.current) return;
+      const normalized = normalizeWheel(event);
+      pixelX = normalized.pixelX;
+      pixelY = normalized.pixelY;
+
+      if (Math.abs(pixelX) > Math.abs(pixelY)) {
+        pixelY = 0;
+      } else {
+        pixelX = 0;
+      }
+
+      // vertical wheel
+      if (pixelX === 0) {
+        y += pixelY;
+        y = Math.max(0, y);
+        y = Math.min(y, scrollHeight - virtualContainerHeight);
+
+        if (y !== lastScrollTop.current) {
+          const item = cachePosition.find((p) => p.bottom > y);
+          if (item) {
+            if (lastStartRowIndex.current !== item.index) {
+              setStartRowIndex(item.index);
+              lastStartRowIndex.current = item.index;
+            }
+            const offset = y - item.top;
+            updateScrollbarPosition(y);
+            tbodyRef.current.style.transform = `translateY(-${offset}px)`;
+          }
+          lastScrollTop.current = y;
+        }
+
+        pixelY = 0;
+      }
+
+      // horizontal wheel
+      // if (pixelY.current === 0) {
+      //   let offset = scrollLeft + pixelX.current;
+      //   offset = Math.max(0, offset);
+      //   offset = Math.min(offset, scrollWidth - virtualContainerAvailableWidth);
+      //   if (offset === scrollLeft) return;
+      //   handleHorizontalScroll(offset);
+      //   pixelX.current = 0;
+      // }
+      ticking = false;
+    };
+
+    const wheelListener = (event: any) => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleWheel(event);
+        });
+        ticking = true;
+      }
+      event.preventDefault();
+    };
+
+    virtualContainerRef.current?.addEventListener('wheel', wheelListener, { passive: false });
+
+    return () => {
+      virtualContainerRef.current?.removeEventListener('wheel', wheelListener);
+    };
+  }, [scrollHeight, virtualContainerHeight, cachePosition]);
+
+  const handleBarScroll = (offset: number) => {
+    offset = Math.max(0, offset);
+    offset = Math.min(offset, scrollHeight - virtualContainerHeight);
+    if (offset !== lastScrollTop.current) {
+      const item = cachePosition.find((p) => p.bottom > offset);
+      if (item) {
+        if (lastStartRowIndex.current !== item.index) {
+          setStartRowIndex(item.index);
+          lastStartRowIndex.current = item.index;
+        }
+        if (tbodyRef.current) {
+          tbodyRef.current.style.transform = `translateY(-${offset - item.top}px)`;
+        }
+      }
+      lastScrollTop.current = offset;
+    }
+  };
+
+  const renderVirtualBody = () => {
+    return (
+      <div
+        className={classnames({
+          'virtual-container': true,
+        })}
+        ref={virtualContainerRef}
+      >
+        <div className="virtual-content">
+          <div
+            className="table-tbody"
+            ref={tbodyRef}
+            // style={{
+            //   width: scrollWidth,
+            //   marginTop: `${startOffset}px`,
+            //   transform: `translate(-${scrollLeft}px, -${scrollTop}px)`,
+            // }}
+          >
+            <table style={{ width: scrollWidth }}>
+              <Colgroup colWidths={colWidths} columns={columnsWithWidth} />
+              <Tbody
+                {...props}
+                bordered
+                empty={empty}
+                isTree={isTree}
+                scrollLeft={scrollLeft}
+                offsetRight={offsetRight}
+                startRowIndex={startRowIndex}
+                // startRowIndex={0}
+                // dataSource={list}
+                dataSource={list.slice(startRowIndex, startRowIndex + getRenderMaxRows())}
+                // columns={flatColumns}
+                columns={columnsWithWidth}
+                treeLevelMap={treeLevel.current}
+                treeExpandKeys={treeExpandKeys}
+                selectedKeys={selectedKeys}
+                halfSelectedKeys={halfSelectedKeys}
+                onSelect={handleSelect}
+                onTreeExpand={handleTreeExpand}
+                onBodyRender={handleBodyRender}
+                onUpdateRowHeight={handleUpdateRowHeight}
+              />
+            </table>
+          </div>
+        </div>
+        {showScrollbarY ? (
+          <VirtualScrollBar
+            orientation="vertical"
+            size={virtualContainerHeight}
+            contentSize={scrollHeight}
+            ref={scrollBarRef}
+            onScroll={handleBarScroll}
+          />
+        ) : null}
+        {/*{showScrollbarY ? (*/}
+        {/*  <ScrollBar*/}
+        {/*    orientation="vertical"*/}
+        {/*    size={virtualContainerHeight}*/}
+        {/*    contentSize={scrollHeight}*/}
+        {/*    offset={scrollTop}*/}
+        {/*    onScroll={handleVerticalScroll}*/}
+        {/*  />*/}
+        {/*) : null}*/}
+      </div>
+    );
+  };
+
   // 1. 考虑没有设置height 时候展示数据范围 没有设置height 就不展示滚动条 设置了height 需要和容器的高度做对比
   // 2. 考虑分页时候设置pageSize 大于renderMaxRows
   const renderBody = () => {
-    return (
-      <VirtualList
-        scrollWidth={scrollWidth}
-        // scrollWidth={getScrollWidth()}
-        scrollHeight={scrollHeight}
-        scrollTop={scrollTop}
-        scrollLeft={scrollLeft}
-        showScrollbarX={showScrollbarX}
-        showScrollbarY={showScrollbarY}
-        onMount={handleMount}
-        onScrollVertical={handleScrollVertical}
-        onScrollHorizontal={handleScrollHorizontal}
+    return virtualized ? (
+      renderVirtualBody()
+    ) : (
+      <div
+        className="table-tbody"
+        ref={tbodyRef}
+        style={{
+          width: scrollWidth,
+          marginTop: `${startOffset}px`,
+          transform: `translate(-${scrollLeft}px, -${scrollTop}px)`,
+        }}
       >
-        <div
-          className="table-tbody"
-          ref={tbodyRef}
-          style={{
-            width: scrollWidth,
-            marginTop: `${startOffset}px`,
-            transform: `translate(-${scrollLeft}px, -${scrollTop}px)`,
-          }}
-        >
-          <table style={{ width: scrollWidth }}>
-            <Colgroup colWidths={colWidths} columns={columnsWithWidth} />
-            <Tbody
-              {...props}
-              bordered
-              empty={empty}
-              isTree={isTree}
-              scrollLeft={scrollLeft}
-              offsetRight={offsetRight}
-              startRowIndex={startRowIndex}
-              // startRowIndex={0}
-              // dataSource={list}
-              dataSource={list.slice(startRowIndex, startRowIndex + getRenderMaxRows())}
-              // columns={flatColumns}
-              columns={columnsWithWidth}
-              treeLevelMap={treeLevel.current}
-              treeExpandKeys={treeExpandKeys}
-              selectedKeys={selectedKeys}
-              halfSelectedKeys={halfSelectedKeys}
-              onSelect={handleSelect}
-              onTreeExpand={handleTreeExpand}
-              onBodyRender={handleBodyRender}
-              onUpdateRowHeight={handleUpdateRowHeight}
-            />
-          </table>
-        </div>
-      </VirtualList>
+        <table style={{ width: scrollWidth }}>
+          <Colgroup colWidths={colWidths} columns={columnsWithWidth} />
+          <Tbody
+            {...props}
+            bordered
+            empty={empty}
+            isTree={isTree}
+            scrollLeft={scrollLeft}
+            offsetRight={offsetRight}
+            startRowIndex={startRowIndex}
+            // startRowIndex={0}
+            // dataSource={list}
+            dataSource={list.slice(startRowIndex, startRowIndex + getRenderMaxRows())}
+            // columns={flatColumns}
+            columns={columnsWithWidth}
+            treeLevelMap={treeLevel.current}
+            treeExpandKeys={treeExpandKeys}
+            selectedKeys={selectedKeys}
+            halfSelectedKeys={halfSelectedKeys}
+            onSelect={handleSelect}
+            onTreeExpand={handleTreeExpand}
+            onBodyRender={handleBodyRender}
+            onUpdateRowHeight={handleUpdateRowHeight}
+          />
+        </table>
+      </div>
     );
+    // return (
+    //   <VirtualList
+    //     scrollWidth={scrollWidth}
+    //     // scrollWidth={getScrollWidth()}
+    //     scrollHeight={scrollHeight}
+    //     scrollTop={scrollTop}
+    //     scrollLeft={scrollLeft}
+    //     showScrollbarX={showScrollbarX}
+    //     showScrollbarY={showScrollbarY}
+    //     onMount={handleMount}
+    //     onScrollVertical={handleScrollVertical}
+    //     onScrollHorizontal={handleScrollHorizontal}
+    //   >
+    //     <div
+    //       className="table-tbody"
+    //       ref={tbodyRef}
+    //       style={{
+    //         width: scrollWidth,
+    //         marginTop: `${startOffset}px`,
+    //         transform: `translate(-${scrollLeft}px, -${scrollTop}px)`,
+    //       }}
+    //     >
+    //       <table style={{ width: scrollWidth }}>
+    //         <Colgroup colWidths={colWidths} columns={columnsWithWidth} />
+    //         <Tbody
+    //           {...props}
+    //           bordered
+    //           empty={empty}
+    //           isTree={isTree}
+    //           scrollLeft={scrollLeft}
+    //           offsetRight={offsetRight}
+    //           startRowIndex={startRowIndex}
+    //           // startRowIndex={0}
+    //           // dataSource={list}
+    //           dataSource={list.slice(startRowIndex, startRowIndex + getRenderMaxRows())}
+    //           // columns={flatColumns}
+    //           columns={columnsWithWidth}
+    //           treeLevelMap={treeLevel.current}
+    //           treeExpandKeys={treeExpandKeys}
+    //           selectedKeys={selectedKeys}
+    //           halfSelectedKeys={halfSelectedKeys}
+    //           onSelect={handleSelect}
+    //           onTreeExpand={handleTreeExpand}
+    //           onBodyRender={handleBodyRender}
+    //           onUpdateRowHeight={handleUpdateRowHeight}
+    //         />
+    //       </table>
+    //     </div>
+    //   </VirtualList>
+    // );
   };
 
   const renderHeader = () => {

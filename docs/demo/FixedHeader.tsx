@@ -37,6 +37,6 @@ for (let i = 0; i < 100; i++) {
 }
 
 const App = () => {
-  return <Table columns={columns} dataSource={data} height={300} bordered />;
+  return <Table columns={columns} dataSource={data} height={300} bordered virtualized />;
 };
 export default App;
