@@ -34,6 +34,7 @@ import { getRowKey, toPoint, findParentByKey, parseValue, getParent } from '../u
 import { BAR_WIDTH } from '../utils/constant';
 import LocaleContext from '../LocalProvider/context';
 import ScrollBar from '../ScrollBar';
+import ScrollBars from '../ScrollBars';
 import VirtualScrollBar from '../VirtualScrollBar';
 import normalizeWheel from 'normalize-wheel';
 // import styles from './index.less';
@@ -1467,41 +1468,43 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return virtualized ? (
       renderVirtualBody()
     ) : (
-      <div
-        className="table-tbody"
-        ref={tbodyRef}
-        style={{
-          width: scrollWidth,
-          marginTop: `${startOffset}px`,
-          transform: `translate(-${scrollLeft}px, -${scrollTop}px)`,
-        }}
-      >
-        <table style={{ width: scrollWidth }}>
-          <Colgroup colWidths={colWidths} columns={columnsWithWidth} />
-          <Tbody
-            {...props}
-            bordered
-            empty={empty}
-            isTree={isTree}
-            scrollLeft={scrollLeft}
-            offsetRight={offsetRight}
-            startRowIndex={startRowIndex}
-            // startRowIndex={0}
-            // dataSource={list}
-            dataSource={list.slice(startRowIndex, startRowIndex + getRenderMaxRows())}
-            // columns={flatColumns}
-            columns={columnsWithWidth}
-            treeLevelMap={treeLevel.current}
-            treeExpandKeys={treeExpandKeys}
-            selectedKeys={selectedKeys}
-            halfSelectedKeys={halfSelectedKeys}
-            onSelect={handleSelect}
-            onTreeExpand={handleTreeExpand}
-            onBodyRender={handleBodyRender}
-            onUpdateRowHeight={handleUpdateRowHeight}
-          />
-        </table>
-      </div>
+      <ScrollBars>
+        <div
+          className="table-tbody"
+          ref={tbodyRef}
+          style={{
+            width: scrollWidth,
+            marginTop: `${startOffset}px`,
+            transform: `translate(-${scrollLeft}px, -${scrollTop}px)`,
+          }}
+        >
+          <table style={{ width: scrollWidth }}>
+            <Colgroup colWidths={colWidths} columns={columnsWithWidth} />
+            <Tbody
+              {...props}
+              bordered
+              empty={empty}
+              isTree={isTree}
+              scrollLeft={scrollLeft}
+              offsetRight={offsetRight}
+              startRowIndex={startRowIndex}
+              // startRowIndex={0}
+              dataSource={list}
+              // dataSource={list.slice(startRowIndex, startRowIndex + getRenderMaxRows())}
+              // columns={flatColumns}
+              columns={columnsWithWidth}
+              treeLevelMap={treeLevel.current}
+              treeExpandKeys={treeExpandKeys}
+              selectedKeys={selectedKeys}
+              halfSelectedKeys={halfSelectedKeys}
+              onSelect={handleSelect}
+              onTreeExpand={handleTreeExpand}
+              onBodyRender={handleBodyRender}
+              onUpdateRowHeight={handleUpdateRowHeight}
+            />
+          </table>
+        </div>
+      </ScrollBars>
     );
     // return (
     //   <VirtualList

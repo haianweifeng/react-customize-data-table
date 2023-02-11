@@ -105,17 +105,25 @@ export function getPropertyValueSum(el: HTMLElement, names: string[]) {
   }, 0);
 }
 
-export function rafThrottle(func: Function) {
-  let lock = false;
-  return function (...args: any) {
-    console.log(this);
-    if (lock) return;
-    lock = true;
-    window.requestAnimationFrame(() => {
-      func.apply(this, args);
-      lock = false;
-    });
-  };
+export function getScrollbarWidth() {
+  const outer = document.createElement('div');
+  outer.style.visibility = 'hidden';
+  outer.style.width = '100px';
+  outer.style.position = 'absolute';
+  outer.style.top = '-9999px';
+  document.body.appendChild(outer);
+
+  const widthNoScroll = outer.offsetWidth;
+  outer.style.overflow = 'scroll';
+
+  const inner = document.createElement('div');
+  inner.style.width = '100%';
+  outer.appendChild(inner);
+
+  const widthWithScroll = inner.offsetWidth;
+  outer.parentNode!.removeChild(outer);
+
+  return widthNoScroll - widthWithScroll;
 }
 
 // const getChildrenKeys = (data: T[] = [], all = true) => {

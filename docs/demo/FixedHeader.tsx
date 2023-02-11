@@ -27,7 +27,7 @@ const columns: ColumnsType<DataType> = [
 ];
 
 const data: DataType[] = [];
-for (let i = 0; i < 100; i++) {
+for (let i = 0; i < 1000; i++) {
   data.push({
     key: i,
     name: `Edward King ${i}`,
@@ -37,6 +37,6 @@ for (let i = 0; i < 100; i++) {
 }
 
 const App = () => {
-  return <Table columns={columns} dataSource={data} height={300} bordered virtualized />;
+  return <Table columns={columns} dataSource={data} height={300} bordered={false} virtualized />;
 };
 export default App;

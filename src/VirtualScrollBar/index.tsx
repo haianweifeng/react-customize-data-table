@@ -1,7 +1,9 @@
 import React, { forwardRef, useMemo, useRef, useEffect } from 'react';
 import classnames from 'classnames';
+import './index.less';
 
 interface VirtualScrollBarProps {
+  className?: string;
   size: number;
   contentSize: number;
   orientation: 'vertical' | 'horizontal';
@@ -9,14 +11,14 @@ interface VirtualScrollBarProps {
 }
 
 const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((props, ref) => {
-  const BAR_SIZE = 20;
-  const { orientation, size, contentSize, onScroll } = props;
+  const BAR_THUMB_SIZE = 20;
+  const { orientation, size, contentSize, className = '', onScroll } = props;
 
   const scrollTrackRef = useRef<HTMLDivElement>(null);
 
   const thumbSize = useMemo(() => {
     const value = (size / contentSize) * size;
-    return value >= BAR_SIZE ? value : BAR_SIZE;
+    return value >= BAR_THUMB_SIZE ? value : BAR_THUMB_SIZE;
   }, [size, contentSize]);
 
   const ratio = useMemo(() => {
@@ -115,22 +117,25 @@ const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((prop
     };
   }, [size, contentSize, ratio]);
 
+  const thumbStyle: any = {};
+  if (orientation === 'vertical') {
+    thumbStyle.height = `${(size / contentSize) * 100}%`;
+    thumbStyle.minHeight = `${BAR_THUMB_SIZE}px`;
+  } else {
+    thumbStyle.width = `${(size / contentSize) * 100}%`;
+    thumbStyle.minWidth = `${BAR_THUMB_SIZE}px`;
+  }
+
   return (
     <div
       className={classnames({
         'scrollbar-track': true,
         [`scrollbar-track-${orientation}`]: !!orientation,
+        [className]: !!className,
       })}
       ref={scrollTrackRef}
     >
-      <div
-        className="scrollbar-thumb"
-        ref={ref}
-        style={{
-          height: `${(size / contentSize) * 100}%`,
-          minHeight: `${BAR_SIZE}px`,
-        }}
-      />
+      <div className="scrollbar-thumb" ref={ref} style={thumbStyle} />
     </div>
   );
 });
