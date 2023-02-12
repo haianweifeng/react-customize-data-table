@@ -58,20 +58,22 @@ function Td(props: TdProps) {
     'cell-ellipsis': !!ellipsis,
     'cell-fixed-left': fixedLeft,
     'cell-fixed-right': fixedRight,
-    'cell-fixed-last-left': !!lastLeftFixed && !!scrollLeft,
-    'cell-fixed-first-right': !!fistRightFixed && !!offsetRight,
+    'cell-is-last-fixedLeft': !!lastLeftFixed,
+    'cell-is-first-fixedRight': !!fistRightFixed,
+    // 'cell-fixed-last-left': !!lastLeftFixed && !!scrollLeft,
+    // 'cell-fixed-first-right': !!fistRightFixed && !!offsetRight,
     [`cell-align-${align}`]: !!align,
     'selection-expand-column': type === 'checkbox' || type === 'radio' || type === 'expanded',
     'cell-ignore-right-border': ignoreRightBorder,
     [className]: !!className,
   });
   const styles: any = {};
-  if (fixedLeft) {
-    styles.transform = `translate(${scrollLeft}px, 0)`;
-  }
-  if (fixedRight) {
-    styles.transform = `translate(-${offsetRight}px, 0)`;
-  }
+  // if (fixedLeft) {
+  //   styles.transform = `translate(${scrollLeft}px, 0)`;
+  // }
+  // if (fixedRight) {
+  //   styles.transform = `translate(-${offsetRight}px, 0)`;
+  // }
 
   const cellContent = typeof content === 'function' ? content() : content;
 

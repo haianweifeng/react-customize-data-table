@@ -105,6 +105,14 @@ export function getPropertyValueSum(el: HTMLElement, names: string[]) {
   }, 0);
 }
 
+export function extractPixel(value?: string) {
+  if (value) {
+    const result = value.match(/[\d|.]+(?=px)/);
+    return result ? Number(result[0]) : 0;
+  }
+  return 0;
+}
+
 export function getScrollbarWidth() {
   const outer = document.createElement('div');
   outer.style.visibility = 'hidden';

@@ -10,10 +10,11 @@ interface ScrollBarsProps {
   viewClass?: string;
   children: React.ReactNode;
   noresize?: Boolean;
+  onHorizontalScroll?: (offset: number) => void;
 }
 
 const ScrollBars = (props: ScrollBarsProps) => {
-  const { children, style = {}, wrapClass = '', viewClass = '' } = props;
+  const { children, style = {}, wrapClass = '', viewClass = '', onHorizontalScroll } = props;
   const wrapRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<HTMLDivElement>(null);
   const barYRef = useRef<HTMLDivElement>(null);
@@ -43,9 +44,20 @@ const ScrollBars = (props: ScrollBarsProps) => {
     }
   }, []);
 
-  const handleVerticalScroll = () => {};
+  const handleVerticalScroll = (offset: number) => {
+    if (wrapRef.current) {
+      const wrapEl = wrapRef.current;
+      wrapEl.scrollTop = offset;
+    }
+  };
 
-  const handleHorizontalScroll = () => {};
+  const handleHorizontalScroll = (offset: number) => {
+    if (wrapRef.current) {
+      const wrapEl = wrapRef.current;
+      wrapEl.scrollLeft = offset;
+    }
+    onHorizontalScroll && onHorizontalScroll(offset);
+  };
 
   useEffect(() => {
     let lastScrollTop = wrapRef.current?.scrollTop || 0;

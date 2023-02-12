@@ -1,6 +1,7 @@
 import React, { forwardRef, useMemo, useRef, useEffect } from 'react';
 import classnames from 'classnames';
 import './index.less';
+import { extractPixel } from '../utils/util';
 
 interface VirtualScrollBarProps {
   className?: string;
@@ -16,6 +17,10 @@ const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((prop
 
   const scrollTrackRef = useRef<HTMLDivElement>(null);
 
+  const lastClient = useRef<number>(0);
+
+  const lastPosition = useRef<number>(0);
+
   const thumbSize = useMemo(() => {
     const value = (size / contentSize) * size;
     return value >= BAR_THUMB_SIZE ? value : BAR_THUMB_SIZE;
@@ -26,29 +31,32 @@ const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((prop
   }, [contentSize, size, thumbSize]);
 
   useEffect(() => {
+    // todo y lastedClientY 抽离出来
+    // todo 考虑横向滚动
     let y = 0;
     let lastedClientY = 0;
 
     let thumbRef: HTMLDivElement | null;
 
-    const getValue = (value?: string) => {
-      if (value) {
-        const result = value.match(/[\d|.]+(?=px)/);
-        return result ? Number(result[0]) : 0;
-      }
-      return 0;
-    };
-
     const handleMouseMoveThumb = (event: MouseEvent) => {
-      let deltaY = event.clientY - lastedClientY;
-      y += deltaY;
-      y = Math.max(0, y);
-      y = Math.min(y, size - thumbSize);
+      const isVertical = orientation === 'vertical';
+      let delta = (isVertical ? event.clientY : event.clientX) - lastClient.current;
+      lastPosition.current += delta;
+      lastPosition.current = Math.max(0, lastPosition.current);
+      lastPosition.current = Math.min(lastPosition.current, size - thumbSize);
       if (thumbRef) {
-        thumbRef.style.transform = `translateY(${y}px)`;
+        thumbRef.style.transform = `translate${isVertical ? 'Y' : 'X'}(${lastPosition.current}px)`;
       }
-      onScroll && onScroll(y * ratio);
-      lastedClientY = event.clientY;
+      onScroll && onScroll(lastPosition.current * ratio);
+      lastClient.current = isVertical ? event.clientY : event.clientX;
+      // y += deltaY;
+      // y = Math.max(0, y);
+      // y = Math.min(y, size - thumbSize);
+      // if (thumbRef) {
+      //   thumbRef.style.transform = `translateY(${y}px)`;
+      // }
+      // onScroll && onScroll(y * ratio);
+      // lastedClientY = event.clientY;
     };
 
     const handleMouseUpThumb = () => {
@@ -58,8 +66,10 @@ const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((prop
     };
 
     const handleMouseDownThumb = (event: MouseEvent) => {
-      y = getValue(thumbRef?.style.transform);
-      lastedClientY = event.clientY;
+      lastPosition.current = extractPixel(thumbRef?.style.transform);
+      lastClient.current = orientation === 'vertical' ? event.clientY : event.clientX;
+      // y = getValue(thumbRef?.style.transform);
+      // lastedClientY = event.clientY;
 
       document.addEventListener('mousemove', handleMouseMoveThumb, false);
       document.addEventListener('mouseup', handleMouseUpThumb, false);
@@ -75,7 +85,7 @@ const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((prop
     return () => {
       thumbRef?.removeEventListener('mousedown', handleMouseDownThumb);
     };
-  }, [thumbSize, size, ratio]);
+  }, [thumbSize, size, ratio, orientation]);
 
   useEffect(() => {
     // todo 抽取到公共方法里

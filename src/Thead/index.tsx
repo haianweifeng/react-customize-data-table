@@ -140,8 +140,10 @@ function Thead<T>(props: TheadProps<T>) {
       const classes = {
         'cell-fixed-left': col.fixed === 'left',
         'cell-fixed-right': col.fixed === 'right',
-        'cell-fixed-last-left': !!col.lastLeftFixed && !!scrollLeft,
-        'cell-fixed-first-right': !!col.fistRightFixed && !!offsetRight,
+        'cell-is-last-fixedLeft': !!col.lastLeftFixed,
+        'cell-is-first-fixedRight': !!col.fistRightFixed,
+        // 'cell-fixed-last-left': !!col.lastLeftFixed && !!scrollLeft,
+        // 'cell-fixed-first-right': !!col.fistRightFixed && !!offsetRight,
         'cell-ignore-right-border': col.ignoreRightBorder,
         [colClassName]: !!col.className,
       };
@@ -155,8 +157,8 @@ function Thead<T>(props: TheadProps<T>) {
       });
 
       const styles: React.CSSProperties = {};
-      if (col.fixed === 'left') styles.transform = `translate(${scrollLeft}px, 0px)`;
-      if (col.fixed === 'right') styles.transform = `translate(-${offsetRight}px, 0px)`;
+      // if (col.fixed === 'left') styles.transform = `translate(${scrollLeft}px, 0px)`;
+      // if (col.fixed === 'right') styles.transform = `translate(-${offsetRight}px, 0px)`;
 
       let baseProps: ThProps<T> = {
         col,

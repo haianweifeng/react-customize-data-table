@@ -157,6 +157,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const resizeLineRef = useRef<HTMLDivElement>(null);
   const tableContainer = useRef<HTMLDivElement>(null);
+  const theadRef = useRef<any>(null);
   const tbodyRef = useRef<any>(null);
   const maxTreeLevel = useRef<number>(0);
   const treeLevel = useRef<TreeLevelType>({} as TreeLevelType);
@@ -1462,21 +1463,59 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     );
   };
 
+  const handleHorizontalScroll = (offset: number) => {
+    let offsetRight = 0;
+    if (tbodyRef.current) {
+      tbodyRef.current.scrollLeft = offset;
+      const clientWidth = tbodyRef.current.clientWidth;
+      const maxScrollWidth = scrollWidth - clientWidth;
+      offsetRight = maxScrollWidth - offset;
+    }
+    if (theadRef.current) {
+      theadRef.current.scrollLeft = offset;
+    }
+    [theadRef.current, tbodyRef.current].forEach((el) => {
+      if (!el) return;
+      el.querySelectorAll('.cell-fixed-left, .cell-fixed-right').forEach(
+        (cell: HTMLTableDataCellElement) => {
+          if (cell.classList.contains('cell-fixed-left')) {
+            cell.style.transform = `translate(${offset}px, 0px)`;
+          } else if (cell.classList.contains('cell-fixed-right')) {
+            cell.style.transform = `translate(-${offsetRight}px, 0px)`;
+          }
+          if (cell.classList.contains('cell-is-last-fixedLeft')) {
+            if (offset > 0) {
+              cell.classList.add('cell-fixed-last-left');
+            } else {
+              cell.classList.remove('cell-fixed-last-left');
+            }
+          } else if (cell.classList.contains('cell-is-first-fixedRight')) {
+            if (offsetRight > 0) {
+              cell.classList.add('cell-fixed-first-right');
+            } else {
+              cell.classList.remove('cell-fixed-first-right');
+            }
+          }
+        },
+      );
+    });
+  };
+
   // 1. 考虑没有设置height 时候展示数据范围 没有设置height 就不展示滚动条 设置了height 需要和容器的高度做对比
   // 2. 考虑分页时候设置pageSize 大于renderMaxRows
   const renderBody = () => {
     return virtualized ? (
       renderVirtualBody()
     ) : (
-      <ScrollBars>
+      <ScrollBars onHorizontalScroll={handleHorizontalScroll}>
         <div
           className="table-tbody"
           ref={tbodyRef}
-          style={{
-            width: scrollWidth,
-            marginTop: `${startOffset}px`,
-            transform: `translate(-${scrollLeft}px, -${scrollTop}px)`,
-          }}
+          // style={{
+          //   width: scrollWidth,
+          //   marginTop: `${startOffset}px`,
+          //   transform: `translate(-${scrollLeft}px, -${scrollTop}px)`,
+          // }}
         >
           <table style={{ width: scrollWidth }}>
             <Colgroup colWidths={colWidths} columns={columnsWithWidth} />
@@ -1561,6 +1600,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const renderHeader = () => {
     return (
       <div
+        ref={theadRef}
         className={classnames({
           'table-thead': true,
           'table-head-gutter': showScrollbarY,
@@ -1569,7 +1609,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         <table
           style={{
             width: scrollWidth,
-            transform: `translate(-${scrollLeft}px, 0)`,
+            // transform: `translate(-${scrollLeft}px, 0)`,
           }}
         >
           <Colgroup colWidths={colWidths} columns={columnsWithWidth} />
