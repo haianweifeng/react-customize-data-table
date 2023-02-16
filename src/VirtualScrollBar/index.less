@@ -4,21 +4,25 @@
   bottom: 0px;
   z-index: 1;
   background-color: transparent;
+  visibility: hidden;
   opacity: 0;
   // transition: opacity .12s ease-out;
   transition: background-color 0.2s linear, opacity 0.2s linear;
 }
 
 .scrollbar-track-scrolling {
+  visibility: visible;
   opacity: 1;
 }
 
 .scrollbar-track-active {
   background-color: rgba(252, 252, 252, 0.95);
+  visibility: visible;
   opacity: 1;
 
   &.scrollbar-track-vertical {
     border-left: 1px solid #dedede;
+    // border-bottom: 1px solid #dedede;
 
     .scrollbar-thumb {
       width: 11px;

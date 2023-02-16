@@ -8,11 +8,11 @@ interface VirtualScrollBarProps {
   size: number;
   contentSize: number;
   orientation: 'vertical' | 'horizontal';
-  onScroll: (offset: number) => void;
+  onScroll?: (offset: number) => void;
 }
 
 const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((props, ref) => {
-  const BAR_THUMB_SIZE = 20;
+  const BAR_THUMB_SIZE = 16;
   const { orientation, size, contentSize, className = '', onScroll } = props;
 
   const scrollTrackRef = useRef<HTMLDivElement>(null);
@@ -20,6 +20,8 @@ const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((prop
   const lastClient = useRef<number>(0);
 
   const lastPosition = useRef<number>(0);
+
+  const isVertical = orientation === 'vertical';
 
   const thumbSize = useMemo(() => {
     const value = (size / contentSize) * size;
@@ -31,15 +33,12 @@ const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((prop
   }, [contentSize, size, thumbSize]);
 
   useEffect(() => {
-    // todo y lastedClientY 抽离出来
-    // todo 考虑横向滚动
     let y = 0;
     let lastedClientY = 0;
 
     let thumbRef: HTMLDivElement | null;
 
     const handleMouseMoveThumb = (event: MouseEvent) => {
-      const isVertical = orientation === 'vertical';
       let delta = (isVertical ? event.clientY : event.clientX) - lastClient.current;
       lastPosition.current += delta;
       lastPosition.current = Math.max(0, lastPosition.current);
@@ -66,8 +65,12 @@ const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((prop
     };
 
     const handleMouseDownThumb = (event: MouseEvent) => {
+      if (event.ctrlKey || event.button === 2) {
+        return;
+      }
+      event.stopImmediatePropagation();
       lastPosition.current = extractPixel(thumbRef?.style.transform);
-      lastClient.current = orientation === 'vertical' ? event.clientY : event.clientX;
+      lastClient.current = isVertical ? event.clientY : event.clientX;
       // y = getValue(thumbRef?.style.transform);
       // lastedClientY = event.clientY;
 
@@ -88,35 +91,37 @@ const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((prop
   }, [thumbSize, size, ratio, orientation]);
 
   useEffect(() => {
-    // todo 抽取到公共方法里
-    const getValue = (value?: string) => {
-      if (value) {
-        const result = value.match(/[\d|.]+(?=px)/);
-        return result ? Number(result[0]) : 0;
-      }
-      return 0;
-    };
-
-    const handleMouseDownTrack = (event: MouseEvent) => {
+    const handleMouseDownTrack = (event: any) => {
       let thumbRef: HTMLDivElement | null = null;
       if (ref !== null && typeof ref !== 'function') {
         thumbRef = ref.current;
       }
       if (thumbRef) {
-        if (event.target === thumbRef) return;
-        let y = getValue(thumbRef?.style.transform);
-        const rect = thumbRef.getBoundingClientRect();
-        // 每次移动距离是一屏可视区域的高度
-        const moveY = size / ratio;
-        if (event.clientY > rect.top) {
-          y += moveY;
-        } else if (event.clientY < rect.top) {
-          y -= moveY;
-        }
-        y = Math.max(0, y);
-        y = Math.min(y, size - thumbSize);
-        thumbRef.style.transform = `translateY(${y}px)`;
-        onScroll && onScroll(y * ratio);
+        // if (event.target === thumbRef) return;
+        // let y = extractPixel(thumbRef?.style.transform);
+        // const rect = thumbRef.getBoundingClientRect();
+        // // 每次移动距离是一屏可视区域的高度
+        // const moveY = size / ratio;
+        // if (event.clientY > rect.top) {
+        //   y += moveY;
+        // } else if (event.clientY < rect.top) {
+        //   y -= moveY;
+        // }
+        // y = Math.max(0, y);
+        // y = Math.min(y, size - thumbSize);
+        // thumbRef.style.transform = `translateY(${y}px)`;
+        // onScroll && onScroll(y * ratio);
+
+        const { left, top } = event.target.getBoundingClientRect();
+
+        const delta = (isVertical ? event.clientY : event.clientX) - (isVertical ? top : left);
+
+        let newOffset = (delta - thumbSize / 2) * ratio;
+        // let newOffset = delta * ratio - thumbSize / 2;
+        newOffset = Math.max(0, newOffset);
+        newOffset = Math.min(newOffset, contentSize - size);
+        thumbRef.style.transform = `translate${isVertical ? 'Y' : 'X'}(${newOffset / ratio}px)`;
+        onScroll && onScroll(newOffset);
       }
     };
 

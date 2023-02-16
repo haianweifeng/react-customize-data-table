@@ -187,6 +187,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const [virtualContainerWidth, setVirtualContainerWidth] = useState<number>(0);
 
+  const [containerWidth, setContainerWidth] = useState<number>(0);
+
   const isRadio = rowSelection?.type === 'radio';
 
   const removeUselessKeys = useCallback(
@@ -722,7 +724,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       let count = 0;
       const noMaxColumns: ColumnsWithType<T>[] = [];
       // const tbodyWidth = Number(parseValue(width)) || (virtualContainerWidth - (showScrollbarY ? BAR_WIDTH : 0));
-      const tbodyWidth = Number(parseValue(width)) || virtualContainerWidth;
+      // const tbodyWidth = Number(parseValue(width)) || virtualContainerWidth;
+      // console.log(tbodyRef.current.clientWidth);
+      // todo 待验证是offsetWidth 还是scrollWidth
+      // todo 考虑如果所有列设置的宽度都设置了最小值导致 remainWidth小于0 是不是意味着后面那几列宽度都为0 还是自动扩充tbodyWidth 的宽度
+      const tbodyWidth = Number(parseValue(width)) || containerWidth;
 
       flatColumns.map((c) => {
         if (c.width) {
@@ -787,7 +793,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       return widthColumns;
     }
     return flatColumns;
-  }, [flatColumns, virtualContainerWidth, width, showScrollbarY]);
+  }, [flatColumns, virtualContainerWidth, width, containerWidth]);
+  console.log(columnsWithWidth);
 
   const converToPixel = useCallback((val: string | number | undefined) => {
     if (typeof val === 'number' || val === undefined) return val;
@@ -1058,6 +1065,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     };
 
     const handleHeaderMouseUp = (event: Event) => {
+      // todo onColumnResize
       const columnWidth =
         parseInt(resizeEl.style.left, 10) - (resizingRect.left - tableContainerRect.left);
       const copyColumns = [...columns];
@@ -1091,8 +1099,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       pagination.onChange(current, size);
     }
   };
-
-  // console.log(`startRowIndex: ${startRowIndex}`);
   // console.log(`scrollTop: ${scrollTop}`);
 
   const handleScrollVertical = (offset: number, availableSize: number) => {
@@ -1167,11 +1173,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   }, [treeProps]);
 
+  // todo
   useEffect(() => {
     setColumns(originColumns);
   }, [originColumns]);
 
-  // column
+  // column todo
   useEffect(() => {
     let exist = false;
     const filter: FilterStateType<T>[] = [];
@@ -1207,6 +1214,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return data.length > 0;
   }, [list]);
 
+  // todo
   const scrollWidth = useMemo(() => {
     if (width) return width;
     return columnsWithWidth.reduce((total, col) => {
@@ -1378,6 +1386,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     };
   }, [scrollHeight, virtualContainerHeight, cachePosition]);
 
+  useEffect(() => {
+    if (tableContainer.current) {
+      setContainerWidth(tableContainer.current.clientWidth);
+    }
+  }, []);
+
   const handleBarScroll = (offset: number) => {
     offset = Math.max(0, offset);
     offset = Math.min(offset, scrollHeight - virtualContainerHeight);
@@ -1464,24 +1478,31 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   };
 
   const handleHorizontalScroll = (offset: number) => {
+    // console.log(`horizontal: ${offset}`);
     let offsetRight = 0;
     if (tbodyRef.current) {
-      tbodyRef.current.scrollLeft = offset;
+      // tbodyRef.current.scrollLeft = offset;
+      const bodyTable = tbodyRef.current.querySelector('table');
       const clientWidth = tbodyRef.current.clientWidth;
-      const maxScrollWidth = scrollWidth - clientWidth;
+      const maxScrollWidth = bodyTable.scrollWidth - clientWidth;
+      // const maxScrollWidth = scrollWidth - clientWidth;
       offsetRight = maxScrollWidth - offset;
     }
     if (theadRef.current) {
-      theadRef.current.scrollLeft = offset;
+      theadRef.current.querySelector('table').style.transform = `translateX(-${offset}px)`;
+      // theadRef.current.scrollLeft = offset;
     }
+    // console.log(`offsetRight: ${offsetRight}`);
     [theadRef.current, tbodyRef.current].forEach((el) => {
       if (!el) return;
+      // el.style.transform = `translateX(-${offset}px)`;
+      // el.scrollLeft = offset;
       el.querySelectorAll('.cell-fixed-left, .cell-fixed-right').forEach(
         (cell: HTMLTableDataCellElement) => {
           if (cell.classList.contains('cell-fixed-left')) {
-            cell.style.transform = `translate(${offset}px, 0px)`;
+            cell.style.transform = `translateX(${offset}px)`;
           } else if (cell.classList.contains('cell-fixed-right')) {
-            cell.style.transform = `translate(-${offsetRight}px, 0px)`;
+            cell.style.transform = `translateX(-${offsetRight}px)`;
           }
           if (cell.classList.contains('cell-is-last-fixedLeft')) {
             if (offset > 0) {

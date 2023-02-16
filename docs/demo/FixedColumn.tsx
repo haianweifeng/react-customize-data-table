@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { ColumnsType } from 'react-data-table';
 import { Table, Checkbox } from 'react-data-table';
 
@@ -101,15 +101,34 @@ for (let i = 0; i < 100; i++) {
 const App = () => {
   // const [expandedRowKeys, setExpandedRowKeys] = useState<number[]>([]);
   // const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
+  const [list, setList] = useState(data);
+  // useEffect(() => {
+  //   const arr: any = [];
+  //   for (let i = 30; i < 100; i++) {
+  //     arr.push({
+  //       key: i,
+  //       name: `Edrward ${i}`,
+  //       age: 32,
+  //       address: `London Park no. ${i}`,
+  //       description: 'test description',
+  //     });
+  //   }
+  //   setTimeout(() => {
+  //     setList((prev) => {
+  //       return [...prev, ...arr];
+  //     });
+  //   }, 6000);
+  // }, []);
   return (
     <Table
       columns={columns}
-      dataSource={data}
+      dataSource={list}
       // width={1500}
       width={1740}
       // height='30%'
       // style={{ height: 400 }}
-      height={300}
+      // height={300}
+      height={400}
       bordered
       // rowSelection={{
       //   // selectedRowKeys,

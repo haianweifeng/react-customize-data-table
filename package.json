@@ -60,6 +60,7 @@
     "lint-staged": "^10.0.7",
     "normalize-wheel": "^1.0.1",
     "prettier": "^2.2.1",
+    "resize-observer-polyfill": "^1.5.1",
     "stylelint": "^13.13.1",
     "typescript": "^4.8.4",
     "yorkie": "^2.0.0"
