@@ -18,19 +18,81 @@ export type TooltipType = {
   renderTooltip: (trigger: React.ReactNode, tip: React.ReactNode) => React.ReactNode;
 };
 
+export interface RowSelectionType<T> {
+  /** 自定义列表选择框标题 */
+  columnTitle?: React.ReactNode;
+  /** 自定义列表选择框宽度 todo 不支持百分比 */
+  columnWidth?: string | number;
+  /** 选择框的默认属性配置 */
+  getCheckboxProps?: (record: T) => any;
+  /** 渲染表体的勾选框 */
+  renderCell?: (
+    checked: boolean,
+    record: T,
+    index: number,
+    originNode: React.ReactNode,
+  ) => React.ReactNode;
+  /** 指定选中项的 key 数组 */
+  selectedRowKeys?: string[] | number[];
+  /** 默认选中项的 key 数组 */
+  defaultSelectedRowKeys?: string[] | number[];
+  /** 多选/单选 */
+  type?: 'radio' | 'checkbox';
+  /** 选中项发生变化时的回调 */
+  onChange?: (selectedRowKeys: (string | number)[], selectedRows: T[]) => void;
+  /** 用户手动选择/取消选择某行的回调 */
+  onSelect?: (record: T, selected: boolean, selectedRows: T[], nativeEvent: Event) => void;
+  /** 用户手动选择/取消选择所有行的回调 */
+  onSelectAll?: (selected: boolean, selectedRows: T[], changeRows: T[]) => void;
+}
+
+export interface BaseExpandableType<T> {
+  /** 初始时，是否展开所有行 */
+  defaultExpandAllRows?: boolean;
+  /** 默认展开的行 */
+  defaultExpandedRowKeys?: string[] | number[];
+  /** 展开的行，控制属性 */
+  expandedRowKeys?: string[] | number[];
+  /** 自定义展开图标 */
+  expandIcon?: (
+    record: T,
+    expanded: boolean,
+    onExpand?: (expanded: boolean, record: T) => void,
+  ) => React.ReactNode;
+  /** 点击展开图标时触发 */
+  onExpand?: (expanded: boolean, record: T) => void;
+}
+
+export interface ExpandableType<T> extends BaseExpandableType<T> {
+  /** 自定义展开列表头 */
+  columnTitle?: React.ReactNode;
+  /** 自定义展开列宽度 */
+  columnWidth?: string | number;
+  /** 渲染展开行的内容 */
+  expandedRowRender?: (record: T, index: number, expanded: boolean) => React.ReactNode;
+  /** 展开行的 className */
+  expandedRowClassName?: (record: T, index: number) => string;
+  /** 设置是否允许行展开 */
+  rowExpandable?: (record: T) => boolean;
+}
+
 export type ColumnType<T> = {
+  /** 设置列的类型 */
+  type?: 'expand' | 'checkbox' | 'radio' | 'default';
   /** 设置列的对齐方式 */
   align?: 'left' | 'center' | 'right';
   /** 列样式类名 */
   className?: string;
   /** 列对应字段名 */
-  dataIndex: string;
+  dataIndex?: string;
+  /** React 需要的 key，如果已经设置了唯一的 dataIndex，可以忽略这个属性 */
+  key?: string;
   /** 列固定 如果相邻的多列需要锁定，只需指定最外侧的column即可，需要配合横向滚动才生效 */
   fixed?: 'left' | 'right';
   /** 生成复杂数据的渲染函数 */
   render?: (text: string, record: T, index: number) => React.ReactNode;
   /** 列头显示文字 */
-  title: React.ReactNode;
+  title?: React.ReactNode;
   /** 列宽度 */
   width?: number | string;
   // width?: string | number;
@@ -76,8 +138,6 @@ export type ColumnType<T> = {
   // onFilterDropdownOpenChange?: (open: boolean) => any;
 };
 
-export type ColumnsType<T> = ColumnType<T>[];
+export type ColumnGroupType<T> = Omit<ColumnType<T>, 'dataIndex'> & { children: ColumnsType<T> };
 
-export type ColumnGroupType<T> = Omit<ColumnsType<T>, 'dataIndex'> & { children: ColumnsType<T> };
-
-export type ColumnGroupsType<T> = ColumnGroupType<T>[];
+export type ColumnsType<T> = (ColumnGroupType<T> | ColumnType<T>)[];
