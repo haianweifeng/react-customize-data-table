@@ -1,5 +1,8 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback, useContext } from 'react';
 import classnames from 'classnames';
+import omit from 'omit.js';
+import useColumns from '../hooks/useColumns';
+import useSelection from '../hooks/useSelection';
 import Thead from '../Thead';
 import Tbody from '../Tbody';
 import VirtualBody from '../VirtualBody';
@@ -7,10 +10,10 @@ import Colgroup from '../Colgroup';
 import Pagination from '../Pagination';
 import Spin from '../Spin';
 import type {
-  RowSelectionType,
-  ColumnsType,
+  // RowSelectionType,
+  // ColumnsType,
   ColumnsGroupType,
-  ExpandableType,
+  // ExpandableType,
   TreeExpandableType,
   ColumnsWithType,
   ColumnsGroupWithType,
@@ -27,6 +30,15 @@ import type {
   ResizeInfoType,
   LocalType,
 } from '../interface';
+import type {
+  ColumnsType,
+  ColumnType,
+  RowSelectionType,
+  ExpandableType,
+  ColumnGroupType,
+  PrivateColumnsType,
+  PrivateColumnType,
+} from '../interface1';
 import VirtualList from '../VirtualList';
 import type { PaginationProps } from '../index';
 import '../style/index.less';
@@ -49,7 +61,8 @@ export interface TableProps<T> {
   /** 表格展示的数据源 */
   dataSource: T[];
   /** 表格列的配置 */
-  columns: ColumnsType<T>[] | ColumnsGroupType<T>[];
+  columns: ColumnsType<T>;
+  // columns: ColumnsType<T>[] | ColumnsGroupType<T>[];
   /** 表格行 key 默认取值key */
   rowKey: RowKeyType<T>;
   /** 是否显示交错斑马底纹 */
@@ -64,9 +77,23 @@ export interface TableProps<T> {
   size?: 'default' | 'small' | 'large';
   /** 表格行的类名 */
   rowClassName?: (record: T, index: number) => string;
+  /** 表头单元格的类名 todo 未实现 列类型 */
+  headerCellClassName?: (
+    column: ColumnType<T> | ColumnGroupType<T>,
+    rowIndex: number,
+    colIndex: number,
+  ) => string | string;
+  /** 表头单元格的style todo 未实现 列类型 */
+  headerCellStyle?: (
+    column: ColumnType<T> | ColumnGroupType<T>,
+    rowIndex: number,
+    colIndex: number,
+  ) => React.CSSProperties | React.CSSProperties;
+  // /** 表头行的类名 todo 未实现 */
+  // headerRowClassName?: (rowIndex: number) => string;
   // /** 设置头部行属性 todo */
   // onHeaderRow?: (columns: ColumnsType<T>[], index: number) => any;
-  /** 设置行属性 */
+  /** 设置行属性 todo 改成onRowEvents 表头增加 onHeaderRowEvents */
   onRow?: (record: T, index: number) => any;
   /** 分页 */
   pagination?: PaginationProps;
@@ -92,10 +119,16 @@ export interface TableProps<T> {
   /** 滚动条滚动后回调函数 todo */
   onScroll?: (x: number, y: number) => void;
   /** 列宽伸缩后的回调 */
+  // onColumnResize?: (
+  //   newWidth: number,
+  //   oldWidth: number,
+  //   column: ColumnsType<T>,
+  //   event: Event,
+  // ) => void;
   onColumnResize?: (
     newWidth: number,
     oldWidth: number,
-    column: ColumnsType<T>,
+    column: ColumnType<T>,
     event: Event,
   ) => void;
   /** 表格行是否可选择配置项 todo header 需要表头空一行 */
@@ -135,8 +168,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     bordered,
     rowKey = 'key',
     dataSource,
-    // columns,
-    columns: originColumns,
+    columns,
+    // columns: originColumns,
     expandable,
     rowSelection,
     treeProps,
@@ -151,15 +184,128 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     empty = 'No data',
     onColumnResize,
     locale = localeContext.table,
+    headerCellClassName,
+    headerCellStyle,
   } = props;
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 44;
+
+  const getRecordKey = useCallback(
+    (record: T) => {
+      let key;
+      if (!record) {
+        key = undefined;
+      } else {
+        key = typeof rowKey === 'function' ? rowKey(record) : (record as any)[rowKey as string];
+      }
+      if (process.env.NODE_ENV !== 'production') {
+        if (key === undefined || key === null) {
+          console.log(
+            'Each record should have a unique "key" prop,or set "rowKey" to an unique primary key.',
+          );
+        }
+      }
+      return key;
+    },
+    [rowKey],
+  );
+
+  // const getRowKey = React.useMemo<GetRowKey<RecordType>>(() => {
+  //   if (typeof rowKey === 'function') {
+  //     return rowKey;
+  //   }
+  //   return (record: RecordType) => {
+  //     const key = record && record[rowKey];
+  //
+  //     if (process.env.NODE_ENV !== 'production') {
+  //       warning(
+  //         key !== undefined,
+  //         'Each record in table should have a unique `key` prop, or set `rowKey` to an unique primary key.',
+  //       );
+  //     }
+  //
+  //     return key;
+  //   };
+  // }, [rowKey]);
+
+  const getLevelInfo = useCallback(
+    (data: T[], level: number = 0) => {
+      let maxTreeLevel: number = level;
+      const keyLevelMap = new Map<React.Key, number>();
+      const levelRecordMap = new Map<number, Set<T>>();
+
+      data.forEach((d) => {
+        const recordKey = getRecordKey(d);
+        keyLevelMap.set(recordKey, level);
+
+        if (!(levelRecordMap.get(level) instanceof Set)) {
+          levelRecordMap.set(level, new Set());
+        }
+        levelRecordMap.get(level)!.add(d);
+
+        if (d?.children && d.children.length) {
+          const {
+            maxTreeLevel: childrenMaxTreeLevel,
+            keyLevelMap: childrenKeyLevelMap,
+            levelRecordMap: childrenLevelRecordMap,
+          } = getLevelInfo(d.children, level + 1);
+          maxTreeLevel = childrenMaxTreeLevel;
+          for (let [key, value] of childrenKeyLevelMap.entries()) {
+            keyLevelMap.set(key, value);
+          }
+          for (let [key, value] of childrenLevelRecordMap) {
+            if (!(levelRecordMap.get(key) instanceof Set)) {
+              levelRecordMap.set(key, new Set());
+            }
+            Array.from(value).forEach((v) => levelRecordMap.get(key)!.add(v));
+          }
+        }
+      });
+      return { maxTreeLevel, keyLevelMap, levelRecordMap };
+    },
+    [getRecordKey],
+  );
+
+  const { maxTreeLevel, keyLevelMap, levelRecordMap } = useMemo(() => {
+    return getLevelInfo(dataSource);
+  }, [dataSource, getLevelInfo]);
+
+  const selectionType = useMemo(() => {
+    const column = columns.find(
+      (column) => column?.type === 'checkbox' || column?.type === 'radio',
+    );
+    if (column) return column.type as 'checkbox' | 'radio';
+    return rowSelection ? rowSelection?.type || 'checkbox' : undefined;
+  }, [columns, rowSelection?.type]);
+
+  const initSelectedKeys = useMemo(() => {
+    return rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
+  }, [rowSelection?.selectedRowKeys, rowSelection?.defaultSelectedRowKeys]);
+
+  const { mergeColumns, fixedColumns, flattenColumns, updateMergeColumns, initMergeColumns } =
+    useColumns(columns, rowSelection, expandable);
+
+  const [
+    selectedKeys,
+    halfSelectedKeys,
+    fillMissSelectedKeys,
+    removeUselessKeys,
+    updateHalfSelectedKeys,
+    updateSelectedKeys,
+  ] = useSelection(
+    dataSource,
+    maxTreeLevel,
+    levelRecordMap,
+    getRecordKey,
+    initSelectedKeys,
+    selectionType,
+  );
 
   const resizeLineRef = useRef<HTMLDivElement>(null);
   const tableContainer = useRef<HTMLDivElement>(null);
   const theadRef = useRef<any>(null);
   const tbodyRef = useRef<any>(null);
-  const maxTreeLevel = useRef<number>(0);
+  // const maxTreeLevel = useRef<number>(0);
   const treeLevel = useRef<TreeLevelType>({} as TreeLevelType);
   const levelRecord = useRef<LevelRecordType<T>>({} as LevelRecordType<T>);
 
@@ -183,7 +329,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     });
   });
 
-  const [columns, setColumns] = useState<(ColumnsType<T> | ColumnsGroupType<T>)[]>(originColumns);
+  // const [columns, setColumns] = useState<(ColumnsType<T> | ColumnsGroupType<T>)[]>(originColumns);
 
   const [virtualContainerWidth, setVirtualContainerWidth] = useState<number>(0);
 
@@ -191,178 +337,178 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const isRadio = rowSelection?.type === 'radio';
 
-  const removeUselessKeys = useCallback(
-    (keys: (string | number)[], halfSelectKeys: (string | number)[]) => {
-      const checkedRowWithKey: SelectedRowWithKey<T> = {} as SelectedRowWithKey<T>;
-      const checkedKeys = new Set<number | string>(keys);
-      let halfCheckedKeys = new Set<number | string>(halfSelectKeys);
+  // const removeUselessKeys = useCallback(
+  //   (keys: (string | number)[], halfSelectKeys: (string | number)[]) => {
+  //     const checkedRowWithKey: SelectedRowWithKey<T> = {} as SelectedRowWithKey<T>;
+  //     const checkedKeys = new Set<number | string>(keys);
+  //     let halfCheckedKeys = new Set<number | string>(halfSelectKeys);
+  //
+  //     if (isRadio) {
+  //       return {
+  //         checkedRowWithKey,
+  //         checkedKeys: Array.from(checkedKeys),
+  //         halfCheckedKeys: Array.from(halfCheckedKeys),
+  //       };
+  //     }
+  //
+  //     // from top to bottom
+  //     for (let i = 0; i <= maxTreeLevel.current; i++) {
+  //       const records = levelRecord.current[i];
+  //       records.forEach((r) => {
+  //         const key = getRowKey(rowKey, r);
+  //         if (key === undefined) return;
+  //         const checked = checkedKeys.has(key);
+  //         if (!checked && !halfCheckedKeys.has(key)) {
+  //           (r?.children || []).forEach((c) => {
+  //             const cKey = getRowKey(rowKey, c);
+  //             if (cKey === undefined) return;
+  //             checkedKeys.delete(cKey);
+  //             halfCheckedKeys.delete(cKey);
+  //           });
+  //         }
+  //       });
+  //     }
+  //
+  //     const existKeys = new Set<number | string>();
+  //     halfCheckedKeys = new Set<number | string>();
+  //     for (let i = maxTreeLevel.current; i >= 0; i--) {
+  //       const records = levelRecord.current[i];
+  //
+  //       records.forEach((r) => {
+  //         const key = getRowKey(rowKey, r);
+  //         if (key === undefined) return;
+  //
+  //         if (checkedKeys.has(key)) {
+  //           checkedRowWithKey[key] = r;
+  //         }
+  //         const parent = findParentByKey<T>(dataSource, key, rowKey);
+  //         if (!parent) return;
+  //         const parentKey = getRowKey(rowKey, parent);
+  //         if (parentKey === undefined) return;
+  //         if (existKeys.has(parentKey)) return;
+  //
+  //         let allChecked = true;
+  //         let isHalfChecked = false;
+  //
+  //         (parent.children || []).forEach((c) => {
+  //           const cKey = getRowKey(rowKey, c);
+  //           if (cKey === undefined) return;
+  //
+  //           if ((checkedKeys.has(cKey) || halfCheckedKeys.has(cKey)) && !isHalfChecked) {
+  //             isHalfChecked = true;
+  //           }
+  //           if (allChecked && !checkedKeys.has(cKey)) {
+  //             allChecked = false;
+  //           }
+  //         });
+  //
+  //         if (!allChecked) {
+  //           checkedKeys.delete(parentKey);
+  //         }
+  //         if (isHalfChecked) {
+  //           halfCheckedKeys.add(parentKey);
+  //         }
+  //         existKeys.add(parentKey);
+  //       });
+  //     }
+  //
+  //     return {
+  //       checkedRowWithKey,
+  //       checkedKeys: Array.from(checkedKeys),
+  //       halfCheckedKeys: Array.from(halfCheckedKeys),
+  //     };
+  //   },
+  //   [isRadio, rowKey, dataSource],
+  // );
 
-      if (isRadio) {
-        return {
-          checkedRowWithKey,
-          checkedKeys: Array.from(checkedKeys),
-          halfCheckedKeys: Array.from(halfCheckedKeys),
-        };
-      }
-
-      // from top to bottom
-      for (let i = 0; i <= maxTreeLevel.current; i++) {
-        const records = levelRecord.current[i];
-        records.forEach((r) => {
-          const key = getRowKey(rowKey, r);
-          if (key === undefined) return;
-          const checked = checkedKeys.has(key);
-          if (!checked && !halfCheckedKeys.has(key)) {
-            (r?.children || []).forEach((c) => {
-              const cKey = getRowKey(rowKey, c);
-              if (cKey === undefined) return;
-              checkedKeys.delete(cKey);
-              halfCheckedKeys.delete(cKey);
-            });
-          }
-        });
-      }
-
-      const existKeys = new Set<number | string>();
-      halfCheckedKeys = new Set<number | string>();
-      for (let i = maxTreeLevel.current; i >= 0; i--) {
-        const records = levelRecord.current[i];
-
-        records.forEach((r) => {
-          const key = getRowKey(rowKey, r);
-          if (key === undefined) return;
-
-          if (checkedKeys.has(key)) {
-            checkedRowWithKey[key] = r;
-          }
-          const parent = findParentByKey<T>(dataSource, key, rowKey);
-          if (!parent) return;
-          const parentKey = getRowKey(rowKey, parent);
-          if (parentKey === undefined) return;
-          if (existKeys.has(parentKey)) return;
-
-          let allChecked = true;
-          let isHalfChecked = false;
-
-          (parent.children || []).forEach((c) => {
-            const cKey = getRowKey(rowKey, c);
-            if (cKey === undefined) return;
-
-            if ((checkedKeys.has(cKey) || halfCheckedKeys.has(cKey)) && !isHalfChecked) {
-              isHalfChecked = true;
-            }
-            if (allChecked && !checkedKeys.has(cKey)) {
-              allChecked = false;
-            }
-          });
-
-          if (!allChecked) {
-            checkedKeys.delete(parentKey);
-          }
-          if (isHalfChecked) {
-            halfCheckedKeys.add(parentKey);
-          }
-          existKeys.add(parentKey);
-        });
-      }
-
-      return {
-        checkedRowWithKey,
-        checkedKeys: Array.from(checkedKeys),
-        halfCheckedKeys: Array.from(halfCheckedKeys),
-      };
-    },
-    [isRadio, rowKey, dataSource],
-  );
-
-  const fillMissSelectedKeys = useCallback(
-    (keys: (string | number)[]) => {
-      const checkedRowWithKey: SelectedRowWithKey<T> = {} as SelectedRowWithKey<T>;
-      const checkedKeys = new Set<number | string>(keys);
-      const halfCheckedKeys = new Set<number | string>();
-
-      if (isRadio) {
-        return {
-          checkedRowWithKey,
-          checkedKeys: Array.from(checkedKeys),
-          halfCheckedKeys: Array.from(halfCheckedKeys),
-        };
-      }
-
-      // from top to bottom
-      for (let i = 0; i <= maxTreeLevel.current; i++) {
-        const records = levelRecord.current[i];
-        records.forEach((r) => {
-          const key = getRowKey(rowKey, r);
-          if (key === undefined) return;
-          if (checkedKeys.has(key)) {
-            checkedRowWithKey[key] = r;
-            (r?.children || []).forEach((c) => {
-              const cKey = getRowKey(rowKey, c);
-              if (cKey === undefined) return;
-              checkedKeys.add(cKey);
-              checkedRowWithKey[cKey] = c;
-            });
-          }
-        });
-      }
-
-      // from bottom to top
-      const existKeys = new Set<number | string>();
-      for (let i = maxTreeLevel.current; i >= 0; i--) {
-        const records = levelRecord.current[i];
-
-        records.forEach((r) => {
-          const key = getRowKey(rowKey, r);
-          if (key === undefined) return;
-          const parent = findParentByKey<T>(dataSource, key, rowKey);
-          if (!parent) return;
-          const parentKey = getRowKey(rowKey, parent);
-          if (parentKey === undefined) return;
-          if (existKeys.has(parentKey)) return;
-
-          let allChecked = true;
-          let isHalfChecked = false;
-          (parent.children || []).forEach((c) => {
-            const cKey = getRowKey(rowKey, c);
-            if (cKey === undefined) return;
-            const exist = checkedKeys.has(cKey);
-            if ((exist || halfCheckedKeys.has(cKey)) && !isHalfChecked) {
-              isHalfChecked = true;
-            }
-            if (allChecked && !exist) {
-              allChecked = false;
-            }
-          });
-
-          if (allChecked) {
-            checkedKeys.add(parentKey);
-            if (!checkedRowWithKey[parentKey]) {
-              checkedRowWithKey[parentKey] = parent;
-            }
-          }
-          if (isHalfChecked) {
-            halfCheckedKeys.add(parentKey);
-          }
-          existKeys.add(parentKey);
-        });
-      }
-
-      return {
-        checkedRowWithKey,
-        checkedKeys: Array.from(checkedKeys),
-        halfCheckedKeys: Array.from(halfCheckedKeys),
-      };
-    },
-    [dataSource, isRadio, rowKey],
-  );
+  // const fillMissSelectedKeys = useCallback(
+  //   (keys: (string | number)[]) => {
+  //     const checkedRowWithKey: SelectedRowWithKey<T> = {} as SelectedRowWithKey<T>;
+  //     const checkedKeys = new Set<number | string>(keys);
+  //     const halfCheckedKeys = new Set<number | string>();
+  //
+  //     if (isRadio) {
+  //       return {
+  //         checkedRowWithKey,
+  //         checkedKeys: Array.from(checkedKeys),
+  //         halfCheckedKeys: Array.from(halfCheckedKeys),
+  //       };
+  //     }
+  //
+  //     // from top to bottom
+  //     for (let i = 0; i <= maxTreeLevel.current; i++) {
+  //       const records = levelRecord.current[i];
+  //       records.forEach((r) => {
+  //         const key = getRowKey(rowKey, r);
+  //         if (key === undefined) return;
+  //         if (checkedKeys.has(key)) {
+  //           checkedRowWithKey[key] = r;
+  //           (r?.children || []).forEach((c) => {
+  //             const cKey = getRowKey(rowKey, c);
+  //             if (cKey === undefined) return;
+  //             checkedKeys.add(cKey);
+  //             checkedRowWithKey[cKey] = c;
+  //           });
+  //         }
+  //       });
+  //     }
+  //
+  //     // from bottom to top
+  //     const existKeys = new Set<number | string>();
+  //     for (let i = maxTreeLevel.current; i >= 0; i--) {
+  //       const records = levelRecord.current[i];
+  //
+  //       records.forEach((r) => {
+  //         const key = getRowKey(rowKey, r);
+  //         if (key === undefined) return;
+  //         const parent = findParentByKey<T>(dataSource, key, rowKey);
+  //         if (!parent) return;
+  //         const parentKey = getRowKey(rowKey, parent);
+  //         if (parentKey === undefined) return;
+  //         if (existKeys.has(parentKey)) return;
+  //
+  //         let allChecked = true;
+  //         let isHalfChecked = false;
+  //         (parent.children || []).forEach((c) => {
+  //           const cKey = getRowKey(rowKey, c);
+  //           if (cKey === undefined) return;
+  //           const exist = checkedKeys.has(cKey);
+  //           if ((exist || halfCheckedKeys.has(cKey)) && !isHalfChecked) {
+  //             isHalfChecked = true;
+  //           }
+  //           if (allChecked && !exist) {
+  //             allChecked = false;
+  //           }
+  //         });
+  //
+  //         if (allChecked) {
+  //           checkedKeys.add(parentKey);
+  //           if (!checkedRowWithKey[parentKey]) {
+  //             checkedRowWithKey[parentKey] = parent;
+  //           }
+  //         }
+  //         if (isHalfChecked) {
+  //           halfCheckedKeys.add(parentKey);
+  //         }
+  //         existKeys.add(parentKey);
+  //       });
+  //     }
+  //
+  //     return {
+  //       checkedRowWithKey,
+  //       checkedKeys: Array.from(checkedKeys),
+  //       halfCheckedKeys: Array.from(halfCheckedKeys),
+  //     };
+  //   },
+  //   [dataSource, isRadio, rowKey],
+  // );
 
   const flatData = useCallback(
     (data: T[], level: number = 0) => {
       const records: T[] = [];
       const keys: (string | number)[] = [];
 
-      maxTreeLevel.current = level;
+      // maxTreeLevel.current = level;
 
       data.forEach((d) => {
         const key = getRowKey(rowKey, d);
@@ -387,142 +533,142 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     [rowKey],
   );
 
-  // todo columns
-  const formatColumns = useMemo(() => {
-    // todo insertBeforeColumnName 如果是放到最后一列
-    let insertIndex = 0;
-    const cols = columns.map((column, index: number) => {
-      const { title } = column;
-      if (expandable?.insertBeforeColumnName === title) insertIndex = index;
-      const cell: ColumnsWithType<T> | ColumnsGroupWithType<T> = {
-        type: '',
-        ...column,
-      };
+  // // todo columns
+  // const formatColumns = useMemo(() => {
+  //   // todo insertBeforeColumnName 如果是放到最后一列
+  //   let insertIndex = 0;
+  //   const cols = columns.map((column, index: number) => {
+  //     const { title } = column;
+  //     if (expandable?.insertBeforeColumnName === title) insertIndex = index;
+  //     const cell: ColumnsWithType<T> | ColumnsGroupWithType<T> = {
+  //       type: '',
+  //       ...column,
+  //     };
+  //
+  //     return cell;
+  //   });
+  //
+  //   if (rowSelection) {
+  //     cols.unshift({
+  //       type: rowSelection.type || 'checkbox',
+  //       dataIndex: 'checkbox',
+  //       title: rowSelection?.columnTitle || '',
+  //       width: rowSelection?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
+  //     });
+  //
+  //     if (expandable?.insertBeforeColumnName) {
+  //       insertIndex += 1;
+  //     }
+  //   }
+  //
+  //   if (expandable && expandable?.expandedRowRender) {
+  //     cols.splice(insertIndex, 0, {
+  //       type: 'expanded',
+  //       dataIndex: 'expanded',
+  //       title: expandable?.columnTitle || '',
+  //       width: expandable?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
+  //     });
+  //   }
+  //
+  //   return cols;
+  // }, [columns, expandable, rowSelection]);
 
-      return cell;
-    });
+  // const addFixedToColumn: any = useCallback(
+  //   (columns: ColumnsType<T>[] | ColumnsGroupType<T>[], fixed: 'left' | 'right') => {
+  //     return columns.map((c) => {
+  //       if (typeof (c as ColumnsGroupWithType<T>).children !== 'undefined') {
+  //         return {
+  //           ...c,
+  //           fixed,
+  //           children: addFixedToColumn((c as ColumnsGroupWithType<T>).children, fixed),
+  //         };
+  //       }
+  //       return { ...c, fixed };
+  //     });
+  //   },
+  //   [],
+  // );
+  //
+  // const existFixedInColumn = useCallback(
+  //   (columns: ColumnsType<T>[] | ColumnsGroupType<T>[]): boolean => {
+  //     let exist: boolean;
+  //     const lastColumn = columns[columns.length - 1];
+  //     if ((lastColumn as ColumnsGroupWithType<T>).children) {
+  //       exist = existFixedInColumn((lastColumn as ColumnsGroupWithType<T>).children);
+  //     } else {
+  //       exist = !!lastColumn.fixed;
+  //     }
+  //     return exist;
+  //   },
+  //   [],
+  // );
 
-    if (rowSelection) {
-      cols.unshift({
-        type: rowSelection.type || 'checkbox',
-        dataIndex: 'checkbox',
-        title: rowSelection?.columnTitle || '',
-        width: rowSelection?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
-      });
+  // const columnsWithFixed = useMemo(() => {
+  //   let left = -1;
+  //   let right = -1;
+  //   const cols = formatColumns.map((column, index: number) => {
+  //     if (typeof (column as ColumnsGroupWithType<T>).children !== 'undefined') {
+  //       const isFixedLeft = column.fixed === 'left';
+  //       const isFixedRight = column.fixed === 'right';
+  //
+  //       if (isFixedLeft || !column.fixed) {
+  //         let exist = false;
+  //         if (!column.fixed) {
+  //           exist = existFixedInColumn((column as ColumnsGroupWithType<T>).children);
+  //         }
+  //         if (isFixedLeft || exist) {
+  //           left = index;
+  //           const children = addFixedToColumn((column as ColumnsGroupWithType<T>).children, 'left');
+  //           (column as ColumnsGroupWithType<T>).children = children;
+  //           column.fixed = 'left';
+  //         }
+  //       }
+  //
+  //       if (isFixedRight || !column.fixed) {
+  //         let exist = false;
+  //         if (!column.fixed) {
+  //           exist = existFixedInColumn((column as ColumnsGroupWithType<T>).children);
+  //         }
+  //         if (isFixedRight || exist) {
+  //           if (right < 0) right = index;
+  //           const children = addFixedToColumn(
+  //             (column as ColumnsGroupWithType<T>).children,
+  //             'right',
+  //           );
+  //           (column as ColumnsGroupWithType<T>).children = children;
+  //           column.fixed = 'right';
+  //         }
+  //       }
+  //     } else {
+  //       if (column.fixed === 'left') left = index;
+  //       if (column.fixed === 'right' && right < 0) right = index;
+  //     }
+  //     return column;
+  //   });
+  //   return cols.map((c, i: number) => {
+  //     if (i <= left) c.fixed = 'left';
+  //     if (i === left) c.lastLeftFixed = true;
+  //     if (i >= right && right > 0) c.fixed = 'right';
+  //     if (i === right) c.fistRightFixed = true;
+  //     return c;
+  //   });
+  // }, [formatColumns, addFixedToColumn, existFixedInColumn]);
 
-      if (expandable?.insertBeforeColumnName) {
-        insertIndex += 1;
-      }
-    }
-
-    if (expandable && expandable?.expandedRowRender) {
-      cols.splice(insertIndex, 0, {
-        type: 'expanded',
-        dataIndex: 'expanded',
-        title: expandable?.columnTitle || '',
-        width: expandable?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
-      });
-    }
-
-    return cols;
-  }, [columns, expandable, rowSelection]);
-
-  const addFixedToColumn: any = useCallback(
-    (columns: ColumnsType<T>[] | ColumnsGroupType<T>[], fixed: 'left' | 'right') => {
-      return columns.map((c) => {
-        if (typeof (c as ColumnsGroupWithType<T>).children !== 'undefined') {
-          return {
-            ...c,
-            fixed,
-            children: addFixedToColumn((c as ColumnsGroupWithType<T>).children, fixed),
-          };
-        }
-        return { ...c, fixed };
-      });
-    },
-    [],
-  );
-
-  const existFixedInColumn = useCallback(
-    (columns: ColumnsType<T>[] | ColumnsGroupType<T>[]): boolean => {
-      let exist: boolean;
-      const lastColumn = columns[columns.length - 1];
-      if ((lastColumn as ColumnsGroupWithType<T>).children) {
-        exist = existFixedInColumn((lastColumn as ColumnsGroupWithType<T>).children);
-      } else {
-        exist = !!lastColumn.fixed;
-      }
-      return exist;
-    },
-    [],
-  );
-
-  const columnsWithFixed = useMemo(() => {
-    let left = -1;
-    let right = -1;
-    const cols = formatColumns.map((column, index: number) => {
-      if (typeof (column as ColumnsGroupWithType<T>).children !== 'undefined') {
-        const isFixedLeft = column.fixed === 'left';
-        const isFixedRight = column.fixed === 'right';
-
-        if (isFixedLeft || !column.fixed) {
-          let exist = false;
-          if (!column.fixed) {
-            exist = existFixedInColumn((column as ColumnsGroupWithType<T>).children);
-          }
-          if (isFixedLeft || exist) {
-            left = index;
-            const children = addFixedToColumn((column as ColumnsGroupWithType<T>).children, 'left');
-            (column as ColumnsGroupWithType<T>).children = children;
-            column.fixed = 'left';
-          }
-        }
-
-        if (isFixedRight || !column.fixed) {
-          let exist = false;
-          if (!column.fixed) {
-            exist = existFixedInColumn((column as ColumnsGroupWithType<T>).children);
-          }
-          if (isFixedRight || exist) {
-            if (right < 0) right = index;
-            const children = addFixedToColumn(
-              (column as ColumnsGroupWithType<T>).children,
-              'right',
-            );
-            (column as ColumnsGroupWithType<T>).children = children;
-            column.fixed = 'right';
-          }
-        }
-      } else {
-        if (column.fixed === 'left') left = index;
-        if (column.fixed === 'right' && right < 0) right = index;
-      }
-      return column;
-    });
-    return cols.map((c, i: number) => {
-      if (i <= left) c.fixed = 'left';
-      if (i === left) c.lastLeftFixed = true;
-      if (i >= right && right > 0) c.fixed = 'right';
-      if (i === right) c.fistRightFixed = true;
-      return c;
-    });
-  }, [formatColumns, addFixedToColumn, existFixedInColumn]);
-
-  const getFlatColumns = useCallback((cols: (ColumnsWithType<T> | ColumnsGroupWithType<T>)[]) => {
-    const flatColumns: ColumnsWithType<T>[] = [];
-    cols.map((column: any) => {
-      if (column?.children) {
-        flatColumns.push(...getFlatColumns(column.children));
-      } else {
-        flatColumns.push(column);
-      }
-    });
-    return flatColumns;
-  }, []);
-
-  const flatColumns = useMemo(() => {
-    return getFlatColumns(columnsWithFixed);
-  }, [getFlatColumns, columnsWithFixed]);
+  // const getFlatColumns = useCallback((cols: (ColumnsWithType<T> | ColumnsGroupWithType<T>)[]) => {
+  //   const flatColumns: ColumnsWithType<T>[] = [];
+  //   cols.map((column: any) => {
+  //     if (column?.children) {
+  //       flatColumns.push(...getFlatColumns(column.children));
+  //     } else {
+  //       flatColumns.push(column);
+  //     }
+  //   });
+  //   return flatColumns;
+  // }, []);
+  //
+  // const flatColumns = useMemo(() => {
+  //   return getFlatColumns(columnsWithFixed);
+  // }, [getFlatColumns, columnsWithFixed]);
 
   const [currentPage, setCurrentPage] = useState(() => {
     return pagination?.current || pagination?.defaultCurrent || 1;
@@ -532,13 +678,27 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return pagination?.pageSize || pagination?.defaultPageSize || 10;
   });
 
+  // const [filterState, setFilterState] = useState<FilterStateType<T>[]>(() => {
+  //   const filter: FilterStateType<T>[] = [];
+  //   flatColumns.forEach((col) => {
+  //     if (col?.filters || typeof col?.filterMethod === 'function') {
+  //       filter.push({
+  //         filteredValue: col?.filteredValue || col?.defaultFilteredValue || [],
+  //         dataIndex: col.dataIndex,
+  //         filterMethod: col?.filterMethod,
+  //       });
+  //     }
+  //   });
+  //   return filter;
+  // });
+
   const [filterState, setFilterState] = useState<FilterStateType<T>[]>(() => {
     const filter: FilterStateType<T>[] = [];
-    flatColumns.forEach((col) => {
+    flattenColumns.forEach((col) => {
       if (col?.filters || typeof col?.filterMethod === 'function') {
         filter.push({
           filteredValue: col?.filteredValue || col?.defaultFilteredValue || [],
-          dataIndex: col.dataIndex,
+          dataIndex: col?.dataIndex || col?.key,
           filterMethod: col?.filterMethod,
         });
       }
@@ -548,11 +708,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const [sorterState, setSorterState] = useState<SorterStateType<T>[]>(() => {
     const sorter: SorterStateType<T>[] = [];
-    flatColumns.forEach((col) => {
+    flattenColumns.forEach((col) => {
       if (col?.sorter && col?.defaultSortOrder) {
         const obj: SorterStateType<T> = {
           order: col.defaultSortOrder,
-          dataIndex: col.dataIndex,
+          dataIndex: col?.dataIndex || col?.key,
         } as SorterStateType<T>;
         if (typeof col.sorter === 'object') {
           obj.sorter = (col.sorter as SorterType<T>).compare;
@@ -613,6 +773,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const [virtualContainerHeight, setVirtualContainerHeight] = useState<number>(0);
 
+  const [scrollWidth, setScrollWidth] = useState<number>(width || 0);
+
   const [startRowIndex, setStartRowIndex] = useState<number>(0);
 
   const [scrollTop, setScrollTop] = useState<number>(0);
@@ -623,24 +785,26 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   // const [resizeLineVisible, setResizeLineVisible] = useState<boolean>(false);
 
-  const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
-    const initSelectedKeys =
-      rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
-    if (initSelectedKeys.length) {
-      return fillMissSelectedKeys(initSelectedKeys).checkedKeys;
-    }
-    return initSelectedKeys;
-  });
+  // const [selectedKeys, setSelectedKeys] = useState<(string | number)[]>(() => {
+  //   const initSelectedKeys =
+  //     rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
+  //   if (initSelectedKeys.length) {
+  //     return fillMissSelectedKeys(initSelectedKeys).checkedKeys;
+  //   }
+  //   return initSelectedKeys;
+  // });
 
-  const [halfSelectedKeys, setHalfSelectedKeys] = useState(() => {
-    const initSelectedKeys =
-      rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
-    if (initSelectedKeys.length) {
-      return fillMissSelectedKeys(initSelectedKeys).halfCheckedKeys;
-    }
-    return initSelectedKeys;
-  });
+  // const [halfSelectedKeys, setHalfSelectedKeys] = useState(() => {
+  //   const initSelectedKeys =
+  //     rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
+  //   if (initSelectedKeys.length) {
+  //     return fillMissSelectedKeys(initSelectedKeys).halfCheckedKeys;
+  //   }
+  //   return initSelectedKeys;
+  // });
+
   // 1.测试列表-分页情况下 展开的也是只展开当前页的
+  // todo bug 如果分页后也是全选的话 是不是没有treeExpandKeys
   const [treeExpandKeys, setTreeExpandKeys] = useState<(string | number)[]>(() => {
     if (
       treeProps?.defaultExpandAllRows &&
@@ -716,137 +880,208 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // 1.如果所有列设置了宽度 表格总宽度计算
   // todo 2.单元格word-break 样式更改
   // todo 考虑如果后面要是把滚动条改动后 tbodyWidth 这个计算要优化 现在没有扣除BAR_WIDTH
-  const columnsWithWidth = useMemo(() => {
-    const allColumnHasWidth = flatColumns.every((c) => typeof parseValue(c.width) === 'number');
-    if (allColumnHasWidth) return flatColumns;
+  // const columnsWithWidth = useMemo(() => {
+  //   const allColumnHasWidth = flatColumns.every((c) => typeof parseValue(c.width) === 'number');
+  //   if (allColumnHasWidth) return flatColumns;
+  //   if (tbodyRef.current) {
+  //     let widthSum = 0;
+  //     let count = 0;
+  //     const noMaxColumns: ColumnsWithType<T>[] = [];
+  //     // const tbodyWidth = Number(parseValue(width)) || (virtualContainerWidth - (showScrollbarY ? BAR_WIDTH : 0));
+  //     // const tbodyWidth = Number(parseValue(width)) || virtualContainerWidth;
+  //     // console.log(tbodyRef.current.clientWidth);
+  //     // todo 待验证是offsetWidth 还是scrollWidth
+  //     // todo 考虑如果所有列设置的宽度都设置了最小值导致 remainWidth小于0 是不是意味着后面那几列宽度都为0 还是自动扩充tbodyWidth 的宽度
+  //     const tbodyWidth = Number(parseValue(width)) || containerWidth;
+  //
+  //     flatColumns.map((c) => {
+  //       if (c.width) {
+  //         let parseWidth = parseValue(c.width);
+  //         if (typeof parseWidth === 'string') {
+  //           parseWidth = toPoint(parseWidth);
+  //           parseWidth = parseWidth! * tbodyWidth;
+  //         }
+  //         widthSum += Number(parseWidth);
+  //       } else {
+  //         count++;
+  //         if (!c.maxWidth) {
+  //           noMaxColumns.push(c);
+  //         }
+  //       }
+  //     });
+  //
+  //     let remainWidth = tbodyWidth - widthSum;
+  //     let averageWidth = 0;
+  //     if (count > 0) {
+  //       averageWidth = parseInt(`${remainWidth / count}`, 10);
+  //     }
+  //
+  //     let widthColumns = flatColumns.map((c) => {
+  //       if (c.width) {
+  //         let parseWidth = parseValue(c.width);
+  //         if (typeof parseWidth === 'string') {
+  //           parseWidth = toPoint(parseWidth);
+  //           parseWidth = parseWidth! * tbodyWidth;
+  //         }
+  //         return Object.assign({}, c, { width: parseWidth });
+  //       }
+  //       let colWidth = averageWidth;
+  //       if (c.minWidth) {
+  //         colWidth = Math.max(averageWidth, Number(parseValue(c.minWidth)));
+  //       }
+  //       if (c.maxWidth) {
+  //         colWidth = Math.min(averageWidth, Number(parseValue(c.maxWidth)));
+  //       }
+  //       remainWidth -= colWidth;
+  //       count--;
+  //       const diff = averageWidth - colWidth;
+  //       if (diff) {
+  //         if (count > 0) {
+  //           averageWidth = parseInt(`${remainWidth / count}`, 10);
+  //         }
+  //       }
+  //       return Object.assign({}, c, { width: colWidth });
+  //     });
+  //
+  //     if (remainWidth > 0) {
+  //       averageWidth = parseInt(`${remainWidth / noMaxColumns.length}`, 10);
+  //       widthColumns = widthColumns.map((c) => {
+  //         const item = noMaxColumns.find((col) => col.dataIndex === c.dataIndex);
+  //         if (item) {
+  //           let colWidth = Number(parseValue(c.width)) + averageWidth;
+  //           return Object.assign({}, c, { width: colWidth });
+  //         }
+  //         return c;
+  //       });
+  //     }
+  //     return widthColumns;
+  //   }
+  //   return flatColumns;
+  // }, [flatColumns, virtualContainerWidth, width, containerWidth]);
+
+  const handleResize = (targetColumns: PrivateColumnsType<T>) => {
     if (tbodyRef.current) {
       let widthSum = 0;
-      let count = 0;
-      const noMaxColumns: ColumnsWithType<T>[] = [];
-      // const tbodyWidth = Number(parseValue(width)) || (virtualContainerWidth - (showScrollbarY ? BAR_WIDTH : 0));
-      // const tbodyWidth = Number(parseValue(width)) || virtualContainerWidth;
-      // console.log(tbodyRef.current.clientWidth);
-      // todo 待验证是offsetWidth 还是scrollWidth
-      // todo 考虑如果所有列设置的宽度都设置了最小值导致 remainWidth小于0 是不是意味着后面那几列宽度都为0 还是自动扩充tbodyWidth 的宽度
-      const tbodyWidth = Number(parseValue(width)) || containerWidth;
+      let noWidthColumnsCount = 0;
+      const noMaxWidthColumnIndexs: number[] = [];
+      const tbodyWidth = width || tbodyRef.current.offsetWidth;
 
-      flatColumns.map((c) => {
-        if (c.width) {
-          let parseWidth = parseValue(c.width);
-          if (typeof parseWidth === 'string') {
-            parseWidth = toPoint(parseWidth);
-            parseWidth = parseWidth! * tbodyWidth;
-          }
-          widthSum += Number(parseWidth);
+      targetColumns.map((column, index) => {
+        if (column.width) {
+          widthSum += parseInt(`${column.width}`, 10);
         } else {
-          count++;
-          if (!c.maxWidth) {
-            noMaxColumns.push(c);
+          noWidthColumnsCount++;
+          if (!column.maxWidth) {
+            noMaxWidthColumnIndexs.push(index);
           }
         }
       });
 
       let remainWidth = tbodyWidth - widthSum;
       let averageWidth = 0;
-      if (count > 0) {
-        averageWidth = parseInt(`${remainWidth / count}`, 10);
+      if (noWidthColumnsCount > 0) {
+        averageWidth = parseInt(`${remainWidth / noWidthColumnsCount}`, 10);
       }
 
-      let widthColumns = flatColumns.map((c) => {
-        if (c.width) {
-          let parseWidth = parseValue(c.width);
-          if (typeof parseWidth === 'string') {
-            parseWidth = toPoint(parseWidth);
-            parseWidth = parseWidth! * tbodyWidth;
-          }
-          return Object.assign({}, c, { width: parseWidth });
+      let widthColumns = targetColumns.map((column) => {
+        if (column.width)
+          return {
+            ...column,
+            width: parseInt(`${column.width}`, 10),
+            _width: parseInt(`${column.width}`, 10),
+          };
+        let columnWidth = averageWidth;
+        if (column.minWidth) {
+          columnWidth = Math.max(averageWidth, parseInt(`${column.minWidth}`, 10));
         }
-        let colWidth = averageWidth;
-        if (c.minWidth) {
-          colWidth = Math.max(averageWidth, Number(parseValue(c.minWidth)));
+        if (column.maxWidth) {
+          columnWidth = Math.min(averageWidth, parseInt(`${column.maxWidth}`, 10));
         }
-        if (c.maxWidth) {
-          colWidth = Math.min(averageWidth, Number(parseValue(c.maxWidth)));
-        }
-        remainWidth -= colWidth;
-        count--;
-        const diff = averageWidth - colWidth;
+        remainWidth -= columnWidth;
+        noWidthColumnsCount--;
+        const diff = averageWidth - columnWidth;
         if (diff) {
-          if (count > 0) {
-            averageWidth = parseInt(`${remainWidth / count}`, 10);
+          if (noWidthColumnsCount > 0) {
+            averageWidth = parseInt(`${remainWidth / noWidthColumnsCount}`, 10);
           }
         }
-        return Object.assign({}, c, { width: colWidth });
+        return Object.assign({}, column, { _width: columnWidth });
       });
 
       if (remainWidth > 0) {
-        averageWidth = parseInt(`${remainWidth / noMaxColumns.length}`, 10);
-        widthColumns = widthColumns.map((c) => {
-          const item = noMaxColumns.find((col) => col.dataIndex === c.dataIndex);
-          if (item) {
-            let colWidth = Number(parseValue(c.width)) + averageWidth;
-            return Object.assign({}, c, { width: colWidth });
+        averageWidth = parseInt(`${remainWidth / noMaxWidthColumnIndexs.length}`, 10);
+        widthColumns = widthColumns.map((c, index) => {
+          if (noMaxWidthColumnIndexs.indexOf(index) >= 0) {
+            return { ...c, _width: Number(c._width) + averageWidth };
           }
           return c;
         });
       }
-      return widthColumns;
+      const tableWidth = widthColumns.reduce((total, column) => {
+        return total + column._width;
+      }, 0);
+      setScrollWidth(tableWidth);
+      updateMergeColumns(widthColumns);
     }
-    return flatColumns;
-  }, [flatColumns, virtualContainerWidth, width, containerWidth]);
-  console.log(columnsWithWidth);
+  };
 
-  const converToPixel = useCallback((val: string | number | undefined) => {
-    if (typeof val === 'number' || val === undefined) return val;
-    const res = toPoint(val);
-    const { width } = tbodyRef.current.getBoundingClientRect();
-    return width * res;
+  // todo 这里没有添加依赖项看eslint 在提交时候会不会报错
+  useEffect(() => {
+    handleResize(initMergeColumns);
   }, []);
+  // console.log(`scrollWidth: ${scrollWidth}`);
+  // console.log(mergeColumns);
+
+  // const converToPixel = useCallback((val: string | number | undefined) => {
+  //   if (typeof val === 'number' || val === undefined) return val;
+  //   const res = toPoint(val);
+  //   const { width } = tbodyRef.current.getBoundingClientRect();
+  //   return width * res;
+  // }, []);
 
   // 不考虑用handleBodyRender 可以删除相关代码
-  const handleBodyRender = useCallback(
-    (tds: HTMLElement[]) => {
-      const widths = [];
-
-      for (let i = 0; i < tds.length; i++) {
-        const td = tds[i];
-        const { width } = td.getBoundingClientRect();
-
-        const colSpan = Number(td.getAttribute('colspan'));
-
-        if (colSpan === 1) {
-          widths.push(width);
-        } else {
-          let sum = 0;
-          let count = 0;
-          const colWidth: (number | undefined)[] = [];
-          for (let j = 0; j < colSpan; j++) {
-            const w = converToPixel(flatColumns[i + j].width);
-            // console.log(w);
-            // todo 待测试列宽设为0
-            // 如果表头是文字 td 是数字就可能产生不对齐 width: 0
-            // 等到做完滚动后再来考虑 是否需要设置表格的宽度
-            // ellipsis 如果设置了表格宽度后是否能生效
-            // ellipsis 是否需要设置ellipsis.maxWidth 来促使表头超出可以截断
-            if (w) {
-              count++;
-              sum += w;
-            }
-            colWidth.push(w);
-          }
-          const remain = width - sum;
-          const averageWidth = remain / (colSpan - count);
-          const formatColWidth = colWidth.map((c: number | undefined) => {
-            return c || averageWidth;
-          });
-          widths.push(...formatColWidth);
-        }
-      }
-      // setColWidths(widths);
-    },
-    [converToPixel, flatColumns],
-  );
-  // console.log(colWidths);
+  // const handleBodyRender = useCallback(
+  //   (tds: HTMLElement[]) => {
+  //     const widths = [];
+  //
+  //     for (let i = 0; i < tds.length; i++) {
+  //       const td = tds[i];
+  //       const { width } = td.getBoundingClientRect();
+  //
+  //       const colSpan = Number(td.getAttribute('colspan'));
+  //
+  //       if (colSpan === 1) {
+  //         widths.push(width);
+  //       } else {
+  //         let sum = 0;
+  //         let count = 0;
+  //         const colWidth: (number | undefined)[] = [];
+  //         for (let j = 0; j < colSpan; j++) {
+  //           const w = converToPixel(flatColumns[i + j].width);
+  //           // console.log(w);
+  //           // todo 待测试列宽设为0
+  //           // 如果表头是文字 td 是数字就可能产生不对齐 width: 0
+  //           // 等到做完滚动后再来考虑 是否需要设置表格的宽度
+  //           // ellipsis 如果设置了表格宽度后是否能生效
+  //           // ellipsis 是否需要设置ellipsis.maxWidth 来促使表头超出可以截断
+  //           if (w) {
+  //             count++;
+  //             sum += w;
+  //           }
+  //           colWidth.push(w);
+  //         }
+  //         const remain = width - sum;
+  //         const averageWidth = remain / (colSpan - count);
+  //         const formatColWidth = colWidth.map((c: number | undefined) => {
+  //           return c || averageWidth;
+  //         });
+  //         widths.push(...formatColWidth);
+  //       }
+  //     }
+  //     // setColWidths(widths);
+  //   },
+  //   [converToPixel, flatColumns],
+  // );
 
   const handleUpdateRowHeight = useCallback(
     (rowHeight: number, rowIndex: number) => {
@@ -874,65 +1109,134 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // console.log(cachePosition);
 
   const handleSelect = (
-    keys: (number | string)[],
-    halfKeys: (number | string)[],
+    keys: React.Key[],
+    halfKeys: React.Key[],
     record: T,
     selected: boolean,
     event: Event,
   ) => {
-    let selectedRows: T[];
-    let selectKeys: (number | string)[];
+    let selectedRecords: T[];
+    let finalSelectedKeys: React.Key[];
     if (selected) {
-      const { checkedKeys, checkedRowWithKey, halfCheckedKeys } = fillMissSelectedKeys(keys);
-      selectKeys = isRadio ? keys : checkedKeys;
-      selectedRows = isRadio ? [record] : Object.values(checkedRowWithKey);
-      setHalfSelectedKeys(halfCheckedKeys);
+      if (selectionType === 'checkbox') {
+        const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(keys);
+        finalSelectedKeys = checkedKeys;
+        selectedRecords = [...checkedKeyRecordMap.values()];
+        updateHalfSelectedKeys(halfCheckedKeys);
+      } else {
+        finalSelectedKeys = [...keys];
+        selectedRecords = [record];
+        updateHalfSelectedKeys([]);
+      }
     } else {
-      const { checkedKeys, checkedRowWithKey, halfCheckedKeys } = removeUselessKeys(keys, halfKeys);
-      selectKeys = isRadio ? [] : checkedKeys;
-      selectedRows = isRadio ? [] : Object.values(checkedRowWithKey);
-      setHalfSelectedKeys(halfCheckedKeys);
+      if (selectionType === 'checkbox') {
+        const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = removeUselessKeys(
+          keys,
+          halfKeys,
+        );
+        finalSelectedKeys = checkedKeys;
+        selectedRecords = [...checkedKeyRecordMap.values()];
+        updateHalfSelectedKeys(halfCheckedKeys);
+      } else {
+        finalSelectedKeys = [];
+        selectedRecords = [];
+        updateHalfSelectedKeys([]);
+      }
     }
-    if (!('selectedRowKeys' in rowSelection!) || rowSelection?.selectedRowKeys === undefined) {
-      setSelectedKeys(selectKeys);
+
+    if (!('selectedRowKeys' in rowSelection!)) {
+      updateSelectedKeys(finalSelectedKeys);
     }
 
     if (typeof rowSelection?.onSelect === 'function') {
-      rowSelection.onSelect(record, selected, selectedRows, event);
+      rowSelection.onSelect(record, selected, selectedRecords, event);
     }
 
     if (typeof rowSelection?.onChange === 'function') {
-      rowSelection?.onChange(selectKeys, selectedRows);
+      rowSelection?.onChange(finalSelectedKeys, selectedRecords);
     }
+
+    // let selectedRows: T[];
+    // let selectKeys: (number | string)[];
+    // if (selected) {
+    //   const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(keys);
+    //   selectKeys = isRadio ? keys : checkedKeys;
+    //   selectedRows = isRadio ? [record] : Object.values(checkedRowWithKey);
+    //   setHalfSelectedKeys(halfCheckedKeys);
+    // } else {
+    //   const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = removeUselessKeys(keys, halfKeys);
+    //   selectKeys = isRadio ? [] : checkedKeys;
+    //   selectedRows = isRadio ? [] : Object.values(checkedRowWithKey);
+    //   setHalfSelectedKeys(halfCheckedKeys);
+    // }
+    // if (!('selectedRowKeys' in rowSelection!) || rowSelection?.selectedRowKeys === undefined) {
+    //   setSelectedKeys(selectKeys);
+    // }
+    //
+    // if (typeof rowSelection?.onSelect === 'function') {
+    //   rowSelection.onSelect(record, selected, selectedRows, event);
+    // }
+    //
+    // if (typeof rowSelection?.onChange === 'function') {
+    //   rowSelection?.onChange(selectKeys, selectedRows);
+    // }
   };
 
   // 2.待测试--分页的话只勾选当页的数据
+  // todo 待优化 currPageRecords currPageKeys
   const handleSelectAll = (selected: boolean) => {
-    let selectedRows: T[];
-    let selectKeys: (number | string)[];
+    let selectedRecords: T[];
+    let finalSelectedKeys: React.Key[];
+
     if (selected) {
-      const { checkedKeys, checkedRowWithKey, halfCheckedKeys } =
+      const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } =
         fillMissSelectedKeys(currPageKeys);
-      selectKeys = checkedKeys;
-      selectedRows = Object.values(checkedRowWithKey);
-      setHalfSelectedKeys(halfCheckedKeys);
+      finalSelectedKeys = checkedKeys;
+      selectedRecords = [...checkedKeyRecordMap.values()];
+      updateHalfSelectedKeys(halfCheckedKeys);
     } else {
-      selectKeys = [];
-      selectedRows = [];
-      setHalfSelectedKeys([]);
+      finalSelectedKeys = [];
+      selectedRecords = [];
+      updateHalfSelectedKeys([]);
     }
 
     if (rowSelection?.onSelectAll) {
       // 3. 待测试--分页情况下currPageRecords 也是当前current页面操作的数据
-      rowSelection.onSelectAll(selected, selectedRows, currPageRecords);
+      rowSelection.onSelectAll(selected, selectedRecords, currPageRecords);
     }
     if (rowSelection?.onChange) {
-      rowSelection.onChange(selectKeys, selectedRows);
+      rowSelection.onChange(finalSelectedKeys, selectedRecords);
     }
 
-    if (!('selectedRowKeys' in rowSelection!) || rowSelection?.selectedRowKeys === undefined) {
-      setSelectedKeys(selectKeys);
+    if (!('selectedRowKeys' in rowSelection!)) {
+      updateSelectedKeys(finalSelectedKeys);
     }
+
+    // let selectedRows: T[];
+    // let selectKeys: (number | string)[];
+    // if (selected) {
+    //   const { checkedKeys, checkedRowWithKey, halfCheckedKeys } =
+    //     fillMissSelectedKeys(currPageKeys);
+    //   selectKeys = checkedKeys;
+    //   selectedRows = Object.values(checkedRowWithKey);
+    //   setHalfSelectedKeys(halfCheckedKeys);
+    // } else {
+    //   selectKeys = [];
+    //   selectedRows = [];
+    //   setHalfSelectedKeys([]);
+    // }
+    //
+    // if (rowSelection?.onSelectAll) {
+    //   // 3. 待测试--分页情况下currPageRecords 也是当前current页面操作的数据
+    //   rowSelection.onSelectAll(selected, selectedRows, currPageRecords);
+    // }
+    // if (rowSelection?.onChange) {
+    //   rowSelection.onChange(selectKeys, selectedRows);
+    // }
+    //
+    // if (!('selectedRowKeys' in rowSelection!) || rowSelection?.selectedRowKeys === undefined) {
+    //   setSelectedKeys(selectKeys);
+    // }
   };
 
   const handleTreeExpand = (treeExpanded: boolean, record: T, recordKey: number | string) => {
@@ -1043,9 +1347,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   };
 
+  // todo
   const handleHeaderMouseDown = (
     resizeInfo: ResizeInfoType,
-    col: ColumnsWithType<T>,
+    col: PrivateColumnType<T>,
+    // col: ColumnsWithType<T>,
     colIndex: number,
   ) => {
     const resizeEl = resizeLineRef.current;
@@ -1065,18 +1371,28 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     };
 
     const handleHeaderMouseUp = (event: Event) => {
-      // todo onColumnResize
       const columnWidth =
         parseInt(resizeEl.style.left, 10) - (resizingRect.left - tableContainerRect.left);
-      const copyColumns = [...columns];
-      const oldWidth = columnsWithWidth[colIndex].width;
-      copyColumns[colIndex] = { ...col, width: columnWidth };
+      const copyMergeColumns = [...mergeColumns];
+      const oldWidth = copyMergeColumns[colIndex]._width;
+      copyMergeColumns[colIndex] = { ...col, width: columnWidth };
+      handleResize(copyMergeColumns);
+      // updateMergeColumns(copyMergeColumns);
+      // const copyColumns = [...columns];
+      // const oldWidth = columnsWithWidth[colIndex].width;
+      // copyColumns[colIndex] = { ...col, width: columnWidth };
       // setColWidths([]);
-      setColumns(copyColumns);
+      // setColumns(copyColumns);
       resizeEl.style.cssText = `display: none`;
 
-      const column = copyColumns[colIndex] as ColumnsType<T>;
-      onColumnResize && onColumnResize(columnWidth, oldWidth as number, column, event);
+      // const column = copyColumns[colIndex] as ColumnsType<T>;
+      onColumnResize &&
+        onColumnResize(
+          columnWidth,
+          oldWidth as number,
+          omit(copyMergeColumns[colIndex], ['_width']),
+          event,
+        );
 
       document.removeEventListener('mousemove', handleHeaderMouseMove);
       document.removeEventListener('mouseup', handleHeaderMouseUp);
@@ -1089,6 +1405,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   };
 
   const handlePaginationChange = (current: number, size: number) => {
+    // todo current 条件是否成立
     if (pagination && !('current' in pagination)) {
       setCurrentPage(current);
     }
@@ -1157,15 +1474,26 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   }, [pagination]);
 
+  // todo rowSelection 待测试
   useEffect(() => {
     if (rowSelection && 'selectedRowKeys' in rowSelection) {
-      const { checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(
-        rowSelection.selectedRowKeys || [],
-      );
-      setSelectedKeys(checkedKeys);
-      setHalfSelectedKeys(halfCheckedKeys);
+      if (selectionType === 'checkbox') {
+        const { checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(
+          rowSelection.selectedRowKeys || [],
+        );
+        updateHalfSelectedKeys(halfCheckedKeys);
+        updateSelectedKeys(checkedKeys);
+      } else {
+        updateHalfSelectedKeys([]);
+        updateSelectedKeys(rowSelection.selectedRowKeys || []);
+      }
+      // const { checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(
+      //   rowSelection.selectedRowKeys || [],
+      // );
+      // setSelectedKeys(checkedKeys);
+      // setHalfSelectedKeys(halfCheckedKeys);
     }
-  }, [rowSelection, fillMissSelectedKeys]);
+  }, [selectionType, rowSelection?.selectedRowKeys, fillMissSelectedKeys]);
 
   useEffect(() => {
     if (treeProps?.expandedRowKeys) {
@@ -1173,27 +1501,27 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   }, [treeProps]);
 
-  // todo
-  useEffect(() => {
-    setColumns(originColumns);
-  }, [originColumns]);
+  // todo columns 主要是过滤排序吧
+  // useEffect(() => {
+  //   setColumns(originColumns);
+  // }, [originColumns]);
 
   // column todo
   useEffect(() => {
     let exist = false;
     const filter: FilterStateType<T>[] = [];
-    flatColumns.forEach((col) => {
+    flattenColumns.forEach((col) => {
       if ('filteredValue' in col) {
         exist = true;
         filter.push({
           filteredValue: col?.filteredValue || [],
-          dataIndex: col.dataIndex,
+          dataIndex: col?.dataIndex || col?.key,
           filterMethod: col?.filterMethod,
         });
       }
     });
     exist && setFilterState(filter);
-  }, [flatColumns]);
+  }, [flattenColumns]);
 
   // 4. 待测试-分页情况下表头的全选只针对当前页面数据
   const checked = useMemo(() => {
@@ -1214,13 +1542,19 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return data.length > 0;
   }, [list]);
 
-  // todo
-  const scrollWidth = useMemo(() => {
-    if (width) return width;
-    return columnsWithWidth.reduce((total, col) => {
-      return total + (Number(parseValue(col.width)) || 0);
-    }, 0);
-  }, [width, columnsWithWidth]);
+  // todo columns
+  // const scrollWidth = useMemo(() => {
+  //   if (width) return width;
+  //   return columnsWithWidth.reduce((total, col) => {
+  //     return total + (Number(parseValue(col.width)) || 0);
+  //   }, 0);
+  // }, [width, columnsWithWidth]);
+
+  // const scrollWidth = useMemo(() => {
+  //   return flattenColumns.reduce((total, column) => {
+  //     return total + column.width;
+  //   }, 0);
+  // }, [flattenColumns]);
 
   // const getScrollWidth = useCallback(() => {
   //   if (width) return width;
@@ -1429,7 +1763,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             // }}
           >
             <table style={{ width: scrollWidth }}>
-              <Colgroup colWidths={colWidths} columns={columnsWithWidth} />
+              <Colgroup
+                // colWidths={colWidths}
+                // columns={columnsWithWidth}
+                columns={flattenColumns}
+              />
               <Tbody
                 {...props}
                 bordered
@@ -1442,15 +1780,19 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
                 // dataSource={list}
                 dataSource={list.slice(startRowIndex, startRowIndex + getRenderMaxRows())}
                 // columns={flatColumns}
-                columns={columnsWithWidth}
-                treeLevelMap={treeLevel.current}
+                columns={flattenColumns}
+                // columns={columnsWithWidth}
+                keyLevelMap={keyLevelMap}
+                // treeLevelMap={treeLevel.current}
                 treeExpandKeys={treeExpandKeys}
                 selectedKeys={selectedKeys}
                 halfSelectedKeys={halfSelectedKeys}
                 onSelect={handleSelect}
                 onTreeExpand={handleTreeExpand}
-                onBodyRender={handleBodyRender}
+                // onBodyRender={handleBodyRender}
+                onBodyRender={() => {}}
                 onUpdateRowHeight={handleUpdateRowHeight}
+                getRecordKey={getRecordKey}
               />
             </table>
           </div>
@@ -1539,7 +1881,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           // }}
         >
           <table style={{ width: scrollWidth }}>
-            <Colgroup colWidths={colWidths} columns={columnsWithWidth} />
+            <Colgroup
+              // colWidths={colWidths}
+              // columns={columnsWithWidth}
+              columns={flattenColumns}
+            />
             <Tbody
               {...props}
               bordered
@@ -1552,15 +1898,18 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
               dataSource={list}
               // dataSource={list.slice(startRowIndex, startRowIndex + getRenderMaxRows())}
               // columns={flatColumns}
-              columns={columnsWithWidth}
-              treeLevelMap={treeLevel.current}
+              columns={flattenColumns}
+              // columns={columnsWithWidth}
+              keyLevelMap={keyLevelMap}
+              // treeLevelMap={treeLevel.current}
               treeExpandKeys={treeExpandKeys}
               selectedKeys={selectedKeys}
               halfSelectedKeys={halfSelectedKeys}
               onSelect={handleSelect}
               onTreeExpand={handleTreeExpand}
-              onBodyRender={handleBodyRender}
+              onBodyRender={() => {}}
               onUpdateRowHeight={handleUpdateRowHeight}
+              getRecordKey={getRecordKey}
             />
           </table>
         </div>
@@ -1633,19 +1982,26 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             // transform: `translate(-${scrollLeft}px, 0)`,
           }}
         >
-          <Colgroup colWidths={colWidths} columns={columnsWithWidth} />
+          <Colgroup
+            // colWidths={colWidths}
+            // columns={columnsWithWidth}
+            columns={flattenColumns}
+          />
           <Thead
             bordered
             checked={checked}
             locale={locale}
-            columns={columnsWithFixed}
-            scrollLeft={scrollLeft}
-            offsetRight={offsetRight}
+            columns={fixedColumns}
+            // columns={columnsWithFixed}
+            // scrollLeft={scrollLeft}
+            // offsetRight={offsetRight}
             sorterState={sorterState}
             filterState={filterState}
             expandable={expandable}
             rowSelection={rowSelection}
             renderSorter={renderSorter}
+            headerCellClassName={headerCellClassName}
+            headerCellStyle={headerCellStyle}
             onSelectAll={handleSelectAll}
             onSort={handleSortChange}
             onFilterChange={handleFilterChange}

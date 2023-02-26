@@ -90,7 +90,7 @@ export type ColumnType<T> = {
   /** 列固定 如果相邻的多列需要锁定，只需指定最外侧的column即可，需要配合横向滚动才生效 */
   fixed?: 'left' | 'right';
   /** 生成复杂数据的渲染函数 */
-  render?: (text: string, record: T, index: number) => React.ReactNode;
+  render?: (text: any, record: T, index: number) => React.ReactNode;
   /** 列头显示文字 */
   title?: React.ReactNode;
   /** 列宽度 */
@@ -102,8 +102,9 @@ export type ColumnType<T> = {
   minWidth?: number | string;
   /** 超过宽度将自动省略 */
   ellipsis?: boolean | TooltipType;
-  /** 表头列合并 todo 是不是要换成 onHeaderCell */
-  headerColSpan?: number;
+  /** 表头列合并 todo 表头不考虑设置onHeaderCell */
+  colSpan?: number;
+  // headerColSpan?: number;
   /** 是否允许拖拽调整宽度 需开启 border 属性，且设置 width 不支持表头分组的调整宽度 */
   resizable?: boolean;
   /** 设置单元格属性 */
@@ -141,3 +142,41 @@ export type ColumnType<T> = {
 export type ColumnGroupType<T> = Omit<ColumnType<T>, 'dataIndex'> & { children: ColumnsType<T> };
 
 export type ColumnsType<T> = (ColumnGroupType<T> | ColumnType<T>)[];
+
+export type PrivateColumnType<T> = ColumnType<T> & {
+  ignoreRightBorder?: boolean;
+  lastLeftFixed?: boolean;
+  fistRightFixed?: boolean;
+  _width?: number;
+};
+
+export type PrivateColumnGroupType<T> = Omit<PrivateColumnType<T>, 'dataIndex'> & {
+  children: PrivateColumnsType<T>;
+};
+
+export type PrivateColumnsType<T> = (PrivateColumnGroupType<T> | PrivateColumnType<T>)[];
+
+export interface CellProps {
+  /** 列的类型 */
+  type?: 'expand' | 'checkbox' | 'radio' | 'default';
+  /** 设置对齐方式 */
+  align?: 'left' | 'center' | 'right';
+  /** 样式类名 */
+  className?: string;
+  /** 列固定 */
+  fixed?: 'left' | 'right';
+  /** 单元格占据的列数 */
+  colSpan: number;
+  /** 单元格占据的行数 */
+  rowSpan: number;
+  /** 单元格渲染内容 */
+  content: React.ReactNode | (() => React.ReactNode);
+  /** 是否是最后一列向左固定的列 */
+  lastLeftFixed?: boolean;
+  /** 是否是向右固定的第一列 */
+  fistRightFixed?: boolean;
+  /** 超过宽度将自动省略 */
+  ellipsis?: boolean | TooltipType;
+  /** 列宽度 */
+  width?: number | string;
+}

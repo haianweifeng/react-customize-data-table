@@ -6,28 +6,31 @@ import {
   ResizeInfoType,
   SorterStateType,
 } from '../interface';
+import omit from 'omit.js';
 import classnames from 'classnames';
 import Tooltip from '../Tooltip';
 import Checkbox from '../Checkbox';
 import { getParent, getPropertyValueSum } from '../utils/util';
 import Sorter from '../Sorter';
 import Filter from '../Filter';
+import { ColumnType, PrivateColumnGroupType, PrivateColumnType } from '../interface1';
 
 export interface ThProps<T> {
-  index: string;
-  checked: boolean | 'indeterminate';
+  colIndex: number;
+  rowIndex: number;
   rowSpan: number;
-  locale: Record<string, string>;
-  col: (ColumnsWithType<T> | ColumnsGroupWithType<T>) & {
-    colSpan: number;
-    ignoreRightBorder: boolean;
-  };
-  // scrollLeft: number;
-  // offsetRight: number;
+  bordered: boolean;
   className: string;
   style: React.CSSProperties;
-  level: number;
-  bordered: boolean;
+  checked: boolean | 'indeterminate';
+  locale: Record<string, string>;
+  column: PrivateColumnType<T> | PrivateColumnGroupType<T>;
+  // column: (ColumnsWithType<T> | ColumnsGroupWithType<T>) & {
+  //   colSpan: number;
+  //   ignoreRightBorder: boolean;
+  // };
+  // scrollLeft: number;
+  // offsetRight: number;
   sorterState: SorterStateType<T>[];
   renderSorter: (params: {
     activeAsc: boolean;
@@ -35,21 +38,25 @@ export interface ThProps<T> {
     triggerAsc: () => void;
     triggerDesc: () => void;
   }) => React.ReactNode;
-  onSort?: (col: ColumnsWithType<T> & { colSpan: number }, order: 'asc' | 'desc') => void;
+  // todo 列的类型
+  // onSort?: (col: ColumnsWithType<T> & { colSpan: number }, order: 'asc' | 'desc') => void;
+  onSort?: (col: PrivateColumnType<T>, order: 'asc' | 'desc') => void;
   filterState: FilterStateType<T>[];
-  onFilterChange?: (col: ColumnsWithType<T> & { colSpan: number }, filteredValue: string[]) => void;
+  // onFilterChange?: (col: ColumnsWithType<T> & { colSpan: number }, filteredValue: string[]) => void;
+  onFilterChange?: (col: PrivateColumnType<T>, filteredValue: string[]) => void;
   onSelectAll?: (selected: boolean) => void;
-  onMouseDown?: (resizeInfo: ResizeInfoType, col: ColumnsWithType<T>, colIndex: number) => void;
+  // onMouseDown?: (resizeInfo: ResizeInfoType, col: ColumnsWithType<T>, colIndex: number) => void;
+  onMouseDown?: (resizeInfo: ResizeInfoType, col: PrivateColumnType<T>, colIndex: number) => void;
 }
 
 function Th<T>(props: ThProps<T>) {
   const {
-    col,
-    index,
-    checked,
-    locale,
+    column,
+    colIndex,
+    rowIndex,
     rowSpan,
-    level,
+    locale,
+    checked,
     bordered,
     // scrollLeft,
     // offsetRight,
@@ -70,15 +77,17 @@ function Th<T>(props: ThProps<T>) {
 
   const [isOverflow, setIsOverflow] = useState<boolean>(false);
 
-  const showTooltip = typeof col?.ellipsis === 'object' && col.ellipsis?.tooltip;
+  const showTooltip = typeof column?.ellipsis === 'object' && column.ellipsis?.tooltip;
 
   useEffect(() => {
     const cellEl = cellRef.current;
     const columnTitleEl = columnTitleRef.current;
-    const targetEl = col.sorter || col.filters ? columnTitleEl : cellEl;
-    if (targetEl && col.ellipsis) {
+    const targetEl = column.sorter || column.filters ? columnTitleEl : cellEl;
+    if (targetEl && column.ellipsis) {
       const firstChild =
-        col.sorter || col.filters ? columnTitleEl?.firstElementChild : cellEl?.firstElementChild;
+        column.sorter || column.filters
+          ? columnTitleEl?.firstElementChild
+          : cellEl?.firstElementChild;
       if (firstChild) {
         const values = getPropertyValueSum(targetEl, [
           'padding-left',
@@ -96,15 +105,15 @@ function Th<T>(props: ThProps<T>) {
         setIsOverflow(rangeWidth > realWidth);
       }
     }
-  }, [col]);
+  }, [column]);
 
   const handleChange = (selected: boolean) => {
     onSelectAll && onSelectAll(selected);
   };
 
   const renderTooltip = (content: React.ReactNode) => {
-    if (typeof col.ellipsis === 'object') {
-      const ellipsis = col.ellipsis;
+    if (typeof column.ellipsis === 'object') {
+      const ellipsis = column.ellipsis;
       const triggerEl = <span className="cell-tooltip-content">{content}</span>;
       if (ellipsis.renderTooltip) {
         return ellipsis.renderTooltip(triggerEl, content);
@@ -119,43 +128,24 @@ function Th<T>(props: ThProps<T>) {
 
   const renderSelection = () => {
     return (
-      <th key={index} rowSpan={rowSpan} className={className} style={style} ref={cellRef}>
-        {/*{col.title ? (*/}
-        {/*  showTooltip && isOverflow ? (*/}
-        {/*    renderTooltip(col.title)*/}
-        {/*  ) : !!col.ellipsis ? (*/}
-        {/*    <span className="cell-tooltip-content">{col.title}</span>*/}
-        {/*  ) : (*/}
-        {/*    col.title*/}
-        {/*  )*/}
-        {/*) : col.type === 'radio' ? null : (*/}
-        {/*  <Checkbox checked={checked} onChange={handleChange} />*/}
-        {/*)}*/}
-        {col.title ||
-          (col.type === 'radio' ? null : <Checkbox checked={checked} onChange={handleChange} />)}
+      <th key={`${rowIndex}_${colIndex}`} rowSpan={rowSpan} className={className} style={style}>
+        {column.title ||
+          (column.type === 'radio' ? null : <Checkbox checked={checked} onChange={handleChange} />)}
       </th>
     );
   };
 
   const renderExpand = () => {
     return (
-      <th key={index} rowSpan={rowSpan} className={className} style={style} ref={cellRef}>
-        {/*{col.title ? (*/}
-        {/*  showTooltip && isOverflow ? (*/}
-        {/*    renderTooltip(col.title)*/}
-        {/*  ) : !!col.ellipsis ? (*/}
-        {/*    <span className="cell-tooltip-content">{col.title}</span>*/}
-        {/*  ) : (*/}
-        {/*    col.title*/}
-        {/*  )*/}
-        {/*) : null}*/}
-        {col.title || null}
+      <th key={`${rowIndex}_${colIndex}`} rowSpan={rowSpan} className={className} style={style}>
+        {column.title || null}
       </th>
     );
   };
 
+  // todo dataIndex?
   const renderSorterContent = useCallback(
-    (col: ColumnsWithType<T> & { colSpan: number; ignoreRightBorder: boolean }) => {
+    (col: PrivateColumnType<T>) => {
       const item = sorterState.find((s) => s.dataIndex === col.dataIndex);
 
       return (
@@ -172,8 +162,9 @@ function Th<T>(props: ThProps<T>) {
     [sorterState, renderSorter, onSort],
   );
 
+  // todo  dataIndex
   const renderFilterContent = useCallback(
-    (col: ColumnsWithType<T> & { colSpan: number; ignoreRightBorder: boolean }) => {
+    (col: PrivateColumnType<T>) => {
       const curr = filterState.find((f) => f.dataIndex === col.dataIndex);
       return (
         <Filter
@@ -195,14 +186,26 @@ function Th<T>(props: ThProps<T>) {
     [onFilterChange, filterState],
   );
 
-  const handleMouseDown = (
-    event: any,
-    col: ColumnsWithType<T> & {
-      colSpan?: number;
-      ignoreRightBorder?: boolean;
-    },
-    colIndex: number,
-  ) => {
+  // const handleMouseDown = (
+  //   event: any,
+  //   col: PrivateColumnType<T>,
+  //   colIndex: number,
+  // ) => {
+  //   const { target } = event;
+  //   const resizingTh = getParent(target, 'th');
+  //   if (resizingTh) {
+  //     const resizingRect = resizingTh.getBoundingClientRect();
+  //     const resizeInfo: ResizeInfoType = {
+  //       startPosX: event.clientX,
+  //       resizingRect,
+  //     };
+  //     delete col['colSpan'];
+  //     delete col.ignoreRightBorder;
+  //     onMouseDown && onMouseDown(resizeInfo, col, colIndex);
+  //   }
+  // };
+
+  const handleMouseDown = (event: any) => {
     const { target } = event;
     const resizingTh = getParent(target, 'th');
     if (resizingTh) {
@@ -211,38 +214,48 @@ function Th<T>(props: ThProps<T>) {
         startPosX: event.clientX,
         resizingRect,
       };
-      delete col['colSpan'];
-      delete col.ignoreRightBorder;
-      onMouseDown && onMouseDown(resizeInfo, col, colIndex);
+      onMouseDown &&
+        onMouseDown(
+          resizeInfo,
+          omit(column, ['ignoreRightBorder', 'lastLeftFixed', 'fistRightFixed']),
+          colIndex,
+        );
     }
   };
 
+  // todo 多级表头也需要配置排序 过滤
   const renderContent = () => {
-    switch (col.type) {
+    switch (column.type) {
       case 'checkbox':
       case 'radio':
         return renderSelection();
-      case 'expanded':
+      case 'expand':
         return renderExpand();
       default: {
-        if ('children' in col && col.children.length) {
+        if ('children' in column && column?.children.length) {
           return (
-            <th key={index} colSpan={col.colSpan} className={className} style={style} ref={cellRef}>
+            <th
+              key={`${rowIndex}_${colIndex}`}
+              colSpan={column.colSpan}
+              className={className}
+              style={style}
+              ref={cellRef}
+            >
               {showTooltip && isOverflow ? (
-                renderTooltip(col.title)
-              ) : !!col.ellipsis ? (
-                <span className="cell-tooltip-content">{col.title}</span>
+                renderTooltip(column.title)
+              ) : !!column.ellipsis ? (
+                <span className="cell-tooltip-content">{column.title}</span>
               ) : (
-                col.title
+                column.title
               )}
             </th>
           );
         } else {
           return (
             <th
-              colSpan={col.colSpan}
               rowSpan={rowSpan}
-              key={index}
+              colSpan={column.colSpan}
+              key={`${rowIndex}_${colIndex}`}
               className={className}
               style={style}
               ref={cellRef}
@@ -252,48 +265,35 @@ function Th<T>(props: ThProps<T>) {
                   ref={columnTitleRef}
                   className={classnames({
                     'column-title': true,
-                    'column-title-ellipsis': !!col.ellipsis,
+                    'column-title-ellipsis': !!column.ellipsis,
                   })}
                 >
                   {showTooltip && isOverflow ? (
-                    renderTooltip(col.title)
-                  ) : !!col.ellipsis ? (
-                    <span className="cell-tooltip-content">{col.title}</span>
+                    renderTooltip(column.title)
+                  ) : !!column.ellipsis ? (
+                    <span className="cell-tooltip-content">{column.title}</span>
                   ) : (
-                    col.title
+                    column.title
                   )}
                 </span>
-                {col.sorter || col.filters ? (
+                {column.sorter || column.filters ? (
                   <div className="sorter-filter">
-                    {col.sorter
-                      ? renderSorterContent(
-                          col as ColumnsWithType<T> & {
-                            colSpan: number;
-                            ignoreRightBorder: boolean;
-                          },
-                        )
-                      : null}
-                    {col.filters
-                      ? renderFilterContent(
-                          col as ColumnsWithType<T> & {
-                            colSpan: number;
-                            ignoreRightBorder: boolean;
-                          },
-                        )
-                      : null}
+                    {column.sorter ? renderSorterContent(column) : null}
+                    {column.filters ? renderFilterContent(column) : null}
                   </div>
                 ) : null}
               </div>
-              {level === 0 &&
+              {rowIndex === 0 &&
               bordered &&
-              !('children' in col) &&
-              !col.ignoreRightBorder &&
-              col?.resizable ? (
+              !('children' in column) &&
+              !column.ignoreRightBorder &&
+              column?.resizable ? (
                 <div
                   className="cell-header-resizable"
-                  onMouseDown={(event) => {
-                    handleMouseDown(event, col, Number(index));
-                  }}
+                  onMouseDown={handleMouseDown}
+                  // onMouseDown={(event) => {
+                  //   handleMouseDown(event, column, colIndex);
+                  // }}
                 />
               ) : null}
             </th>

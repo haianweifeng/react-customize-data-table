@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import classnames from 'classnames';
-import type { CellProps } from '../interface';
+import type { CellProps } from '../interface1';
 import Tooltip from '../Tooltip';
 import { getPropertyValueSum } from '../utils/util';
 import '../style/index.less';
@@ -63,7 +63,7 @@ function Td(props: TdProps) {
     // 'cell-fixed-last-left': !!lastLeftFixed && !!scrollLeft,
     // 'cell-fixed-first-right': !!fistRightFixed && !!offsetRight,
     [`cell-align-${align}`]: !!align,
-    'selection-expand-column': type === 'checkbox' || type === 'radio' || type === 'expanded',
+    'selection-expand-column': type !== 'default',
     'cell-ignore-right-border': ignoreRightBorder,
     [className]: !!className,
   });

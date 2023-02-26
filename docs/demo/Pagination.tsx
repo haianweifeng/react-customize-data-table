@@ -9,6 +9,7 @@ interface DataType {
   address: string;
   // description: string;
   children?: DataType[];
+  description: string;
 }
 
 const columns: ColumnsType<DataType> = [
@@ -39,7 +40,7 @@ for (let i = 0; i < 46; i++) {
     name: `Edward King ${i}`,
     age: 32 + i,
     address: `London, Park Lane no. ${i}`,
-    // description: 'test description',
+    description: 'test description',
     // children: [
     //   {
     //     key: `${i}_1`,
@@ -106,6 +107,13 @@ const App = () => {
         pageSize,
         layout: ['sizes', 'prev', 'pager', 'next', 'jumper', renderInfo],
         onChange: handleChange,
+      }}
+      expandable={{
+        defaultExpandAllRows: true,
+        expandedRowRender: (record: DataType) => <p style={{ margin: 0 }}>{record.description}</p>,
+        onExpand: (expanded: boolean, record: DataType) => {
+          console.log(`expanded: ${expanded}`, 'record: ', record);
+        },
       }}
       // treeProps={
       //   {

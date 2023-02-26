@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useMemo, useState } from 'react';
 import classnames from 'classnames';
-import type { CellProps } from '../interface';
+// import type { CellProps } from '../interface';
+import type { CellProps } from '../interface1';
 import type { TableProps } from '../Table';
 import Td from '../Td';
 import { getParent } from '../utils/util';
@@ -80,6 +81,7 @@ function Tr<T>(props: TrProps<T>) {
     return tds;
   };
 
+  // todo 需要考虑如果是列设置了expand
   const renderExpandRow = () => {
     if (
       !expandable ||
@@ -91,8 +93,10 @@ function Tr<T>(props: TrProps<T>) {
 
     const cls =
       expandable?.expandedRowClassName && expandable.expandedRowClassName(rowData, rowIndex);
+    // todo 这里的固定列需要考虑去掉
     const existFixed = cols.some((c) => c.fixed === 'left' || c.fixed === 'right');
     const styles = existFixed ? { transform: `translate(${scrollLeft}px, 0)` } : {};
+    // todo 考虑列为expand 的render
     return (
       <tr key="1" className={cls} ref={expandTrRef}>
         <td

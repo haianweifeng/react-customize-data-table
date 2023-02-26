@@ -1,7 +1,15 @@
-import { useMemo, useCallback } from 'react';
-import type { ColumnType, ColumnsType, RowSelectionType, ExpandableType } from '../interface1';
+import { useState, useMemo, useCallback } from 'react';
+import omit from 'omit.js';
+import type {
+  ColumnType,
+  ColumnsType,
+  RowSelectionType,
+  ExpandableType,
+  PrivateColumnGroupType,
+  PrivateColumnType,
+  PrivateColumnsType,
+} from '../interface1';
 import { SELECTION_EXPAND_COLUMN_WIDTH } from '../utils/constant';
-import { parseValue } from '../utils/util';
 
 function useColumns<T>(
   originColumns: ColumnsType<T>,
@@ -9,7 +17,7 @@ function useColumns<T>(
   expandable?: ExpandableType<T>,
 ) {
   const existFixedInColumn = useCallback(
-    (columns: ColumnsType<T>, fixed: 'left' | 'right'): boolean => {
+    (columns: PrivateColumnsType<T>, fixed: 'left' | 'right'): boolean => {
       let exist: boolean;
       const lastColumn = columns[columns.length - 1];
       if ('children' in lastColumn && lastColumn?.children.length) {
@@ -23,7 +31,7 @@ function useColumns<T>(
   );
 
   const addFixedToColumn = useCallback(
-    (columns: ColumnsType<T>, fixed: 'left' | 'right'): ColumnsType<T> => {
+    (columns: PrivateColumnsType<T>, fixed: 'left' | 'right'): PrivateColumnsType<T> => {
       return columns.map((c) => {
         if ('children' in c && c?.children.length) {
           return {
@@ -38,9 +46,9 @@ function useColumns<T>(
     [],
   );
 
-  const flatColumns = useCallback((columns: ColumnsType<T>) => {
-    const flattenColumns: ColumnsType<T> = [];
-    columns.map((column: any) => {
+  const flatColumns = useCallback((columns: PrivateColumnsType<T>) => {
+    const flattenColumns: PrivateColumnsType<T> = [];
+    columns.map((column) => {
       if ('children' in column && column?.children.length) {
         flattenColumns.push(...flatColumns(column.children));
       } else {
@@ -50,24 +58,26 @@ function useColumns<T>(
     return flattenColumns;
   }, []);
 
-  const mergeColumns = useMemo(() => {
+  const getMergeColumns = useCallback(() => {
+    console.log('gegeg');
     let existExpand = false;
     let existSelection = false;
     const selectionColumn: ColumnType<T> = {};
 
-    const mergeColumns: ColumnsType<T> = [];
+    const mergeColumns: PrivateColumnsType<T> = [];
 
     if (rowSelection) {
       selectionColumn.key = 'selection';
       selectionColumn.type = rowSelection.type || 'checkbox';
-      selectionColumn.width = parseValue(rowSelection.columnWidth) || SELECTION_EXPAND_COLUMN_WIDTH;
+      selectionColumn.width =
+        parseInt(`${rowSelection.columnWidth}`, 10) || SELECTION_EXPAND_COLUMN_WIDTH;
       selectionColumn.title = rowSelection?.columnTitle || '';
     }
 
     originColumns.map((column) => {
       if (column?.type === 'checkbox' || column?.type === 'radio') {
         existSelection = true;
-        mergeColumns.push({ ...column, ...selectionColumn });
+        mergeColumns.push({ ...column, ...omit(selectionColumn, ['type']) });
       }
       if (column?.type === 'expand') {
         existExpand = typeof column?.render === 'function';
@@ -76,17 +86,18 @@ function useColumns<T>(
             ...column,
             key: 'expand',
             title: expandable.columnTitle || '',
-            width: expandable?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
+            width: parseInt(`${expandable?.columnWidth}`, 10) || SELECTION_EXPAND_COLUMN_WIDTH,
           });
         }
       }
-      mergeColumns.push(column);
+      mergeColumns.push({ ...column, type: 'default' });
     });
+
     if (!existExpand && expandable && expandable?.expandedRowRender) {
       mergeColumns.unshift({
         type: 'expand',
         key: 'expand',
-        width: parseValue(expandable?.columnWidth) || SELECTION_EXPAND_COLUMN_WIDTH,
+        width: parseInt(`${expandable?.columnWidth}`, 10) || SELECTION_EXPAND_COLUMN_WIDTH,
         title: expandable.columnTitle || '',
       });
     }
@@ -94,53 +105,79 @@ function useColumns<T>(
       mergeColumns.unshift(selectionColumn);
     }
     return mergeColumns;
-  }, [originColumns, rowSelection, expandable]);
+    // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
+
+  const initMergeColumns = useMemo(() => {
+    return getMergeColumns();
+  }, [getMergeColumns]);
+
+  const [mergeColumns, setMergeColumns] = useState<PrivateColumnsType<T>>(initMergeColumns);
 
   const fixedColumns = useMemo(() => {
     let leftIndex = -1;
     let rightIndex = -1;
-    return mergeColumns.map((column, index: number) => {
-      if ('children' in column && column?.children.length) {
-        const isFixedLeft = column.fixed === 'left';
-        const isFixedRight = column.fixed === 'right';
+    return mergeColumns
+      .map((column, index: number) => {
+        if ('children' in column && column?.children.length) {
+          const isFixedLeft = column.fixed === 'left';
+          const isFixedRight = column.fixed === 'right';
 
-        if (isFixedLeft || !column.fixed) {
-          let exist = false;
-          if (!column.fixed) {
-            exist = existFixedInColumn(column.children, 'left');
+          if (isFixedLeft || !column.fixed) {
+            let exist = false;
+            if (!column.fixed) {
+              exist = existFixedInColumn(column.children, 'left');
+            }
+            if (isFixedLeft || exist) {
+              leftIndex = index;
+              const children = addFixedToColumn(column.children, 'left');
+              column.children = children;
+              column.fixed = 'left';
+            }
           }
-          if (isFixedLeft || exist) {
-            leftIndex = index;
-            const children = addFixedToColumn(column.children, 'left');
-            column.children = children;
-            column.fixed = 'left';
-          }
-        }
 
-        if (isFixedRight || !column.fixed) {
-          let exist = false;
-          if (!column.fixed) {
-            exist = existFixedInColumn(column.children, 'right');
+          if (isFixedRight || !column.fixed) {
+            let exist = false;
+            if (!column.fixed) {
+              exist = existFixedInColumn(column.children, 'right');
+            }
+            if (isFixedRight || exist) {
+              if (rightIndex < 0) rightIndex = index;
+              const children = addFixedToColumn(column.children, 'right');
+              column.children = children;
+              column.fixed = 'right';
+            }
           }
-          if (isFixedRight || exist) {
-            if (rightIndex < 0) rightIndex = index;
-            const children = addFixedToColumn(column.children, 'right');
-            column.children = children;
-            column.fixed = 'right';
-          }
+        } else {
+          if (column.fixed === 'left') leftIndex = index;
+          if (column.fixed === 'right' && rightIndex < 0) rightIndex = index;
         }
-      } else {
-        if (column.fixed === 'left') leftIndex = index;
-        if (column.fixed === 'right' && rightIndex < 0) rightIndex = index;
-      }
-      return column;
-    });
+        return column;
+      })
+      .map((column, index) => {
+        const col: PrivateColumnType<T> | PrivateColumnGroupType<T> = { ...column };
+        if (index <= leftIndex) col.fixed = 'left';
+        if (index === leftIndex) col.lastLeftFixed = true;
+        if (index >= rightIndex && rightIndex > 0) col.fixed = 'right';
+        if (index === rightIndex) col.fistRightFixed = true;
+        return col;
+      });
   }, [mergeColumns, existFixedInColumn, addFixedToColumn]);
-
+  // 如果是表头分级 只会计算第一层的宽度
   const flattenColumns = useMemo(() => {
     return flatColumns(fixedColumns);
-  }, [fixedColumns]);
+  }, [fixedColumns, flatColumns]);
 
-  return [mergeColumns, fixedColumns, flattenColumns];
+  const updateMergeColumns = useCallback((columns: PrivateColumnsType<T>) => {
+    setMergeColumns(columns);
+  }, []);
+
+  return {
+    mergeColumns,
+    fixedColumns,
+    flattenColumns,
+    updateMergeColumns,
+    initMergeColumns,
+  };
 }
 export default useColumns;

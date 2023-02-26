@@ -16,19 +16,19 @@ const App = () => {
       dataIndex: 'date',
       resizable: true,
       // maxWidth: 140,
-      // width: 180
+      width: 180,
     },
     {
       title: 'Age',
       dataIndex: 'age',
       resizable: true,
-      maxWidth: '100',
-      // width: '180px'
+      // maxWidth: '100',
+      width: '180px',
     },
     {
       title: 'Address',
       dataIndex: 'address',
-      // width: '400px'
+      width: '507px',
     },
   ];
 

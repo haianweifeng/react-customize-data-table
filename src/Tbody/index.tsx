@@ -2,24 +2,29 @@ import React, { useRef, useState, useEffect } from 'react';
 import classnames from 'classnames';
 import { getRowKey } from '../utils/util';
 import type { TableProps } from '../Table';
-import type { CellProps, ColumnsWithType, TreeLevelType } from '../interface';
+import type { ColumnsWithType, TreeLevelType } from '../interface';
 import Tr from '../Tr';
 import Radio from '../Radio';
 import Checkbox from '../Checkbox';
+import type { PrivateColumnsType, CellProps } from '../interface1';
 
 interface TbodyProps<T> extends TableProps<T> {
   isTree: boolean;
-  columns: ColumnsWithType<T>[];
+  columns: PrivateColumnsType<T>;
+  // columns: ColumnsWithType<T>[];
   scrollLeft: number;
   offsetRight: number;
   startRowIndex: number;
-  treeLevelMap: TreeLevelType;
+  keyLevelMap: Map<React.Key, number>;
+  // treeLevelMap: TreeLevelType;
   treeExpandKeys: (number | string)[];
-  selectedKeys: (number | string)[];
-  halfSelectedKeys: (number | string)[];
+  selectedKeys: React.Key[];
+  halfSelectedKeys: React.Key[];
+  // selectedKeys: (number | string)[];
+  // halfSelectedKeys: (number | string)[];
   onSelect: (
-    selectedKeys: (number | string)[],
-    halfSelectedKeys: (number | string)[],
+    selectedKeys: React.Key[],
+    halfSelectedKeys: React.Key[],
     record: T,
     selected: boolean,
     event: Event,
@@ -27,6 +32,7 @@ interface TbodyProps<T> extends TableProps<T> {
   onTreeExpand: (treeExpanded: boolean, record: T, recordKey: number | string) => void;
   onBodyRender: (cells: HTMLElement[]) => void;
   onUpdateRowHeight: (height: number, rowIndex: number) => void;
+  getRecordKey: (record: T) => any;
 }
 
 function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
@@ -38,7 +44,8 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     bordered,
     startRowIndex,
     rowKey = 'key',
-    treeLevelMap,
+    keyLevelMap,
+    // treeLevelMap,
     treeExpandKeys,
     selectedKeys,
     halfSelectedKeys,
@@ -48,6 +55,7 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     onSelect,
     onTreeExpand,
     onBodyRender,
+    getRecordKey,
   } = props;
 
   const tbodyRef = useRef<any>(null);
@@ -79,29 +87,43 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     checked: boolean,
     record: T,
     rowIndex: number,
+    recordKey: React.Key,
     selected: boolean,
     event: Event,
   ) => {
-    const key = getRowKey(rowKey, record);
-
-    if (key === undefined) {
-      if (typeof rowSelection?.onSelect === 'function') {
-        rowSelection.onSelect(record, selected, [record], event);
-      }
-
-      if (typeof rowSelection?.onChange === 'function') {
-        rowSelection?.onChange([key as any], [record]);
-      }
-      return;
-    }
-
     if (!checked) {
-      onSelect(isRadio ? [key] : [...selectedKeys, key], halfSelectedKeys, record, selected, event);
+      onSelect(
+        isRadio ? [recordKey] : [...selectedKeys, recordKey],
+        halfSelectedKeys,
+        record,
+        selected,
+        event,
+      );
     } else {
-      const keys = selectedKeys.filter((selectKey) => selectKey !== key);
-      const halfKeys = halfSelectedKeys.filter((halfKey) => halfKey !== key);
+      const keys = selectedKeys.filter((key) => key !== recordKey);
+      const halfKeys = halfSelectedKeys.filter((halfKey) => halfKey !== recordKey);
       onSelect(keys, halfKeys, record, selected, event);
     }
+    // const key = getRowKey(rowKey, record);
+    //
+    // if (key === undefined) {
+    //   if (typeof rowSelection?.onSelect === 'function') {
+    //     rowSelection.onSelect(record, selected, [record], event);
+    //   }
+    //
+    //   if (typeof rowSelection?.onChange === 'function') {
+    //     rowSelection?.onChange([key as any], [record]);
+    //   }
+    //   return;
+    // }
+    //
+    // if (!checked) {
+    //   onSelect(isRadio ? [key] : [...selectedKeys, key], halfSelectedKeys, record, selected, event);
+    // } else {
+    //   const keys = selectedKeys.filter((selectKey) => selectKey !== key);
+    //   const halfKeys = halfSelectedKeys.filter((halfKey) => halfKey !== key);
+    //   onSelect(keys, halfKeys, record, selected, event);
+    // }
   };
 
   const handleExpand = (expanded: boolean, record: T, recordKey?: number | string) => {
@@ -162,6 +184,7 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     checked: boolean | 'indeterminate',
     rowIndex: number,
     cellProps: CellProps,
+    recordKey: React.Key,
   ) => {
     const checkboxProps =
       typeof rowSelection?.getCheckboxProps === 'function'
@@ -173,7 +196,7 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
         {...checkboxProps}
         checked={checked}
         onChange={(selected: boolean, event: Event) => {
-          handleSelect(isRadio, checked == true, rowData, rowIndex, selected, event);
+          handleSelect(isRadio, checked == true, rowData, rowIndex, recordKey, selected, event);
           event.stopPropagation();
         }}
       />
@@ -182,12 +205,12 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
         {...checkboxProps}
         checked={checked}
         onChange={(selected: boolean, event: Event) => {
-          handleSelect(isRadio, checked == true, rowData, rowIndex, selected, event);
+          handleSelect(isRadio, checked == true, rowData, rowIndex, recordKey, selected, event);
           event.stopPropagation();
         }}
       />
     );
-
+    // todo 待测试如果直接返回defaultContent 能不能触发内容handleSelect 函数
     return {
       ...cellProps,
       content:
@@ -237,14 +260,16 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     rowIndex: number,
     checked: boolean | 'indeterminate',
     expanded: boolean,
-    recordKey?: number | string,
+    recordKey: React.Key,
   ) => {
-    const treeLevel = treeLevelMap[recordKey as string] || 0;
-    const treeExpanded = recordKey !== undefined && treeExpandKeys.indexOf(recordKey) >= 0;
+    const treeLevel = keyLevelMap.get(recordKey) || 0;
+    const treeExpanded = treeExpandKeys.indexOf(recordKey) >= 0;
+    // const treeLevel = treeLevelMap[recordKey as string] || 0;
+    // const treeExpanded = recordKey !== undefined && treeExpandKeys.indexOf(recordKey) >= 0;
     const treeIndent = treeProps?.indentSize || 15;
     const hasChildren = rowData?.children && rowData.children.length > 0;
 
-    const startIndex = columns.findIndex((c) => !c.type);
+    const startIndex = columns.findIndex((c) => c.type === 'default');
 
     return columns.map((column, index: number) => {
       const {
@@ -262,6 +287,7 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
         width,
       } = column;
 
+      // todo width: _width
       const cellProps = {
         type,
         fixed,
@@ -276,8 +302,8 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
       switch (type) {
         case 'checkbox':
         case 'radio':
-          return renderSelectionColumn(rowData, checked, rowIndex, cellProps);
-        case 'expanded':
+          return renderSelectionColumn(rowData, checked, rowIndex, cellProps, recordKey);
+        case 'expand':
           return renderExpandColumn(rowData, expanded, cellProps, recordKey);
         default: {
           // const cell: CellProps = {
@@ -376,34 +402,48 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     });
   };
 
-  const renderTr = (rowData: T, i: number) => {
-    const key = getRowKey(rowKey, rowData);
+  const renderTr = (rowData: T, rowIndex: number) => {
+    const recordKey = getRecordKey(rowData);
+    // const key = getRowKey(rowKey, rowData);
     let checked: boolean | 'indeterminate' = false;
     const hasChildren = rowData?.children && rowData.children.length;
 
-    if (key !== undefined) {
-      if (rowSelection?.type === 'radio' || !hasChildren) {
-        checked = selectedKeys.indexOf(key) >= 0;
-      } else {
-        checked =
-          selectedKeys.indexOf(key) >= 0
-            ? true
-            : halfSelectedKeys.indexOf(key) >= 0
-            ? 'indeterminate'
-            : false;
-      }
+    if (rowSelection?.type === 'radio' || !hasChildren) {
+      checked = selectedKeys.indexOf(recordKey) >= 0;
+    } else {
+      checked =
+        selectedKeys.indexOf(recordKey) >= 0
+          ? true
+          : halfSelectedKeys.indexOf(recordKey) >= 0
+          ? 'indeterminate'
+          : false;
     }
 
-    const expanded = key !== undefined && expandedRowKeys.indexOf(key) >= 0;
+    // if (key !== undefined) {
+    //   if (rowSelection?.type === 'radio' || !hasChildren) {
+    //     checked = selectedKeys.indexOf(key) >= 0;
+    //   } else {
+    //     checked =
+    //       selectedKeys.indexOf(key) >= 0
+    //         ? true
+    //         : halfSelectedKeys.indexOf(key) >= 0
+    //         ? 'indeterminate'
+    //         : false;
+    //   }
+    // }
 
-    const cols = getColumns(rowData, i, checked, expanded, key);
+    const expanded = expandedRowKeys.indexOf(recordKey) >= 0;
+
+    // const expanded = key !== undefined && expandedRowKeys.indexOf(key) >= 0;
+
+    const cols = getColumns(rowData, rowIndex, checked, expanded, recordKey);
 
     return (
       <Tr
-        key={key}
+        key={recordKey}
         cols={cols}
         rowData={rowData}
-        rowIndex={i}
+        rowIndex={rowIndex}
         checked={checked}
         expanded={expanded}
         {...props}
