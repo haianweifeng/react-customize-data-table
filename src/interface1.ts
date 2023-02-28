@@ -1,4 +1,11 @@
 import React from 'react';
+import { FilterStateType } from './interface';
+
+export type FilterState<T> = {
+  key: React.Key;
+  filteredValue: React.Key[];
+  filterMethod?: (value: React.Key, record: T) => boolean;
+};
 
 export type CellType = { colSpan?: number; rowSpan?: number };
 
@@ -25,7 +32,7 @@ export interface RowSelectionType<T> {
   columnWidth?: string | number;
   /** 选择框的默认属性配置 */
   getCheckboxProps?: (record: T) => any;
-  /** 渲染表体的勾选框 */
+  /** 渲染表体的勾选框 todo 怎么整合到列的render 中 */
   renderCell?: (
     checked: boolean,
     record: T,
@@ -117,6 +124,13 @@ export type ColumnType<T> = {
   // sortOrder?: 'ascend' | 'descend' | null;
   /** 排序函数 */
   sorter?: (rowA: T, rowB: T) => number | SorterType<T>;
+  /** 自定义排序图标 todo */
+  renderSorter?: (params: {
+    activeAsc: boolean;
+    activeDesc: boolean;
+    triggerAsc: () => void;
+    triggerDesc: () => void;
+  }) => React.ReactNode;
   /** 默认筛选值 */
   defaultFilteredValue?: string[];
   /** 筛选的受控属性 */
@@ -134,7 +148,7 @@ export type ColumnType<T> = {
   // /** 用于控制自定义筛选菜单是否可见 */
   // filterDropdownOpen?: boolean;
   /** 筛选函数 */
-  filterMethod?: (value: string, record: T) => boolean;
+  filterMethod?: (value: React.Key, record: T) => boolean;
   // /** 自定义筛选菜单可见变化时调用 */
   // onFilterDropdownOpenChange?: (open: boolean) => any;
 };
@@ -144,14 +158,14 @@ export type ColumnGroupType<T> = Omit<ColumnType<T>, 'dataIndex'> & { children: 
 export type ColumnsType<T> = (ColumnGroupType<T> | ColumnType<T>)[];
 
 export type PrivateColumnType<T> = ColumnType<T> & {
-  ignoreRightBorder?: boolean;
-  lastLeftFixed?: boolean;
-  fistRightFixed?: boolean;
+  _ignoreRightBorder?: boolean;
+  _lastLeftFixed?: boolean;
+  _firstRightFixed?: boolean;
   _width?: number;
 };
 
-export type PrivateColumnGroupType<T> = Omit<PrivateColumnType<T>, 'dataIndex'> & {
-  children: PrivateColumnsType<T>;
+export type PrivateColumnGroupType<T> = Omit<PrivateColumnType<T>, 'dataIndex' | 'type'> & {
+  children: Omit<PrivateColumnsType<T>, 'type'>;
 };
 
 export type PrivateColumnsType<T> = (PrivateColumnGroupType<T> | PrivateColumnType<T>)[];
@@ -172,9 +186,9 @@ export interface CellProps {
   /** 单元格渲染内容 */
   content: React.ReactNode | (() => React.ReactNode);
   /** 是否是最后一列向左固定的列 */
-  lastLeftFixed?: boolean;
+  _lastLeftFixed?: boolean;
   /** 是否是向右固定的第一列 */
-  fistRightFixed?: boolean;
+  _firstRightFixed?: boolean;
   /** 超过宽度将自动省略 */
   ellipsis?: boolean | TooltipType;
   /** 列宽度 */

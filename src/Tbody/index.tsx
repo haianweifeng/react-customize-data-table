@@ -281,8 +281,8 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
         fixed,
         title,
         type,
-        lastLeftFixed,
-        fistRightFixed,
+        _lastLeftFixed,
+        _firstRightFixed,
         ellipsis,
         width,
       } = column;
@@ -291,8 +291,8 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
       const cellProps = {
         type,
         fixed,
-        lastLeftFixed,
-        fistRightFixed,
+        _lastLeftFixed,
+        _firstRightFixed,
         colSpan: 1,
         rowSpan: 1,
         content: '',

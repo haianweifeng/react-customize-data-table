@@ -10,12 +10,13 @@ import omit from 'omit.js';
 import classnames from 'classnames';
 import Tooltip from '../Tooltip';
 import Checkbox from '../Checkbox';
-import { getParent, getPropertyValueSum } from '../utils/util';
+import { getColumnKey, getParent, getPropertyValueSum } from '../utils/util';
 import Sorter from '../Sorter';
 import Filter from '../Filter';
-import { ColumnType, PrivateColumnGroupType, PrivateColumnType } from '../interface1';
+import { ColumnType, FilterState, PrivateColumnGroupType, PrivateColumnType } from '../interface1';
 
 export interface ThProps<T> {
+  defaultColumnKey: React.Key;
   colIndex: number;
   rowIndex: number;
   rowSpan: number;
@@ -41,9 +42,13 @@ export interface ThProps<T> {
   // todo 列的类型
   // onSort?: (col: ColumnsWithType<T> & { colSpan: number }, order: 'asc' | 'desc') => void;
   onSort?: (col: PrivateColumnType<T>, order: 'asc' | 'desc') => void;
-  filterState: FilterStateType<T>[];
+  filterStates: FilterState<T>[];
   // onFilterChange?: (col: ColumnsWithType<T> & { colSpan: number }, filteredValue: string[]) => void;
-  onFilterChange?: (col: PrivateColumnType<T>, filteredValue: string[]) => void;
+  onFilterChange?: (
+    col: PrivateColumnType<T>,
+    filteredValue: React.Key[],
+    columnKey: React.Key,
+  ) => void;
   onSelectAll?: (selected: boolean) => void;
   // onMouseDown?: (resizeInfo: ResizeInfoType, col: ColumnsWithType<T>, colIndex: number) => void;
   onMouseDown?: (resizeInfo: ResizeInfoType, col: PrivateColumnType<T>, colIndex: number) => void;
@@ -51,6 +56,7 @@ export interface ThProps<T> {
 
 function Th<T>(props: ThProps<T>) {
   const {
+    defaultColumnKey,
     column,
     colIndex,
     rowIndex,
@@ -64,7 +70,7 @@ function Th<T>(props: ThProps<T>) {
     className = '',
     sorterState,
     renderSorter,
-    filterState,
+    filterStates,
     onSort,
     onFilterChange,
     onSelectAll,
@@ -162,10 +168,11 @@ function Th<T>(props: ThProps<T>) {
     [sorterState, renderSorter, onSort],
   );
 
-  // todo  dataIndex
+  // todo  colIndex 有可能是children curr 是否存在
   const renderFilterContent = useCallback(
     (col: PrivateColumnType<T>) => {
-      const curr = filterState.find((f) => f.dataIndex === col.dataIndex);
+      const columnKey = getColumnKey(col, defaultColumnKey);
+      const curr = filterStates.find((f) => f.key === columnKey);
       return (
         <Filter
           locale={locale}
@@ -175,15 +182,15 @@ function Th<T>(props: ThProps<T>) {
           filteredValue={curr?.filteredValue || []}
           filterSearch={col?.filterSearch}
           onReset={() => {
-            onFilterChange && onFilterChange(col, []);
+            onFilterChange && onFilterChange(col, [], columnKey);
           }}
-          onChange={(checkedValue: string[]) => {
-            onFilterChange && onFilterChange(col, checkedValue);
+          onChange={(checkedValue: React.Key[]) => {
+            onFilterChange && onFilterChange(col, checkedValue, columnKey);
           }}
         />
       );
     },
-    [onFilterChange, filterState],
+    [onFilterChange, filterStates],
   );
 
   // const handleMouseDown = (
@@ -217,7 +224,7 @@ function Th<T>(props: ThProps<T>) {
       onMouseDown &&
         onMouseDown(
           resizeInfo,
-          omit(column, ['ignoreRightBorder', 'lastLeftFixed', 'fistRightFixed']),
+          omit(column, ['_ignoreRightBorder', '_lastLeftFixed', '_firstRightFixed']),
           colIndex,
         );
     }
@@ -232,73 +239,120 @@ function Th<T>(props: ThProps<T>) {
       case 'expand':
         return renderExpand();
       default: {
-        if ('children' in column && column?.children.length) {
-          return (
-            <th
-              key={`${rowIndex}_${colIndex}`}
-              colSpan={column.colSpan}
-              className={className}
-              style={style}
-              ref={cellRef}
-            >
-              {showTooltip && isOverflow ? (
-                renderTooltip(column.title)
-              ) : !!column.ellipsis ? (
-                <span className="cell-tooltip-content">{column.title}</span>
-              ) : (
-                column.title
-              )}
-            </th>
-          );
-        } else {
-          return (
-            <th
-              rowSpan={rowSpan}
-              colSpan={column.colSpan}
-              key={`${rowIndex}_${colIndex}`}
-              className={className}
-              style={style}
-              ref={cellRef}
-            >
-              <div className="cell-header">
-                <span
-                  ref={columnTitleRef}
-                  className={classnames({
-                    'column-title': true,
-                    'column-title-ellipsis': !!column.ellipsis,
-                  })}
-                >
-                  {showTooltip && isOverflow ? (
-                    renderTooltip(column.title)
-                  ) : !!column.ellipsis ? (
-                    <span className="cell-tooltip-content">{column.title}</span>
-                  ) : (
-                    column.title
-                  )}
-                </span>
-                {column.sorter || column.filters ? (
-                  <div className="sorter-filter">
-                    {column.sorter ? renderSorterContent(column) : null}
-                    {column.filters ? renderFilterContent(column) : null}
-                  </div>
-                ) : null}
-              </div>
-              {rowIndex === 0 &&
-              bordered &&
-              !('children' in column) &&
-              !column.ignoreRightBorder &&
-              column?.resizable ? (
-                <div
-                  className="cell-header-resizable"
-                  onMouseDown={handleMouseDown}
-                  // onMouseDown={(event) => {
-                  //   handleMouseDown(event, column, colIndex);
-                  // }}
-                />
+        return (
+          <th
+            rowSpan={'children' in column && column?.children.length ? 1 : rowSpan}
+            key={`${rowIndex}_${colIndex}`}
+            colSpan={column.colSpan}
+            className={className}
+            style={style}
+            ref={cellRef}
+          >
+            <div className="cell-header">
+              <span
+                ref={columnTitleRef}
+                className={classnames({
+                  'column-title': true,
+                  'column-title-ellipsis': !!column.ellipsis,
+                })}
+              >
+                {showTooltip && isOverflow ? (
+                  renderTooltip(column.title)
+                ) : !!column.ellipsis ? (
+                  <span className="cell-tooltip-content">{column.title}</span>
+                ) : (
+                  column.title
+                )}
+              </span>
+              {column.sorter || column.filters ? (
+                <div className="sorter-filter">
+                  {column.sorter ? renderSorterContent(column) : null}
+                  {column.filters ? renderFilterContent(column) : null}
+                </div>
               ) : null}
-            </th>
-          );
-        }
+            </div>
+            {rowIndex === 0 &&
+            bordered &&
+            !('children' in column) &&
+            !column._ignoreRightBorder &&
+            column?.resizable ? (
+              <div
+                className="cell-header-resizable"
+                onMouseDown={handleMouseDown}
+                // onMouseDown={(event) => {
+                //   handleMouseDown(event, column, colIndex);
+                // }}
+              />
+            ) : null}
+          </th>
+        );
+        // if ('children' in column && column?.children.length) {
+        //   return (
+        //     <th
+        //       key={`${rowIndex}_${colIndex}`}
+        //       colSpan={column.colSpan}
+        //       className={className}
+        //       style={style}
+        //       ref={cellRef}
+        //     >
+        //       {showTooltip && isOverflow ? (
+        //         renderTooltip(column.title)
+        //       ) : !!column.ellipsis ? (
+        //         <span className="cell-tooltip-content">{column.title}</span>
+        //       ) : (
+        //         column.title
+        //       )}
+        //     </th>
+        //   );
+        // } else {
+        //   return (
+        //     <th
+        //       rowSpan={rowSpan}
+        //       key={`${rowIndex}_${colIndex}`}
+        //       colSpan={column.colSpan}
+        //       className={className}
+        //       style={style}
+        //       ref={cellRef}
+        //     >
+        //       <div className="cell-header">
+        //         <span
+        //           ref={columnTitleRef}
+        //           className={classnames({
+        //             'column-title': true,
+        //             'column-title-ellipsis': !!column.ellipsis,
+        //           })}
+        //         >
+        //           {showTooltip && isOverflow ? (
+        //             renderTooltip(column.title)
+        //           ) : !!column.ellipsis ? (
+        //             <span className="cell-tooltip-content">{column.title}</span>
+        //           ) : (
+        //             column.title
+        //           )}
+        //         </span>
+        //         {column.sorter || column.filters ? (
+        //           <div className="sorter-filter">
+        //             {column.sorter ? renderSorterContent(column) : null}
+        //             {column.filters ? renderFilterContent(column) : null}
+        //           </div>
+        //         ) : null}
+        //       </div>
+        //       {rowIndex === 0 &&
+        //       bordered &&
+        //       !('children' in column) &&
+        //       !column.ignoreRightBorder &&
+        //       column?.resizable ? (
+        //         <div
+        //           className="cell-header-resizable"
+        //           onMouseDown={handleMouseDown}
+        //           // onMouseDown={(event) => {
+        //           //   handleMouseDown(event, column, colIndex);
+        //           // }}
+        //         />
+        //       ) : null}
+        //     </th>
+        //   );
+        // }
       }
     }
   };

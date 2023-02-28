@@ -1,5 +1,7 @@
+import React from 'react';
 import omit from 'omit.js';
 import type { RowKeyType } from '../interface';
+import type { PrivateColumnType } from '../interface1';
 
 export function generateUUID() {
   const time = new Date().getTime().toString(36);
@@ -7,6 +9,17 @@ export function generateUUID() {
   random = random.substring(2, random.length);
   return `${random}${time}`;
 }
+
+export function getColumnKey<T>(column: PrivateColumnType<T>, defaultKey: React.Key) {
+  if ('key' in column && column.key !== null && column.key !== undefined) {
+    return column.key;
+  }
+  if (column.dataIndex) {
+    return column.dataIndex;
+  }
+  return defaultKey;
+}
+
 // todo 待测试如果用的数据不存在的字段 record.desc  desc 不存在
 export function getRowKey<T>(rowKey: RowKeyType<T>, rowData: T) {
   let key;

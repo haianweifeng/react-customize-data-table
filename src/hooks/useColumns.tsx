@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import omit from 'omit.js';
 import type {
   ColumnType,
@@ -10,18 +10,24 @@ import type {
   PrivateColumnsType,
 } from '../interface1';
 import { SELECTION_EXPAND_COLUMN_WIDTH } from '../utils/constant';
-
+// todo 考虑过滤值发生变化后导致列变化 但是目前没有更新列
+// todo 考虑如果是children的列不能再设置type
 function useColumns<T>(
   originColumns: ColumnsType<T>,
   rowSelection?: RowSelectionType<T>,
   expandable?: ExpandableType<T>,
 ) {
+  // todo 待测试如果是其中一层children 设置了fixed
   const existFixedInColumn = useCallback(
     (columns: PrivateColumnsType<T>, fixed: 'left' | 'right'): boolean => {
       let exist: boolean;
       const lastColumn = columns[columns.length - 1];
       if ('children' in lastColumn && lastColumn?.children.length) {
-        exist = existFixedInColumn(lastColumn.children, fixed);
+        if (lastColumn.fixed === fixed) {
+          return true;
+        } else {
+          exist = existFixedInColumn(lastColumn.children, fixed);
+        }
       } else {
         exist = lastColumn.fixed === fixed;
       }
@@ -57,7 +63,7 @@ function useColumns<T>(
     });
     return flattenColumns;
   }, []);
-
+  // todo 考虑expand checkbox radio 的render
   const getMergeColumns = useCallback(() => {
     console.log('gegeg');
     let existExpand = false;
@@ -89,8 +95,9 @@ function useColumns<T>(
             width: parseInt(`${expandable?.columnWidth}`, 10) || SELECTION_EXPAND_COLUMN_WIDTH,
           });
         }
+      } else {
+        mergeColumns.push({ ...column, type: 'default' });
       }
-      mergeColumns.push({ ...column, type: 'default' });
     });
 
     if (!existExpand && expandable && expandable?.expandedRowRender) {
@@ -106,13 +113,17 @@ function useColumns<T>(
     }
     return mergeColumns;
     // eslint-disable-line react-hooks/exhaustive-deps
-  }, []);
+  }, [originColumns]);
 
   const initMergeColumns = useMemo(() => {
     return getMergeColumns();
   }, [getMergeColumns]);
 
   const [mergeColumns, setMergeColumns] = useState<PrivateColumnsType<T>>(initMergeColumns);
+
+  useEffect(() => {
+    setMergeColumns(initMergeColumns);
+  }, [initMergeColumns]);
 
   const fixedColumns = useMemo(() => {
     let leftIndex = -1;
@@ -157,9 +168,9 @@ function useColumns<T>(
       .map((column, index) => {
         const col: PrivateColumnType<T> | PrivateColumnGroupType<T> = { ...column };
         if (index <= leftIndex) col.fixed = 'left';
-        if (index === leftIndex) col.lastLeftFixed = true;
+        if (index === leftIndex) col._lastLeftFixed = true;
         if (index >= rightIndex && rightIndex > 0) col.fixed = 'right';
-        if (index === rightIndex) col.fistRightFixed = true;
+        if (index === rightIndex) col._firstRightFixed = true;
         return col;
       });
   }, [mergeColumns, existFixedInColumn, addFixedToColumn]);
@@ -172,12 +183,12 @@ function useColumns<T>(
     setMergeColumns(columns);
   }, []);
 
-  return {
+  return [
     mergeColumns,
     fixedColumns,
     flattenColumns,
     updateMergeColumns,
     initMergeColumns,
-  };
+  ] as const;
 }
 export default useColumns;

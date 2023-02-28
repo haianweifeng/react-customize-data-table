@@ -20,6 +20,7 @@ import type {
   PrivateColumnType,
   PrivateColumnGroupType,
   PrivateColumnsType,
+  FilterState,
 } from '../interface1';
 import Th from '../Th';
 import type { ThProps } from '../Th';
@@ -29,7 +30,7 @@ interface TheadProps<T> {
   // scrollLeft: number;
   // offsetRight: number;
   sorterState: SorterStateType<T>[];
-  filterState: FilterStateType<T>[];
+  filterStates: FilterState<T>[];
   locale: Record<string, string>;
   checked: boolean | 'indeterminate';
   expandable?: ExpandableType<T>;
@@ -56,7 +57,11 @@ interface TheadProps<T> {
     triggerAsc: () => void;
     triggerDesc: () => void;
   }) => React.ReactNode;
-  onFilterChange: (col: ColumnsWithType<T> & { colSpan: number }, filteredValue: string[]) => void;
+  onFilterChange: (
+    col: PrivateColumnType<T>,
+    filteredValue: React.Key[],
+    columnKey: React.Key,
+  ) => void;
   // onMouseDown: (resizeInfo: ResizeInfoType, col: ColumnsWithType<T>, colIndex: number) => void;
   onMouseDown: (resizeInfo: ResizeInfoType, col: PrivateColumnType<T>, colIndex: number) => void;
 }
@@ -68,7 +73,7 @@ function Thead<T>(props: TheadProps<T>) {
     checked,
     columns,
     sorterState,
-    filterState,
+    filterStates,
     expandable,
     // scrollLeft,
     // offsetRight,
@@ -89,7 +94,7 @@ function Thead<T>(props: TheadProps<T>) {
 
       cols.map((col, index: number) => {
         const isLastColumn = index === cols.length - 1;
-        const ignoreRightBorder = !!(
+        const _ignoreRightBorder = !!(
           bordered &&
           isLastColumn &&
           (!parentCol || (parentCol && lastColumn))
@@ -98,7 +103,7 @@ function Thead<T>(props: TheadProps<T>) {
           const column: PrivateColumnGroupType<T> = {
             ...col,
             colSpan: 0,
-            ignoreRightBorder,
+            _ignoreRightBorder,
           } as PrivateColumnGroupType<T>;
           column.children = parseHeaderColumns(col?.children, column, !parentCol && isLastColumn);
           if (parentCol && 'colSpan' in parentCol) {
@@ -110,7 +115,7 @@ function Thead<T>(props: TheadProps<T>) {
             (parentCol.colSpan as number) += 1;
           }
           if (col?.colSpan === 0) return;
-          headerColumns.push({ ...col, colSpan: col?.colSpan || 1, ignoreRightBorder });
+          headerColumns.push({ ...col, colSpan: col?.colSpan || 1, _ignoreRightBorder });
         }
       });
 
@@ -151,13 +156,14 @@ function Thead<T>(props: TheadProps<T>) {
       trs: React.ReactNode[][],
       rowIndex: number,
       colIndex: number,
+      pos?: number,
     ) => {
       const totalRows = trs.length;
       const colClassName = col.className || '';
       const cellClassName =
         typeof headerCellClassName === 'function'
           ? headerCellClassName(
-              omit(col, ['ignoreRightBorder', 'lastLeftFixed', 'fistRightFixed']),
+              omit(col, ['_ignoreRightBorder', '_lastLeftFixed', '_firstRightFixed']),
               rowIndex,
               colIndex,
             )
@@ -166,9 +172,9 @@ function Thead<T>(props: TheadProps<T>) {
       const classes = {
         'cell-fixed-left': col.fixed === 'left',
         'cell-fixed-right': col.fixed === 'right',
-        'cell-is-last-fixedLeft': !!col.lastLeftFixed,
-        'cell-is-first-fixedRight': !!col.fistRightFixed,
-        'cell-ignore-right-border': col.ignoreRightBorder,
+        'cell-is-last-fixedLeft': !!col._lastLeftFixed,
+        'cell-is-first-fixedRight': !!col._firstRightFixed,
+        'cell-ignore-right-border': col._ignoreRightBorder,
         [colClassName]: !!col.className,
         [cellClassName]: !!cellClassName,
       };
@@ -183,13 +189,14 @@ function Thead<T>(props: TheadProps<T>) {
       let styles: React.CSSProperties = {};
       if (typeof headerCellStyle === 'function') {
         styles = headerCellStyle(
-          omit(col, ['ignoreRightBorder', 'lastLeftFixed', 'fistRightFixed']),
+          omit(col, ['_ignoreRightBorder', '_lastLeftFixed', '_firstRightFixed']),
           rowIndex,
           colIndex,
         );
       }
 
       let baseProps: ThProps<T> = {
+        defaultColumnKey: pos ? `${pos}_${colIndex}` : colIndex,
         column: col,
         colIndex,
         rowIndex,
@@ -199,7 +206,7 @@ function Thead<T>(props: TheadProps<T>) {
         style: styles,
         sorterState,
         renderSorter,
-        filterState,
+        filterStates,
       } as ThProps<T>;
 
       switch (col.type) {
@@ -224,7 +231,7 @@ function Thead<T>(props: TheadProps<T>) {
             });
             trs[rowIndex].push(createTh(baseProps));
             col.children.forEach((c, i) => {
-              renderTh(c, trs, rowIndex + 1, i);
+              renderTh(c, trs, rowIndex + 1, i, colIndex);
             });
           } else {
             baseProps = Object.assign({}, baseProps, {
@@ -244,7 +251,7 @@ function Thead<T>(props: TheadProps<T>) {
       bordered,
       sorterState,
       renderSorter,
-      filterState,
+      filterStates,
       rowSelection,
       expandable,
       handleChange,

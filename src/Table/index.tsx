@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState, useEffect, useCallback, useContext } 
 import classnames from 'classnames';
 import omit from 'omit.js';
 import useColumns from '../hooks/useColumns';
+import useFilter from '../hooks/useFilter';
 import useSelection from '../hooks/useSelection';
 import Thead from '../Thead';
 import Tbody from '../Tbody';
@@ -145,7 +146,7 @@ export interface TableProps<T> {
   /** 排序事件 */
   onSort?: (sortInfo: SortInfoType[]) => void;
   /** 筛选事件 */
-  onFilter?: (filterInfo: FilterInfoType) => void;
+  onFilter?: (filterInfo: Record<React.Key, React.Key[]>) => void;
   /** 配置展开属性 todo header 需要表头空一行 */
   expandable?: ExpandableType<T>;
   /** 配置树形数据属性 */
@@ -282,7 +283,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
   }, [rowSelection?.selectedRowKeys, rowSelection?.defaultSelectedRowKeys]);
 
-  const { mergeColumns, fixedColumns, flattenColumns, updateMergeColumns, initMergeColumns } =
+  const [mergeColumns, fixedColumns, flattenColumns, updateMergeColumns, initMergeColumns] =
     useColumns(columns, rowSelection, expandable);
 
   const [
@@ -300,6 +301,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     initSelectedKeys,
     selectionType,
   );
+
+  const [filterStates, updateFilterStates] = useFilter(mergeColumns);
 
   const resizeLineRef = useRef<HTMLDivElement>(null);
   const tableContainer = useRef<HTMLDivElement>(null);
@@ -680,31 +683,17 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   // const [filterState, setFilterState] = useState<FilterStateType<T>[]>(() => {
   //   const filter: FilterStateType<T>[] = [];
-  //   flatColumns.forEach((col) => {
+  //   flattenColumns.forEach((col) => {
   //     if (col?.filters || typeof col?.filterMethod === 'function') {
   //       filter.push({
   //         filteredValue: col?.filteredValue || col?.defaultFilteredValue || [],
-  //         dataIndex: col.dataIndex,
+  //         dataIndex: col?.dataIndex || col?.key,
   //         filterMethod: col?.filterMethod,
   //       });
   //     }
   //   });
   //   return filter;
   // });
-
-  const [filterState, setFilterState] = useState<FilterStateType<T>[]>(() => {
-    const filter: FilterStateType<T>[] = [];
-    flattenColumns.forEach((col) => {
-      if (col?.filters || typeof col?.filterMethod === 'function') {
-        filter.push({
-          filteredValue: col?.filteredValue || col?.defaultFilteredValue || [],
-          dataIndex: col?.dataIndex || col?.key,
-          filterMethod: col?.filterMethod,
-        });
-      }
-    });
-    return filter;
-  });
 
   const [sorterState, setSorterState] = useState<SorterStateType<T>[]>(() => {
     const sorter: SorterStateType<T>[] = [];
@@ -728,18 +717,19 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const totalData = useMemo(() => {
     let records: T[] = [...dataSource];
-    filterState.forEach((f) => {
+    filterStates.forEach((filterState) => {
       records = records.filter((r) => {
-        let result = !f.filteredValue.length;
-        for (let i = 0; i < f.filteredValue.length; i++) {
-          if (typeof f?.filterMethod === 'function') {
-            result = f.filterMethod(f.filteredValue[i], r);
+        let result = !filterState.filteredValue.length;
+        for (let i = 0; i < filterState.filteredValue.length; i++) {
+          if (typeof filterState?.filterMethod === 'function') {
+            result = filterState.filterMethod(filterState.filteredValue[i], r);
             if (result) break;
           }
         }
         return result;
       });
     });
+    // console.log(records);
 
     sorterState.forEach((s) => {
       records.sort((a, b) => {
@@ -751,7 +741,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       });
     });
     return records;
-  }, [dataSource, filterState, sorterState]);
+  }, [dataSource, filterStates, sorterState]);
 
   const currentPageData = useMemo(() => {
     if (pagination) {
@@ -1028,7 +1018,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // todo 这里没有添加依赖项看eslint 在提交时候会不会报错
   useEffect(() => {
     handleResize(initMergeColumns);
-  }, []);
+  }, [initMergeColumns]);
   // console.log(`scrollWidth: ${scrollWidth}`);
   // console.log(mergeColumns);
 
@@ -1319,22 +1309,24 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   };
 
   const handleFilterChange = (
-    col: ColumnsWithType<T> & { colSpan: number },
-    checkedValue: string[],
+    col: PrivateColumnType<T>,
+    checkedValue: React.Key[],
+    columnKey: React.Key,
   ) => {
-    const index = filterState.findIndex((f) => f.dataIndex === col.dataIndex);
+    const index = filterStates.findIndex((filterState) => filterState.key === columnKey);
     if (index >= 0) {
-      const copyFilterState = [...filterState];
+      const copyFilterState = [...filterStates];
       const item = copyFilterState[index];
       item.filteredValue = [...checkedValue];
       copyFilterState.splice(index, 1, item);
       if (!('filteredValue' in col)) {
-        setFilterState(copyFilterState);
+        updateFilterStates(copyFilterState);
+        // setFilterState(copyFilterState);
       }
       if (typeof onFilter === 'function') {
-        const filterInfo: FilterInfoType = {};
-        copyFilterState.forEach((f) => {
-          filterInfo[f.dataIndex] = f.filteredValue;
+        const filterInfo: Record<React.Key, React.Key[]> = {};
+        copyFilterState.forEach((filterState) => {
+          filterInfo[filterState.key] = filterState.filteredValue;
         });
         onFilter(filterInfo);
       }
@@ -1444,7 +1436,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     //   setScrollTop(offset);
     // }
   };
-  console.log(`startRowIndex: ${startRowIndex}`);
+  // console.log(`startRowIndex: ${startRowIndex}`);
   // console.log(`scrollTop: ${scrollTop}`)
 
   const handleScrollHorizontal = (offset: number) => {
@@ -1507,21 +1499,21 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // }, [originColumns]);
 
   // column todo
-  useEffect(() => {
-    let exist = false;
-    const filter: FilterStateType<T>[] = [];
-    flattenColumns.forEach((col) => {
-      if ('filteredValue' in col) {
-        exist = true;
-        filter.push({
-          filteredValue: col?.filteredValue || [],
-          dataIndex: col?.dataIndex || col?.key,
-          filterMethod: col?.filterMethod,
-        });
-      }
-    });
-    exist && setFilterState(filter);
-  }, [flattenColumns]);
+  // useEffect(() => {
+  //   let exist = false;
+  //   const filter: FilterStateType<T>[] = [];
+  //   flattenColumns.forEach((col) => {
+  //     if ('filteredValue' in col) {
+  //       exist = true;
+  //       filter.push({
+  //         filteredValue: col?.filteredValue || [],
+  //         dataIndex: col?.dataIndex || col?.key,
+  //         filterMethod: col?.filterMethod,
+  //       });
+  //     }
+  //   });
+  //   exist && setFilterState(filter);
+  // }, [flattenColumns]);
 
   // 4. 待测试-分页情况下表头的全选只针对当前页面数据
   const checked = useMemo(() => {
@@ -1996,7 +1988,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             // scrollLeft={scrollLeft}
             // offsetRight={offsetRight}
             sorterState={sorterState}
-            filterState={filterState}
+            filterStates={filterStates}
+            // filterState={filterState}
             expandable={expandable}
             rowSelection={rowSelection}
             renderSorter={renderSorter}

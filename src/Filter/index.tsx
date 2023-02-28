@@ -15,9 +15,9 @@ interface FilterProps {
   locale: Record<string, string>;
   filters: FilterMenusType[];
   filterMultiple: boolean;
-  filteredValue: string[];
+  filteredValue: React.Key[];
   onReset: () => void;
-  onChange: (filteredValue: string[]) => void;
+  onChange: (filteredValue: React.Key[]) => void;
   filterIcon?: (filtered: boolean) => React.ReactNode;
   filterSearch?: ((value: string, record: FilterMenusType) => boolean) | boolean;
 }
@@ -41,7 +41,7 @@ const Filter = (props: FilterProps) => {
   const [visible, setVisible] = useState<boolean>(false);
   const [isFocus, setIsFocus] = useState<boolean>(false);
   const [searchValue, setSearchValue] = useState<string>('');
-  const [checkedValue, setCheckedValue] = useState<string[]>(filteredValue);
+  const [checkedValue, setCheckedValue] = useState<React.Key[]>(filteredValue);
 
   const handleFocus = () => {
     setIsFocus(true);
