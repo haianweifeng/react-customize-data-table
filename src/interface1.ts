@@ -7,11 +7,18 @@ export type FilterState<T> = {
   filterMethod?: (value: React.Key, record: T) => boolean;
 };
 
+export type SortState<T> = {
+  key: React.Key;
+  order: 'asc' | 'desc' | null;
+  weight?: number;
+  sorter: (rowA: T, rowB: T) => number;
+};
+
 export type CellType = { colSpan?: number; rowSpan?: number };
 
 export type FilterMenusType = { label: string; value: string };
 
-export type SorterType<T> = {
+export type Sorter<T> = {
   compare: (rowA: T, rowB: T) => number;
   weight: number;
 };
@@ -120,11 +127,11 @@ export type ColumnType<T> = {
   // sortDirections?: ['ascend', 'descend'];
   /** 默认排序 defaultSortOrder */
   defaultSortOrder?: 'asc' | 'desc';
-  // /** 排序的受控属性,外界可用此控制列的排序 */
-  // sortOrder?: 'ascend' | 'descend' | null;
+  // /** 排序的受控属性,外界可用此控制列的排序 todo 未实现 */
+  sortOrder?: 'asc' | 'desc' | null;
   /** 排序函数 */
-  sorter?: (rowA: T, rowB: T) => number | SorterType<T>;
-  /** 自定义排序图标 todo */
+  sorter?: (rowA: T, rowB: T) => number | Sorter<T>;
+  /** 自定义排序图标 todo 未实现 */
   renderSorter?: (params: {
     activeAsc: boolean;
     activeDesc: boolean;

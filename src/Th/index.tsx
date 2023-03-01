@@ -13,7 +13,13 @@ import Checkbox from '../Checkbox';
 import { getColumnKey, getParent, getPropertyValueSum } from '../utils/util';
 import Sorter from '../Sorter';
 import Filter from '../Filter';
-import { ColumnType, FilterState, PrivateColumnGroupType, PrivateColumnType } from '../interface1';
+import {
+  ColumnType,
+  FilterState,
+  PrivateColumnGroupType,
+  PrivateColumnType,
+  SortState,
+} from '../interface1';
 
 export interface ThProps<T> {
   defaultColumnKey: React.Key;
@@ -32,7 +38,7 @@ export interface ThProps<T> {
   // };
   // scrollLeft: number;
   // offsetRight: number;
-  sorterState: SorterStateType<T>[];
+  sorterStates: SortState<T>[];
   renderSorter: (params: {
     activeAsc: boolean;
     activeDesc: boolean;
@@ -41,7 +47,7 @@ export interface ThProps<T> {
   }) => React.ReactNode;
   // todo 列的类型
   // onSort?: (col: ColumnsWithType<T> & { colSpan: number }, order: 'asc' | 'desc') => void;
-  onSort?: (col: PrivateColumnType<T>, order: 'asc' | 'desc') => void;
+  onSort?: (col: ColumnType<T>, order: 'asc' | 'desc', columnKey: React.Key) => void;
   filterStates: FilterState<T>[];
   // onFilterChange?: (col: ColumnsWithType<T> & { colSpan: number }, filteredValue: string[]) => void;
   onFilterChange?: (
@@ -68,7 +74,7 @@ function Th<T>(props: ThProps<T>) {
     // offsetRight,
     style = {},
     className = '',
-    sorterState,
+    sorterStates,
     renderSorter,
     filterStates,
     onSort,
@@ -152,20 +158,26 @@ function Th<T>(props: ThProps<T>) {
   // todo dataIndex?
   const renderSorterContent = useCallback(
     (col: PrivateColumnType<T>) => {
-      const item = sorterState.find((s) => s.dataIndex === col.dataIndex);
+      const columnKey = getColumnKey(col, defaultColumnKey);
+      const item = sorterStates.find((s) => s.key === columnKey);
 
       return (
         <Sorter
           activeAsc={item?.order === 'asc'}
           activeDesc={item?.order === 'desc'}
-          renderSorter={renderSorter}
+          renderSorter={col.renderSorter}
           onChange={(order) => {
-            onSort && onSort(col, order);
+            onSort &&
+              onSort(
+                omit(col, ['_ignoreRightBorder', '_lastLeftFixed', '_firstRightFixed', '_width']),
+                order,
+                columnKey,
+              );
           }}
         />
       );
     },
-    [sorterState, renderSorter, onSort],
+    [sorterStates, renderSorter, onSort],
   );
 
   // todo  colIndex 有可能是children curr 是否存在

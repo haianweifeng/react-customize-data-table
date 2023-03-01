@@ -9,7 +9,7 @@ interface SorterProps {
   activeAsc: boolean;
   activeDesc: boolean;
   onChange: (order: 'asc' | 'desc') => void;
-  renderSorter: (params: {
+  renderSorter?: (params: {
     activeAsc: boolean;
     activeDesc: boolean;
     triggerAsc: () => void;

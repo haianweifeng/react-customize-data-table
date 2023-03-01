@@ -1,40 +1,14 @@
-import React from 'react';
-import type { ColumnsType, SortInfoType } from 'react-data-table';
+import React, { useState } from 'react';
+import type { ColumnsType, FilterInfoType } from 'react-data-table';
 import { Table } from 'react-data-table';
+import type { SortState } from '../../src/interface1';
 
 interface DataType {
-  key: React.Key;
+  key: string;
   name: string;
   age: number;
   address: string;
 }
-
-const columns: ColumnsType<DataType>[] = [
-  {
-    title: 'Name',
-    dataIndex: 'name',
-    width: '30%',
-    sorter: {
-      weight: 1,
-      compare: (a: DataType, b: DataType) => a.name.localeCompare(b.name),
-    },
-  },
-  {
-    title: 'Age',
-    dataIndex: 'age',
-    defaultSortOrder: 'desc',
-    sorter: (a: DataType, b: DataType) => a.age - b.age,
-  },
-  {
-    title: 'Address',
-    dataIndex: 'address',
-    width: '40%',
-    sorter: {
-      weight: 2,
-      compare: (a: DataType, b: DataType) => a.address.length - b.address.length,
-    },
-  },
-];
 
 const data: DataType[] = [
   {
@@ -64,9 +38,41 @@ const data: DataType[] = [
 ];
 
 const App = () => {
-  const handleSort = (sortInfo: SortInfoType) => {
-    console.log(sortInfo);
+  const [sortedInfo, setSortedInfo] = useState<SortState<DataType>>({} as SortState<DataType>);
+
+  const handleSorter = (sortState) => {
+    // setSortedInfo(sortState);
+    setSortedInfo((prev) => {
+      return { ...prev, [sortState.field]: sortState };
+    });
   };
-  return <Table columns={columns} dataSource={data} bordered onSort={handleSort} />;
+
+  const columns: ColumnsType<DataType> = [
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
+      sorter: (a, b) => a.name.length - b.name.length,
+      sortOrder: sortedInfo['name'] ? sortedInfo['name'].order : null,
+      // sortOrder: sortedInfo.field === 'name' ? sortedInfo.order : null,
+    },
+    {
+      title: 'Age',
+      dataIndex: 'age',
+      key: 'age',
+      sorter: (a, b) => a.age - b.age,
+      sortOrder: sortedInfo['age'] ? sortedInfo['age'].order : null,
+      // sortOrder: sortedInfo.field === 'age' ? sortedInfo.order : null,
+    },
+    {
+      title: 'Address',
+      dataIndex: 'address',
+      key: 'address',
+      sorter: (a, b) => a.address.length - b.address.length,
+      sortOrder: sortedInfo['address'] ? sortedInfo['address'].order : null,
+      // sortOrder: sortedInfo.field === 'address' ? sortedInfo.order : null,
+    },
+  ];
+  return <Table columns={columns} dataSource={data} bordered onSort={handleSorter} />;
 };
 export default App;

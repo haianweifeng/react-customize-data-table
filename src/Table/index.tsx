@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState, useEffect, useCallback, useContext } 
 import classnames from 'classnames';
 import omit from 'omit.js';
 import useColumns from '../hooks/useColumns';
+import useSorter from '../hooks/useSorter';
 import useFilter from '../hooks/useFilter';
 import useSelection from '../hooks/useSelection';
 import Thead from '../Thead';
@@ -39,6 +40,7 @@ import type {
   ColumnGroupType,
   PrivateColumnsType,
   PrivateColumnType,
+  Sorter,
 } from '../interface1';
 import VirtualList from '../VirtualList';
 import type { PaginationProps } from '../index';
@@ -144,7 +146,11 @@ export interface TableProps<T> {
   // /** 排序取消事件 */
   // onSortCancel?: (col: ColumnsType<T>, order: 'asc' | 'desc') => void;
   /** 排序事件 */
-  onSort?: (sortInfo: SortInfoType[]) => void;
+  onSort?: (sortResult: {
+    column: ColumnType<T>;
+    order: 'asc' | 'desc' | null;
+    field: string | undefined;
+  }) => void;
   /** 筛选事件 */
   onFilter?: (filterInfo: Record<React.Key, React.Key[]>) => void;
   /** 配置展开属性 todo header 需要表头空一行 */
@@ -303,6 +309,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   );
 
   const [filterStates, updateFilterStates] = useFilter(mergeColumns);
+
+  const [sorterStates, updateSorterStates] = useSorter(mergeColumns);
 
   const resizeLineRef = useRef<HTMLDivElement>(null);
   const tableContainer = useRef<HTMLDivElement>(null);
@@ -695,25 +703,25 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   //   return filter;
   // });
 
-  const [sorterState, setSorterState] = useState<SorterStateType<T>[]>(() => {
-    const sorter: SorterStateType<T>[] = [];
-    flattenColumns.forEach((col) => {
-      if (col?.sorter && col?.defaultSortOrder) {
-        const obj: SorterStateType<T> = {
-          order: col.defaultSortOrder,
-          dataIndex: col?.dataIndex || col?.key,
-        } as SorterStateType<T>;
-        if (typeof col.sorter === 'object') {
-          obj.sorter = (col.sorter as SorterType<T>).compare;
-          obj.weight = (col.sorter as SorterType<T>).weight;
-        } else {
-          obj.sorter = col.sorter as (rowA: T, rowB: T) => number;
-        }
-        sorter.push(obj);
-      }
-    });
-    return sorter;
-  });
+  // const [sorterState, setSorterState] = useState<SorterStateType<T>[]>(() => {
+  //   const sorter: SorterStateType<T>[] = [];
+  //   flattenColumns.forEach((col) => {
+  //     if (col?.sorter && col?.defaultSortOrder) {
+  //       const obj: SorterStateType<T> = {
+  //         order: col.defaultSortOrder,
+  //         dataIndex: col?.dataIndex || col?.key,
+  //       } as SorterStateType<T>;
+  //       if (typeof col.sorter === 'object') {
+  //         obj.sorter = (col.sorter as SorterType<T>).compare;
+  //         obj.weight = (col.sorter as SorterType<T>).weight;
+  //       } else {
+  //         obj.sorter = col.sorter as (rowA: T, rowB: T) => number;
+  //       }
+  //       sorter.push(obj);
+  //     }
+  //   });
+  //   return sorter;
+  // });
 
   const totalData = useMemo(() => {
     let records: T[] = [...dataSource];
@@ -731,17 +739,24 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     });
     // console.log(records);
 
-    sorterState.forEach((s) => {
-      records.sort((a, b) => {
-        const compareResult = s.sorter(a, b);
-        if (compareResult !== 0) {
-          return s.order === 'asc' ? compareResult : -compareResult;
-        }
-        return compareResult;
+    sorterStates
+      .sort((a, b) => {
+        const a1 = (a.weight || 0).toString();
+        const b1 = (b.weight || 0).toString();
+        return a1.localeCompare(b1);
+      })
+      .forEach((sorterState) => {
+        records.sort((a, b) => {
+          const compareResult = sorterState.sorter(a, b);
+          if (compareResult !== 0) {
+            return sorterState.order === 'asc' ? compareResult : -compareResult;
+          }
+          return compareResult;
+        });
       });
-    });
+
     return records;
-  }, [dataSource, filterStates, sorterState]);
+  }, [dataSource, filterStates, sorterStates]);
 
   const currentPageData = useMemo(() => {
     if (pagination) {
@@ -1241,71 +1256,110 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   };
 
-  const handleSortChange = (
-    col: ColumnsWithType<T> & { colSpan: number },
-    order: 'asc' | 'desc',
-  ) => {
-    const index = sorterState.findIndex((s) => s.dataIndex === col.dataIndex);
-    const isCancel = index >= 0 && sorterState[index].order === order;
+  const handleSortChange = (col: ColumnType<T>, order: 'asc' | 'desc', columnKey: React.Key) => {
+    const index = sorterStates.findIndex((sorterState) => sorterState.key === columnKey);
+    const isCancel = index >= 0 && sorterStates[index].order === order;
 
     if (isCancel) {
-      const filterResult = sorterState.filter((s) => s.dataIndex !== col.dataIndex);
-      setSorterState(filterResult);
+      const filterResult = sorterStates.filter((sorterState) => sorterState.key !== columnKey);
+      if (!('sortOrder' in col)) {
+        updateSorterStates(filterResult);
+      }
+      // setSorterState(filterResult);
       // setSorterState((prev) => {
       //   return prev.filter((p) => p.dataIndex !== col.dataIndex);
       // });
       // if (typeof onSortCancel === 'function') {
       //   onSortCancel(omit(col, ['colSpan', 'type']) as ColumnsType<T>, order);
       // }
-      const sortInfos = filterResult.map((f) => ({ field: f.dataIndex, order: f.order }));
-      onSort && onSort(sortInfos);
+      // const sortInfos = filterResult.map((f) => ({ field: f.dataIndex, order: f.order }));
+      onSort &&
+        onSort({
+          column: col,
+          order: null,
+          field: col.dataIndex,
+        });
       return;
     }
     if (typeof col?.sorter === 'object') {
       if (index >= 0) {
-        const copyList = [...sorterState];
-        const item = sorterState[index];
+        const copyList = [...sorterStates];
+        const item = sorterStates[index];
         item.order = order;
         copyList.splice(index, 1, item);
-        setSorterState(copyList);
-        onSort && onSort(copyList.map((c) => ({ field: c.dataIndex, order: c.order })));
+        if (!('sortOrder' in col)) {
+          updateSorterStates(copyList);
+        }
+        // setSorterState(copyList);
+        // onSort && onSort(copyList.map((c) => ({ field: c.dataIndex, order: c.order })));
+        // onSort && onSort({
+        //   column: col,
+        //   order,
+        //   field: col.dataIndex
+        // });
       } else {
-        const list =
-          sorterState.length === 1 && sorterState[0]?.weight === undefined ? [] : [...sorterState];
-        list.push({
-          order,
-          dataIndex: col.dataIndex,
-          sorter: (col.sorter as SorterType<T>).compare,
-          weight: (col.sorter as SorterType<T>).weight,
-        });
-        list.sort((a, b) => {
-          const a1 = (a.weight || 0).toString();
-          const b1 = (b.weight || 0).toString();
-          return a1.localeCompare(b1);
-        });
-        setSorterState(list);
-        const sortInfo = list.map((l) => {
-          return { field: l.dataIndex, order: l.order };
-        });
-        onSort && onSort(sortInfo);
+        // const list =
+        //   sorterStates.length === 1 && sorterStates[0]?.weight === undefined ? [] : [...sorterStates];
+        // list.push({
+        //   key: columnKey,
+        //   order,
+        //   sorter: (col.sorter as Sorter<T>).compare,
+        //   weight: (col.sorter as Sorter<T>).weight,
+        // });
+        // // list.push({
+        // //   order,
+        // //   dataIndex: col.dataIndex,
+        // //   sorter: (col.sorter as SorterType<T>).compare,
+        // //   weight: (col.sorter as SorterType<T>).weight,
+        // // });
+        // list.sort((a, b) => {
+        //   const a1 = (a.weight || 0).toString();
+        //   const b1 = (b.weight || 0).toString();
+        //   return a1.localeCompare(b1);
+        // });
+        // if (!('sortOrder' in col)) {
+        //   updateSorterStates(list);
+        // }
+        // // setSorterState(list);
+        // // const sortInfo = list.map((l) => {
+        // //   return { field: l.dataIndex, order: l.order };
+        // // });
+        // // onSort && onSort(sortInfo);
       }
+      onSort &&
+        onSort({
+          column: col,
+          order,
+          field: col.dataIndex,
+        });
       return;
     }
     if (typeof col?.sorter === 'function') {
-      setSorterState([
-        {
-          order,
-          dataIndex: col.dataIndex,
-          sorter: col.sorter as (rowA: T, rowB: T) => number,
-        },
-      ]);
-      onSort && onSort([{ field: col.dataIndex, order }]);
-    }
+      if (!('sortOrder' in col)) {
+        updateSorterStates([
+          {
+            key: columnKey,
+            order,
+            sorter: col.sorter as (rowA: T, rowB: T) => number,
+          },
+        ]);
+      }
+      // setSorterState([
+      //   {
+      //     order,
+      //     dataIndex: col.dataIndex,
+      //     sorter: col.sorter as (rowA: T, rowB: T) => number,
+      //   },
+      // ]);
+      // onSort && onSort([{ field: col.dataIndex, order }]);
 
-    // if (typeof onSort === 'function') {
-    //   // (column: ColumnsType<T>, order: 'ascend' | 'descend') => void;
-    //   onSort(omit(col, ['colSpan', 'type']) as ColumnsType<T>, order);
-    // }
+      onSort &&
+        onSort({
+          column: col,
+          order,
+          field: col.dataIndex,
+        });
+    }
   };
 
   const handleFilterChange = (
@@ -1987,7 +2041,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             // columns={columnsWithFixed}
             // scrollLeft={scrollLeft}
             // offsetRight={offsetRight}
-            sorterState={sorterState}
+            sorterStates={sorterStates}
             filterStates={filterStates}
             // filterState={filterState}
             expandable={expandable}

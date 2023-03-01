@@ -21,6 +21,7 @@ import type {
   PrivateColumnGroupType,
   PrivateColumnsType,
   FilterState,
+  SortState,
 } from '../interface1';
 import Th from '../Th';
 import type { ThProps } from '../Th';
@@ -29,7 +30,7 @@ interface TheadProps<T> {
   bordered: boolean;
   // scrollLeft: number;
   // offsetRight: number;
-  sorterState: SorterStateType<T>[];
+  sorterStates: SortState<T>[];
   filterStates: FilterState<T>[];
   locale: Record<string, string>;
   checked: boolean | 'indeterminate';
@@ -50,7 +51,8 @@ interface TheadProps<T> {
   ) => React.CSSProperties | React.CSSProperties;
   onSelectAll: (selected: boolean) => void;
   // todo
-  onSort: (col: ColumnsWithType<T> & { colSpan: number }, order: 'asc' | 'desc') => void;
+  onSort: (col: ColumnType<T>, order: 'asc' | 'desc', columnKey: React.Key) => void;
+  // onSort: (col: ColumnsWithType<T> & { colSpan: number }, order: 'asc' | 'desc') => void;
   renderSorter: (params: {
     activeAsc: boolean;
     activeDesc: boolean;
@@ -72,7 +74,7 @@ function Thead<T>(props: TheadProps<T>) {
     bordered,
     checked,
     columns,
-    sorterState,
+    sorterStates,
     filterStates,
     expandable,
     // scrollLeft,
@@ -204,7 +206,7 @@ function Thead<T>(props: TheadProps<T>) {
         checked,
         bordered,
         style: styles,
-        sorterState,
+        sorterStates,
         renderSorter,
         filterStates,
       } as ThProps<T>;
@@ -249,7 +251,7 @@ function Thead<T>(props: TheadProps<T>) {
     [
       checked,
       bordered,
-      sorterState,
+      sorterStates,
       renderSorter,
       filterStates,
       rowSelection,
