@@ -60,7 +60,7 @@ export interface RowSelectionType<T> {
   onSelectAll?: (selected: boolean, selectedRows: T[], changeRows: T[]) => void;
 }
 
-export interface BaseExpandableType<T> {
+export interface BaseExpandable<T> {
   /** 初始时，是否展开所有行 */
   defaultExpandAllRows?: boolean;
   /** 默认展开的行 */
@@ -77,7 +77,7 @@ export interface BaseExpandableType<T> {
   onExpand?: (expanded: boolean, record: T) => void;
 }
 
-export interface ExpandableType<T> extends BaseExpandableType<T> {
+export interface Expandable<T> extends BaseExpandable<T> {
   /** 自定义展开列表头 */
   columnTitle?: React.ReactNode;
   /** 自定义展开列宽度 */
@@ -88,6 +88,13 @@ export interface ExpandableType<T> extends BaseExpandableType<T> {
   expandedRowClassName?: (record: T, index: number) => string;
   /** 设置是否允许行展开 */
   rowExpandable?: (record: T) => boolean;
+}
+
+export interface TreeExpandable<T> extends BaseExpandable<T> {
+  /** 树形数据每层的缩进 */
+  indentSize?: number;
+  /** 展开图标所在列名 */
+  treeColumnsName?: string;
 }
 
 export type ColumnType<T> = {

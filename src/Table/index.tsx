@@ -6,6 +6,8 @@ import useSorter from '../hooks/useSorter';
 import useFilter from '../hooks/useFilter';
 import useSelection from '../hooks/useSelection';
 import usePagination from '../hooks/usePagination';
+import useTreeExpand from '../hooks/useTreeExpand';
+import useFlattenData from '../hooks/useFlattenData';
 import Thead from '../Thead';
 import Tbody from '../Tbody';
 import VirtualBody from '../VirtualBody';
@@ -37,7 +39,8 @@ import type {
   ColumnsType,
   ColumnType,
   RowSelectionType,
-  ExpandableType,
+  Expandable,
+  TreeExpandable,
   ColumnGroupType,
   PrivateColumnsType,
   PrivateColumnType,
@@ -137,7 +140,7 @@ export interface TableProps<T> {
   ) => void;
   /** 表格行是否可选择配置项 todo header 需要表头空一行 */
   rowSelection?: RowSelectionType<T>;
-  /** 自定义排序图标 */
+  /** 自定义排序图标 todo 废弃 */
   renderSorter: (params: {
     activeAsc: boolean;
     activeDesc: boolean;
@@ -155,9 +158,9 @@ export interface TableProps<T> {
   /** 筛选事件 */
   onFilter?: (filterInfo: Record<React.Key, React.Key[]>) => void;
   /** 配置展开属性 todo header 需要表头空一行 */
-  expandable?: ExpandableType<T>;
+  expandable?: Expandable<T>;
   /** 配置树形数据属性 */
-  treeProps?: TreeExpandableType<T>;
+  treeProps?: TreeExpandable<T>;
 }
 // todo 还未测试列宽设为百分比的情况
 // todo bug columnWidth: '160' 不起作用
@@ -290,6 +293,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
   }, [rowSelection?.selectedRowKeys, rowSelection?.defaultSelectedRowKeys]);
 
+  const flattenRecords = useFlattenData(dataSource);
+
   const [mergeColumns, fixedColumns, flattenColumns, updateMergeColumns, initMergeColumns] =
     useColumns(columns, rowSelection, expandable);
 
@@ -314,6 +319,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const [sorterStates, updateSorterStates] = useSorter(mergeColumns);
 
   const [currentPage, pageSize, updateCurrentPage, updatePageSize] = usePagination(pagination);
+
+  const [treeExpandKeys, handleTreeExpand] = useTreeExpand(flattenRecords, getRecordKey, treeProps);
 
   const resizeLineRef = useRef<HTMLDivElement>(null);
   const tableContainer = useRef<HTMLDivElement>(null);
@@ -726,6 +733,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   //   return sorter;
   // });
 
+  // todo bug 没有考虑树形中children data 的排序 过滤
   const totalData = useMemo(() => {
     let records: T[] = [...dataSource];
     filterStates.forEach((filterState) => {
@@ -740,7 +748,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         return result;
       });
     });
-    // console.log(records);
 
     sorterStates
       .sort((a, b) => {
@@ -812,16 +819,16 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // });
 
   // 1.测试列表-分页情况下 展开的也是只展开当前页的
-  // todo bug 如果分页后也是全选的话 是不是没有treeExpandKeys
-  const [treeExpandKeys, setTreeExpandKeys] = useState<(string | number)[]>(() => {
-    if (
-      treeProps?.defaultExpandAllRows &&
-      !(treeProps?.defaultExpandedRowKeys || treeProps?.expandedRowKeys)
-    ) {
-      return currPageKeys;
-    }
-    return treeProps?.expandedRowKeys || treeProps?.defaultExpandedRowKeys || [];
-  });
+  // todo bug 如果分页后也是全选的话 是不是没有treeExpandKeys 这里应该针对所有数据进行操作
+  // const [treeExpandKeys, setTreeExpandKeys] = useState<(string | number)[]>(() => {
+  //   if (
+  //     treeProps?.defaultExpandAllRows &&
+  //     !(treeProps?.defaultExpandedRowKeys || treeProps?.expandedRowKeys)
+  //   ) {
+  //     return currPageKeys;
+  //   }
+  //   return treeProps?.expandedRowKeys || treeProps?.defaultExpandedRowKeys || [];
+  // });
 
   const getTreeChildrenData = useCallback(
     (parent: T) => {
@@ -856,7 +863,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     },
     [cachePosition, rowHeight],
   );
-
+  // todo 应该是基于list 进行获取所有records keys
   const list = useMemo(() => {
     const records: T[] = [];
 
@@ -1192,13 +1199,16 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   // 2.待测试--分页的话只勾选当页的数据
   // todo 待优化 currPageRecords currPageKeys
+  // todo 选择的keys 和records 如果存在分页的话则应该选择所有的页面的 要拼接 但是currPageRecords 这里应该是指当页所有选择的数据包括展开的
+  // todo currPageRecords 这里应该是指当页所有选择的数据包括展开的
   const handleSelectAll = (selected: boolean) => {
     let selectedRecords: T[];
     let finalSelectedKeys: React.Key[];
 
     if (selected) {
-      const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } =
-        fillMissSelectedKeys(currPageKeys);
+      const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(
+        Array.from(new Set([...selectedKeys, ...currPageKeys])),
+      );
       finalSelectedKeys = checkedKeys;
       selectedRecords = [...checkedKeyRecordMap.values()];
       updateHalfSelectedKeys(halfCheckedKeys);
@@ -1210,6 +1220,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
     if (rowSelection?.onSelectAll) {
       // 3. 待测试--分页情况下currPageRecords 也是当前current页面操作的数据
+      // todo currPageRecords 这里应该是指当页所有选择的数据包括展开的
       rowSelection.onSelectAll(selected, selectedRecords, currPageRecords);
     }
     if (rowSelection?.onChange) {
@@ -1247,17 +1258,17 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     // }
   };
 
-  const handleTreeExpand = (treeExpanded: boolean, record: T, recordKey: number | string) => {
-    if (!treeProps?.expandedRowKeys) {
-      setTreeExpandKeys((prev) => {
-        const isExist = prev.indexOf(recordKey) >= 0;
-        return isExist ? prev.filter((p) => p !== recordKey) : [...prev, recordKey];
-      });
-    }
-    if (treeProps?.onExpand) {
-      treeProps.onExpand(treeExpanded, record);
-    }
-  };
+  // const handleTreeExpand = (treeExpanded: boolean, record: T, recordKey: number | string) => {
+  //   if (!treeProps?.expandedRowKeys) {
+  //     setTreeExpandKeys((prev) => {
+  //       const isExist = prev.indexOf(recordKey) >= 0;
+  //       return isExist ? prev.filter((p) => p !== recordKey) : [...prev, recordKey];
+  //     });
+  //   }
+  //   if (treeProps?.onExpand) {
+  //     treeProps.onExpand(treeExpanded, record);
+  //   }
+  // };
 
   const handleSortChange = (col: ColumnType<T>, order: 'asc' | 'desc', columnKey: React.Key) => {
     const index = sorterStates.findIndex((sorterState) => sorterState.key === columnKey);
@@ -1542,11 +1553,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   }, [selectionType, rowSelection?.selectedRowKeys, fillMissSelectedKeys]);
 
-  useEffect(() => {
-    if (treeProps?.expandedRowKeys) {
-      setTreeExpandKeys(treeProps.expandedRowKeys);
-    }
-  }, [treeProps]);
+  // useEffect(() => {
+  //   if (treeProps?.expandedRowKeys) {
+  //     setTreeExpandKeys(treeProps.expandedRowKeys);
+  //   }
+  // }, [treeProps]);
 
   // todo columns 主要是过滤排序吧
   // useEffect(() => {
