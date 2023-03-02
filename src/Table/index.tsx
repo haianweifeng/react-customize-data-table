@@ -5,6 +5,7 @@ import useColumns from '../hooks/useColumns';
 import useSorter from '../hooks/useSorter';
 import useFilter from '../hooks/useFilter';
 import useSelection from '../hooks/useSelection';
+import usePagination from '../hooks/usePagination';
 import Thead from '../Thead';
 import Tbody from '../Tbody';
 import VirtualBody from '../VirtualBody';
@@ -311,6 +312,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const [filterStates, updateFilterStates] = useFilter(mergeColumns);
 
   const [sorterStates, updateSorterStates] = useSorter(mergeColumns);
+
+  const [currentPage, pageSize, updateCurrentPage, updatePageSize] = usePagination(pagination);
 
   const resizeLineRef = useRef<HTMLDivElement>(null);
   const tableContainer = useRef<HTMLDivElement>(null);
@@ -681,13 +684,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   //   return getFlatColumns(columnsWithFixed);
   // }, [getFlatColumns, columnsWithFixed]);
 
-  const [currentPage, setCurrentPage] = useState(() => {
-    return pagination?.current || pagination?.defaultCurrent || 1;
-  });
-
-  const [pageSize, setPageSize] = useState(() => {
-    return pagination?.pageSize || pagination?.defaultPageSize || 10;
-  });
+  // const [currentPage, setCurrentPage] = useState(() => {
+  //   return pagination?.current || pagination?.defaultCurrent || 1;
+  // });
+  //
+  // const [pageSize, setPageSize] = useState(() => {
+  //   return pagination?.pageSize || pagination?.defaultPageSize || 10;
+  // });
 
   // const [filterState, setFilterState] = useState<FilterStateType<T>[]>(() => {
   //   const filter: FilterStateType<T>[] = [];
@@ -1385,7 +1388,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         onFilter(filterInfo);
       }
       if (pagination && !('current' in pagination)) {
-        setCurrentPage(1);
+        // setCurrentPage(1);
+        updateCurrentPage(1);
       }
       if (typeof pagination?.onChange === 'function') {
         pagination.onChange(1, pageSize);
@@ -1453,16 +1457,17 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const handlePaginationChange = (current: number, size: number) => {
     // todo current 条件是否成立
     if (pagination && !('current' in pagination)) {
-      setCurrentPage(current);
+      updateCurrentPage(1);
+      // setCurrentPage(current);
     }
-    if (pagination && 'pageSize' in pagination) {
-      setPageSize(size);
+    if (pagination && !('pageSize' in pagination)) {
+      updatePageSize(size);
+      // setPageSize(size);
     }
     if (typeof pagination?.onChange === 'function') {
       pagination.onChange(current, size);
     }
   };
-  // console.log(`scrollTop: ${scrollTop}`);
 
   const handleScrollVertical = (offset: number, availableSize: number) => {
     setScrollTop((prev) => {
@@ -1490,14 +1495,10 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     //   setScrollTop(offset);
     // }
   };
-  // console.log(`startRowIndex: ${startRowIndex}`);
-  // console.log(`scrollTop: ${scrollTop}`)
 
   const handleScrollHorizontal = (offset: number) => {
-    // console.log(offset);
     setScrollLeft(offset);
   };
-  // console.log(cachePosition);
 
   useEffect(() => {
     const positions = dataSource.map((d, index) => {
@@ -1511,14 +1512,14 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     setCachePosition(positions);
   }, [dataSource]);
 
-  useEffect(() => {
-    if (pagination && 'current' in pagination) {
-      setCurrentPage(pagination?.current || 1);
-    }
-    if (pagination && 'pageSize' in pagination) {
-      setPageSize(pagination?.pageSize || 10);
-    }
-  }, [pagination]);
+  // useEffect(() => {
+  //   if (pagination && 'current' in pagination) {
+  //     setCurrentPage(pagination?.current || 1);
+  //   }
+  //   if (pagination && 'pageSize' in pagination) {
+  //     setPageSize(pagination?.pageSize || 10);
+  //   }
+  // }, [pagination]);
 
   // todo rowSelection 待测试
   useEffect(() => {
