@@ -35,6 +35,27 @@ function useFilter<T extends { key?: React.Key; children?: T[] }>(
     setFilterStates(newFilterStates);
   }, []);
 
+  const getFilterData = useCallback(
+    (data: T[]) => {
+      if (!filterStates.length) return data;
+      let newData: T[] = [];
+      filterStates.map((filterState) => {
+        newData = data.filter((d) => {
+          let result = !filterState.filteredValue.length;
+          for (let i = 0; i < filterState.filteredValue.length; i++) {
+            if (typeof filterState?.filterMethod === 'function') {
+              result = filterState.filterMethod(filterState.filteredValue[i], d);
+              if (result) break;
+            }
+          }
+          return result;
+        });
+      });
+      return newData;
+    },
+    [filterStates],
+  );
+
   useEffect(() => {
     const findExistControlledFilterValue = (columns: PrivateColumnsType<T>) => {
       for (let i = 0; i < columns.length; i++) {
@@ -58,6 +79,6 @@ function useFilter<T extends { key?: React.Key; children?: T[] }>(
     }
   }, [mergeColumns]);
 
-  return [filterStates, updateFilterStates] as const;
+  return [filterStates, updateFilterStates, getFilterData] as const;
 }
 export default useFilter;

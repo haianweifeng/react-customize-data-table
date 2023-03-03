@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import classnames from 'classnames';
 import { getRowKey } from '../utils/util';
 import type { TableProps } from '../Table';
@@ -402,6 +402,21 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
     });
   };
 
+  const flatRecords = useCallback(
+    (data: T[]) => {
+      const records: T[] = [];
+      data.map((d) => {
+        records.push(d);
+        const recordKey = getRecordKey(d);
+        if (d.children && d.children.length && treeExpandKeys.indexOf(recordKey) >= 0) {
+          records.push(...flatRecords(d.children));
+        }
+      });
+      return records;
+    },
+    [treeExpandKeys, getRecordKey],
+  );
+
   const renderTr = (rowData: T, rowIndex: number) => {
     const recordKey = getRecordKey(rowData);
     // const key = getRowKey(rowKey, rowData);
@@ -463,7 +478,7 @@ function Tbody<T extends { children?: T[] }>(props: TbodyProps<T>) {
           </td>
         </tr>
       ) : null}
-      {dataSource.map((d, i: number) => renderTr(d, i + startRowIndex))}
+      {flatRecords(dataSource).map((d, i: number) => renderTr(d, i + startRowIndex))}
     </tbody>
   );
 }

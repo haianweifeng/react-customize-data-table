@@ -37,6 +37,39 @@ function useSorter<T extends { key?: React.Key; children?: T[] }>(
     setSorterStates(newSorterStates);
   }, []);
 
+  const getSortData = useCallback(
+    (data: T[]) => {
+      let records: T[] = [...data];
+      if (!sorterStates.length) return records;
+      sorterStates
+        .sort((a, b) => {
+          const a1 = (a.weight || 0).toString();
+          const b1 = (b.weight || 0).toString();
+          return a1.localeCompare(b1);
+        })
+        .forEach((sorterState) => {
+          records.sort((a, b) => {
+            const compareResult = sorterState.sorter(a, b);
+            if (compareResult !== 0) {
+              return sorterState.order === 'asc' ? compareResult : -compareResult;
+            }
+            return compareResult;
+          });
+        });
+      records = records.map((record) => {
+        if (record.children && record.children.length) {
+          return {
+            ...record,
+            children: getSortData(record.children),
+          };
+        }
+        return record;
+      });
+      return records;
+    },
+    [sorterStates],
+  );
+
   useEffect(() => {
     const findExistControlledSortOrder = (columns: PrivateColumnsType<T>) => {
       for (let i = 0; i < columns.length; i++) {
@@ -60,6 +93,6 @@ function useSorter<T extends { key?: React.Key; children?: T[] }>(
     }
   }, [mergeColumns]);
 
-  return [sorterStates, updateSorterStates] as const;
+  return [sorterStates, updateSorterStates, getSortData] as const;
 }
 export default useSorter;
