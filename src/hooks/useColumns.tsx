@@ -4,7 +4,7 @@ import type {
   ColumnType,
   ColumnsType,
   RowSelectionType,
-  ExpandableType,
+  Expandable,
   PrivateColumnGroupType,
   PrivateColumnType,
   PrivateColumnsType,
@@ -15,7 +15,7 @@ import { SELECTION_EXPAND_COLUMN_WIDTH } from '../utils/constant';
 function useColumns<T>(
   originColumns: ColumnsType<T>,
   rowSelection?: RowSelectionType<T>,
-  expandable?: ExpandableType<T>,
+  expandable?: Expandable<T>,
 ) {
   // todo 待测试如果是其中一层children 设置了fixed
   const existFixedInColumn = useCallback(
@@ -121,9 +121,9 @@ function useColumns<T>(
 
   const [mergeColumns, setMergeColumns] = useState<PrivateColumnsType<T>>(initMergeColumns);
 
-  useEffect(() => {
-    setMergeColumns(initMergeColumns);
-  }, [initMergeColumns]);
+  // useEffect(() => {
+  //   setMergeColumns(initMergeColumns);
+  // }, [initMergeColumns]);
 
   const fixedColumns = useMemo(() => {
     let leftIndex = -1;
@@ -189,6 +189,7 @@ function useColumns<T>(
     flattenColumns,
     updateMergeColumns,
     initMergeColumns,
+    flatColumns,
   ] as const;
 }
 export default useColumns;

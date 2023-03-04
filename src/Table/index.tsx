@@ -292,8 +292,14 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return flatRecords(dataSource);
   }, [dataSource]);
 
-  const [mergeColumns, fixedColumns, flattenColumns, updateMergeColumns, initMergeColumns] =
-    useColumns(columns, rowSelection, expandable);
+  const [
+    mergeColumns,
+    fixedColumns,
+    flattenColumns,
+    updateMergeColumns,
+    initMergeColumns,
+    flatColumns,
+  ] = useColumns(columns, rowSelection, expandable);
 
   const [
     selectedKeys,
@@ -617,12 +623,15 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   //   return flatColumns;
   // }, [flatColumns, virtualContainerWidth, width, containerWidth]);
 
+  // todo 考虑多级表头问题
   const handleResize = (targetColumns: PrivateColumnsType<T>) => {
     if (tbodyRef.current) {
       let widthSum = 0;
       let noWidthColumnsCount = 0;
       const noMaxWidthColumnIndexs: number[] = [];
       const tbodyWidth = width || tbodyRef.current.offsetWidth;
+
+      const flattenTargetColumns = flatColumns(targetColumns);
 
       targetColumns.map((column, index) => {
         if (column.width) {
@@ -687,7 +696,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   useEffect(() => {
     handleResize(initMergeColumns);
   }, [initMergeColumns]);
-  // console.log(`scrollWidth: ${scrollWidth}`);
   // console.log(mergeColumns);
 
   // const converToPixel = useCallback((val: string | number | undefined) => {

@@ -38,20 +38,20 @@ function useFilter<T extends { key?: React.Key; children?: T[] }>(
   const getFilterData = useCallback(
     (data: T[]) => {
       if (!filterStates.length) return data;
-      let newData: T[] = [];
-      filterStates.map((filterState) => {
-        newData = data.filter((d) => {
+      let records: T[] = [...data];
+      filterStates.forEach((filterState) => {
+        records = records.filter((r) => {
           let result = !filterState.filteredValue.length;
           for (let i = 0; i < filterState.filteredValue.length; i++) {
             if (typeof filterState?.filterMethod === 'function') {
-              result = filterState.filterMethod(filterState.filteredValue[i], d);
+              result = filterState.filterMethod(filterState.filteredValue[i], r);
               if (result) break;
             }
           }
           return result;
         });
       });
-      return newData;
+      return records;
     },
     [filterStates],
   );
