@@ -28,7 +28,7 @@ const App = () => {
     {
       title: 'Address',
       dataIndex: 'address',
-      width: '507px',
+      // width: '507px',
     },
   ];
 

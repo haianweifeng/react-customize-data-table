@@ -189,7 +189,6 @@ function useColumns<T>(
     flattenColumns,
     updateMergeColumns,
     initMergeColumns,
-    flatColumns,
   ] as const;
 }
 export default useColumns;
