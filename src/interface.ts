@@ -56,6 +56,8 @@ export interface FilterMenusType {
   value: string;
 }
 
+export type FilterMenus = { label: string; value: string };
+
 export interface FilterStateType<T> {
   filteredValue: string[];
   dataIndex: string;

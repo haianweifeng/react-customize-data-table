@@ -38,7 +38,7 @@ import type {
 import type {
   ColumnsType,
   ColumnType,
-  RowSelectionType,
+  RowSelection,
   Expandable,
   TreeExpandable,
   ColumnGroupType,
@@ -147,14 +147,14 @@ export interface TableProps<T> {
     event: Event,
   ) => void;
   /** 表格行是否可选择配置项 todo header 需要表头空一行 */
-  rowSelection?: RowSelectionType<T>;
-  /** 自定义排序图标 todo 废弃 */
-  renderSorter: (params: {
-    activeAsc: boolean;
-    activeDesc: boolean;
-    triggerAsc: () => void;
-    triggerDesc: () => void;
-  }) => React.ReactNode;
+  rowSelection?: RowSelection<T>;
+  // /** 自定义排序图标 todo 废弃 */
+  // renderSorter: (params: {
+  //   activeAsc: boolean;
+  //   activeDesc: boolean;
+  //   triggerAsc: () => void;
+  //   triggerDesc: () => void;
+  // }) => React.ReactNode;
   // /** 排序取消事件 */
   // onSortCancel?: (col: ColumnsType<T>, order: 'asc' | 'desc') => void;
   /** 排序事件 */
@@ -192,7 +192,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     expandable,
     rowSelection,
     treeProps,
-    renderSorter,
     onSort,
     onFilter,
     pagination,
@@ -284,9 +283,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const selectionType = useMemo(() => {
     const column = columns.find(
-      (column) => column?.type === 'checkbox' || column?.type === 'radio',
+      (column) => 'type' in column && (column?.type === 'checkbox' || column?.type === 'radio'),
     );
-    if (column) return column.type as 'checkbox' | 'radio';
+    if (column) return (column as ColumnType<T>).type as 'checkbox' | 'radio';
     return rowSelection ? rowSelection?.type || 'checkbox' : undefined;
   }, [columns, rowSelection?.type]);
 
@@ -321,7 +320,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const [filterStates, updateFilterStates, getFilterData] = useFilter(mergeColumns);
 
-  const [sorterStates, updateSorterStates, getSortData] = useSorter(mergeColumns);
+  const [sorterStates, getSortData, handleSortChange] = useSorter(mergeColumns, onSort);
 
   const [currentPage, pageSize, updateCurrentPage, updatePageSize] = usePagination(pagination);
 
@@ -1017,111 +1016,122 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     // }
   };
 
-  const handleSortChange = (col: ColumnType<T>, order: 'asc' | 'desc', columnKey: React.Key) => {
-    const index = sorterStates.findIndex((sorterState) => sorterState.key === columnKey);
-    const isCancel = index >= 0 && sorterStates[index].order === order;
-
-    if (isCancel) {
-      const filterResult = sorterStates.filter((sorterState) => sorterState.key !== columnKey);
-      if (!('sortOrder' in col)) {
-        updateSorterStates(filterResult);
-      }
-      // setSorterState(filterResult);
-      // setSorterState((prev) => {
-      //   return prev.filter((p) => p.dataIndex !== col.dataIndex);
-      // });
-      // if (typeof onSortCancel === 'function') {
-      //   onSortCancel(omit(col, ['colSpan', 'type']) as ColumnsType<T>, order);
-      // }
-      // const sortInfos = filterResult.map((f) => ({ field: f.dataIndex, order: f.order }));
-      onSort &&
-        onSort({
-          column: col,
-          order: null,
-          field: col.dataIndex,
-        });
-      return;
-    }
-    if (typeof col?.sorter === 'object') {
-      if (index >= 0) {
-        const copyList = [...sorterStates];
-        const item = sorterStates[index];
-        item.order = order;
-        copyList.splice(index, 1, item);
-        if (!('sortOrder' in col)) {
-          updateSorterStates(copyList);
-        }
-        // setSorterState(copyList);
-        // onSort && onSort(copyList.map((c) => ({ field: c.dataIndex, order: c.order })));
-        // onSort && onSort({
-        //   column: col,
-        //   order,
-        //   field: col.dataIndex
-        // });
-      } else {
-        // const list =
-        //   sorterStates.length === 1 && sorterStates[0]?.weight === undefined ? [] : [...sorterStates];
-        // list.push({
-        //   key: columnKey,
-        //   order,
-        //   sorter: (col.sorter as Sorter<T>).compare,
-        //   weight: (col.sorter as Sorter<T>).weight,
-        // });
-        // // list.push({
-        // //   order,
-        // //   dataIndex: col.dataIndex,
-        // //   sorter: (col.sorter as SorterType<T>).compare,
-        // //   weight: (col.sorter as SorterType<T>).weight,
-        // // });
-        // list.sort((a, b) => {
-        //   const a1 = (a.weight || 0).toString();
-        //   const b1 = (b.weight || 0).toString();
-        //   return a1.localeCompare(b1);
-        // });
-        // if (!('sortOrder' in col)) {
-        //   updateSorterStates(list);
-        // }
-        // // setSorterState(list);
-        // // const sortInfo = list.map((l) => {
-        // //   return { field: l.dataIndex, order: l.order };
-        // // });
-        // // onSort && onSort(sortInfo);
-      }
-      onSort &&
-        onSort({
-          column: col,
-          order,
-          field: col.dataIndex,
-        });
-      return;
-    }
-    if (typeof col?.sorter === 'function') {
-      if (!('sortOrder' in col)) {
-        updateSorterStates([
-          {
-            key: columnKey,
-            order,
-            sorter: col.sorter as (rowA: T, rowB: T) => number,
-          },
-        ]);
-      }
-      // setSorterState([
-      //   {
-      //     order,
-      //     dataIndex: col.dataIndex,
-      //     sorter: col.sorter as (rowA: T, rowB: T) => number,
-      //   },
-      // ]);
-      // onSort && onSort([{ field: col.dataIndex, order }]);
-
-      onSort &&
-        onSort({
-          column: col,
-          order,
-          field: col.dataIndex,
-        });
-    }
-  };
+  // const handleSortChange = (col: ColumnType<T>, order: 'asc' | 'desc', columnKey: React.Key) => {
+  //   const index = sorterStates.findIndex((sorterState) => sorterState.key === columnKey);
+  //   const isCancel = index >= 0 && sorterStates[index].order === order;
+  //
+  //   if (isCancel) {
+  //     const filterResult = sorterStates.filter((sorterState) => sorterState.key !== columnKey);
+  //     if (!('sortOrder' in col)) {
+  //       updateSorterStates(filterResult);
+  //     }
+  //     // setSorterState(filterResult);
+  //     // setSorterState((prev) => {
+  //     //   return prev.filter((p) => p.dataIndex !== col.dataIndex);
+  //     // });
+  //     // if (typeof onSortCancel === 'function') {
+  //     //   onSortCancel(omit(col, ['colSpan', 'type']) as ColumnsType<T>, order);
+  //     // }
+  //     // const sortInfos = filterResult.map((f) => ({ field: f.dataIndex, order: f.order }));
+  //     onSort &&
+  //       onSort({
+  //         column: col,
+  //         order: null,
+  //         field: col.dataIndex,
+  //       });
+  //     return;
+  //   }
+  //   if (typeof col?.sorter === 'object') {
+  //     if (index >= 0) {
+  //       const copyList = [...sorterStates];
+  //       const item = sorterStates[index];
+  //       item.order = order;
+  //       copyList.splice(index, 1, item);
+  //       if (!('sortOrder' in col)) {
+  //         updateSorterStates(copyList);
+  //       }
+  //       // setSorterState(copyList);
+  //       // onSort && onSort(copyList.map((c) => ({ field: c.dataIndex, order: c.order })));
+  //       // onSort && onSort({
+  //       //   column: col,
+  //       //   order,
+  //       //   field: col.dataIndex
+  //       // });
+  //     } else {
+  //       const newSorterStates =
+  //         sorterStates.length === 1 && sorterStates[0]?.weight === undefined ? [] : [...sorterStates];
+  //       newSorterStates.push({
+  //         order,
+  //         key: columnKey,
+  //         sorter: (col.sorter as Sorter<T>).compare,
+  //         weight: (col.sorter as Sorter<T>).weight,
+  //       });
+  //       if (!('sortOrder' in col)) {
+  //         updateSorterStates(newSorterStates);
+  //       }
+  //       // const list =
+  //       //   sorterStates.length === 1 && sorterStates[0]?.weight === undefined ? [] : [...sorterStates];
+  //       // list.push({
+  //       //   key: columnKey,
+  //       //   order,
+  //       //   sorter: (col.sorter as Sorter<T>).compare,
+  //       //   weight: (col.sorter as Sorter<T>).weight,
+  //       // });
+  //       // // list.push({
+  //       // //   order,
+  //       // //   dataIndex: col.dataIndex,
+  //       // //   sorter: (col.sorter as SorterType<T>).compare,
+  //       // //   weight: (col.sorter as SorterType<T>).weight,
+  //       // // });
+  //       // list.sort((a, b) => {
+  //       //   const a1 = (a.weight || 0).toString();
+  //       //   const b1 = (b.weight || 0).toString();
+  //       //   return a1.localeCompare(b1);
+  //       // });
+  //       // if (!('sortOrder' in col)) {
+  //       //   updateSorterStates(list);
+  //       // }
+  //       // // setSorterState(list);
+  //       // // const sortInfo = list.map((l) => {
+  //       // //   return { field: l.dataIndex, order: l.order };
+  //       // // });
+  //       // // onSort && onSort(sortInfo);
+  //     }
+  //     onSort &&
+  //       onSort({
+  //         column: col,
+  //         order,
+  //         field: col.dataIndex,
+  //       });
+  //     return;
+  //   }
+  //   if (typeof col?.sorter === 'function') {
+  //     if (!('sortOrder' in col)) {
+  //       updateSorterStates([
+  //         {
+  //           key: columnKey,
+  //           order,
+  //           sorter: col.sorter as (rowA: T, rowB: T) => number,
+  //         },
+  //       ]);
+  //     }
+  //     // setSorterState([
+  //     //   {
+  //     //     order,
+  //     //     dataIndex: col.dataIndex,
+  //     //     sorter: col.sorter as (rowA: T, rowB: T) => number,
+  //     //   },
+  //     // ]);
+  //     // onSort && onSort([{ field: col.dataIndex, order }]);
+  //
+  //     onSort &&
+  //       onSort({
+  //         column: col,
+  //         order,
+  //         field: col.dataIndex,
+  //       });
+  //   }
+  // };
 
   const handleFilterChange = (
     col: PrivateColumnType<T>,
@@ -1811,35 +1821,19 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           'table-head-gutter': showScrollbarY,
         })}
       >
-        <table
-          style={{
-            width: scrollWidth,
-            // transform: `translate(-${scrollLeft}px, 0)`,
-          }}
-        >
-          <Colgroup
-            // colWidths={colWidths}
-            // columns={columnsWithWidth}
-            columns={flattenColumns}
-          />
+        <table style={{ width: scrollWidth }}>
+          <Colgroup columns={flattenColumns} />
           <Thead
             bordered
-            checked={checked}
             locale={locale}
+            checked={checked}
             columns={fixedColumns}
-            // columns={columnsWithFixed}
-            // scrollLeft={scrollLeft}
-            // offsetRight={offsetRight}
             sorterStates={sorterStates}
             filterStates={filterStates}
-            // filterState={filterState}
-            expandable={expandable}
-            rowSelection={rowSelection}
-            renderSorter={renderSorter}
-            headerCellClassName={headerCellClassName}
             headerCellStyle={headerCellStyle}
-            onSelectAll={handleSelectAll}
+            headerCellClassName={headerCellClassName}
             onSort={handleSortChange}
+            onSelectAll={handleSelectAll}
             onFilterChange={handleFilterChange}
             onMouseDown={handleHeaderMouseDown}
           />

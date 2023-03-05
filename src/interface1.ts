@@ -1,5 +1,4 @@
 import React from 'react';
-import { FilterStateType } from './interface';
 
 export type FilterState<T> = {
   key: React.Key;
@@ -16,7 +15,9 @@ export type SortState<T> = {
 
 export type CellType = { colSpan?: number; rowSpan?: number };
 
-export type FilterMenusType = { label: string; value: string };
+export type FilterMenus = { label: string; value: string };
+
+export type ResizeInfo = { startPosX: number; resizingRect: DOMRect };
 
 export type Sorter<T> = {
   compare: (rowA: T, rowB: T) => number;
@@ -32,7 +33,7 @@ export type TooltipType = {
   renderTooltip: (trigger: React.ReactNode, tip: React.ReactNode) => React.ReactNode;
 };
 
-export interface RowSelectionType<T> {
+export interface RowSelection<T> {
   /** 自定义列表选择框标题 */
   columnTitle?: React.ReactNode;
   /** 自定义列表选择框宽度 todo 不支持百分比 */
@@ -154,9 +155,9 @@ export type ColumnType<T> = {
   /** 自定义 filter 图标 */
   filterIcon?: (filtered: boolean) => React.ReactNode;
   /** 筛选菜单项是否可搜索 */
-  filterSearch?: (value: string, record: FilterMenusType) => boolean | boolean;
+  filterSearch?: (value: string, record: FilterMenus) => boolean | boolean;
   /** 表头的筛选菜单项 */
-  filters?: FilterMenusType[];
+  filters?: FilterMenus[];
   // /** 可以自定义筛选菜单 */
   // filterDropdown?: () => React.ReactNode;
   // /** 用于控制自定义筛选菜单是否可见 */
@@ -167,7 +168,9 @@ export type ColumnType<T> = {
   // onFilterDropdownOpenChange?: (open: boolean) => any;
 };
 
-export type ColumnGroupType<T> = Omit<ColumnType<T>, 'dataIndex'> & { children: ColumnsType<T> };
+export type ColumnGroupType<T> = Omit<ColumnType<T>, 'dataIndex' | 'type'> & {
+  children: Omit<ColumnsType<T>, 'type'>;
+};
 
 export type ColumnsType<T> = (ColumnGroupType<T> | ColumnType<T>)[];
 

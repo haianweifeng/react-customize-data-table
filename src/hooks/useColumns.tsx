@@ -1,20 +1,19 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import omit from 'omit.js';
 import type {
   ColumnType,
   ColumnsType,
-  RowSelectionType,
+  RowSelection,
   Expandable,
   PrivateColumnGroupType,
   PrivateColumnType,
   PrivateColumnsType,
 } from '../interface1';
 import { SELECTION_EXPAND_COLUMN_WIDTH } from '../utils/constant';
-// todo 考虑过滤值发生变化后导致列变化 但是目前没有更新列
 // todo 考虑如果是children的列不能再设置type
 function useColumns<T>(
   originColumns: ColumnsType<T>,
-  rowSelection?: RowSelectionType<T>,
+  rowSelection?: RowSelection<T>,
   expandable?: Expandable<T>,
 ) {
   // todo 待测试如果是其中一层children 设置了fixed
@@ -65,7 +64,6 @@ function useColumns<T>(
   }, []);
   // todo 考虑expand checkbox radio 的render
   const getMergeColumns = useCallback(() => {
-    console.log('gegeg');
     let existExpand = false;
     let existSelection = false;
     const selectionColumn: ColumnType<T> = {};
@@ -75,28 +73,27 @@ function useColumns<T>(
     if (rowSelection) {
       selectionColumn.key = 'selection';
       selectionColumn.type = rowSelection.type || 'checkbox';
-      selectionColumn.width =
-        parseInt(`${rowSelection.columnWidth}`, 10) || SELECTION_EXPAND_COLUMN_WIDTH;
+      selectionColumn.width = rowSelection.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH;
       selectionColumn.title = rowSelection?.columnTitle || '';
     }
 
     originColumns.map((column) => {
-      if (column?.type === 'checkbox' || column?.type === 'radio') {
+      if ('type' in column && (column?.type === 'checkbox' || column?.type === 'radio')) {
         existSelection = true;
         mergeColumns.push({ ...column, ...omit(selectionColumn, ['type']) });
       }
-      if (column?.type === 'expand') {
+      if ('type' in column && column?.type === 'expand') {
         existExpand = typeof column?.render === 'function';
         if (expandable && (expandable?.expandedRowRender || typeof column?.render === 'function')) {
           mergeColumns.push({
             ...column,
             key: 'expand',
             title: expandable.columnTitle || '',
-            width: parseInt(`${expandable?.columnWidth}`, 10) || SELECTION_EXPAND_COLUMN_WIDTH,
+            width: expandable?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
           });
         }
       } else {
-        mergeColumns.push({ ...column, type: 'default' });
+        mergeColumns.push({ ...column });
       }
     });
 
@@ -104,7 +101,7 @@ function useColumns<T>(
       mergeColumns.unshift({
         type: 'expand',
         key: 'expand',
-        width: parseInt(`${expandable?.columnWidth}`, 10) || SELECTION_EXPAND_COLUMN_WIDTH,
+        width: expandable?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
         title: expandable.columnTitle || '',
       });
     }
@@ -120,10 +117,6 @@ function useColumns<T>(
   }, [getMergeColumns]);
 
   const [mergeColumns, setMergeColumns] = useState<PrivateColumnsType<T>>(initMergeColumns);
-
-  // useEffect(() => {
-  //   setMergeColumns(initMergeColumns);
-  // }, [initMergeColumns]);
 
   const fixedColumns = useMemo(() => {
     let leftIndex = -1;

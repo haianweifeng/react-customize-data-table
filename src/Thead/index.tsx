@@ -2,43 +2,26 @@ import React, { useMemo, useCallback } from 'react';
 import omit from 'omit.js';
 import classnames from 'classnames';
 import type {
-  ColumnsWithType,
-  ColumnsGroupWithType,
-  // ExpandableType,
-  // RowSelectionType,
-  SorterStateType,
-  FilterStateType,
-  ResizeInfoType,
-  // ColumnsType,
-} from '../interface';
-import type {
-  ColumnsType,
-  RowSelectionType,
-  ExpandableType,
+  ResizeInfo,
   ColumnType,
   ColumnGroupType,
   PrivateColumnType,
-  PrivateColumnGroupType,
   PrivateColumnsType,
-  FilterState,
+  PrivateColumnGroupType,
   SortState,
+  FilterState,
 } from '../interface1';
 import Th from '../Th';
 import type { ThProps } from '../Th';
+import { getColumnKey } from '../utils/util';
 
 interface TheadProps<T> {
   bordered: boolean;
-  // scrollLeft: number;
-  // offsetRight: number;
   sorterStates: SortState<T>[];
   filterStates: FilterState<T>[];
   locale: Record<string, string>;
   checked: boolean | 'indeterminate';
-  expandable?: ExpandableType<T>;
-  rowSelection?: RowSelectionType<T>;
   columns: PrivateColumnsType<T>;
-  // columns: ColumnsType<T>;
-  // columns: (ColumnsWithType<T> | ColumnsGroupWithType<T>)[];
   headerCellClassName?: (
     column: ColumnType<T> | ColumnGroupType<T>,
     rowIndex: number,
@@ -50,24 +33,19 @@ interface TheadProps<T> {
     colIndex: number,
   ) => React.CSSProperties | React.CSSProperties;
   onSelectAll: (selected: boolean) => void;
-  // todo
-  onSort: (col: ColumnType<T>, order: 'asc' | 'desc', columnKey: React.Key) => void;
-  // onSort: (col: ColumnsWithType<T> & { colSpan: number }, order: 'asc' | 'desc') => void;
-  renderSorter: (params: {
-    activeAsc: boolean;
-    activeDesc: boolean;
-    triggerAsc: () => void;
-    triggerDesc: () => void;
-  }) => React.ReactNode;
+  onSort: (
+    col: ColumnGroupType<T> | ColumnType<T>,
+    order: 'asc' | 'desc',
+    columnKey: React.Key,
+  ) => void;
   onFilterChange: (
-    col: PrivateColumnType<T>,
+    col: PrivateColumnType<T> | PrivateColumnGroupType<T>,
     filteredValue: React.Key[],
     columnKey: React.Key,
   ) => void;
-  // onMouseDown: (resizeInfo: ResizeInfoType, col: ColumnsWithType<T>, colIndex: number) => void;
-  onMouseDown: (resizeInfo: ResizeInfoType, col: PrivateColumnType<T>, colIndex: number) => void;
+  onMouseDown: (resizeInfo: ResizeInfo, col: PrivateColumnType<T>, colIndex: number) => void;
 }
-
+// todo onHeaderRowEvents
 function Thead<T>(props: TheadProps<T>) {
   const {
     locale,
@@ -76,11 +54,6 @@ function Thead<T>(props: TheadProps<T>) {
     columns,
     sorterStates,
     filterStates,
-    expandable,
-    // scrollLeft,
-    // offsetRight,
-    rowSelection,
-    renderSorter,
     onSelectAll,
     onSort,
     onFilterChange,
@@ -89,7 +62,6 @@ function Thead<T>(props: TheadProps<T>) {
     headerCellStyle,
   } = props;
 
-  // todo 考虑是否需要把ignoreRightBorder 改成表格边框缺少右边框
   const parseHeaderColumns = useCallback(
     (cols: PrivateColumnsType<T>, parentCol?: PrivateColumnGroupType<T>, lastColumn?: boolean) => {
       const headerColumns: PrivateColumnsType<T> = [];
@@ -123,18 +95,18 @@ function Thead<T>(props: TheadProps<T>) {
 
       return headerColumns;
     },
-    [],
+    [bordered],
   );
 
   const computeTrs = useCallback(
-    (cols: PrivateColumnsType<T>, level = 0, trs: React.ReactNode[][]) => {
+    (cols: PrivateColumnsType<T>, rowIndex = 0, trs: React.ReactNode[][]) => {
       for (let i = 0; i < cols.length; i++) {
         const col = cols[i];
-        if (!Array.isArray(trs[level])) {
-          trs[level] = [];
+        if (!Array.isArray(trs[rowIndex])) {
+          trs[rowIndex] = [];
         }
         if ('children' in col && col?.children.length) {
-          computeTrs(col.children, level + 1, trs);
+          computeTrs(col.children, rowIndex + 1, trs);
         }
       }
     },
@@ -148,58 +120,60 @@ function Thead<T>(props: TheadProps<T>) {
     [onSelectAll],
   );
 
-  const createTh = useCallback((thProps: ThProps<T>) => {
-    return <Th {...thProps} key={`${thProps.rowIndex}_${thProps.colIndex}`} />;
+  const renderCell = useCallback((thProps: ThProps<T>) => {
+    return <Th {...thProps} key={thProps.columnKey} />;
   }, []);
 
-  const renderTh = useCallback(
+  const renderCells = useCallback(
     (
-      col: PrivateColumnType<T> | PrivateColumnGroupType<T>,
+      column: PrivateColumnType<T> | PrivateColumnGroupType<T>,
       trs: React.ReactNode[][],
       rowIndex: number,
       colIndex: number,
       pos?: number,
     ) => {
       const totalRows = trs.length;
-      const colClassName = col.className || '';
+      const colClassName = column.className || '';
       const cellClassName =
         typeof headerCellClassName === 'function'
           ? headerCellClassName(
-              omit(col, ['_ignoreRightBorder', '_lastLeftFixed', '_firstRightFixed']),
+              omit(column, ['_ignoreRightBorder', '_lastLeftFixed', '_firstRightFixed', '_width']),
               rowIndex,
               colIndex,
             )
           : headerCellClassName || '';
 
       const classes = {
-        'cell-fixed-left': col.fixed === 'left',
-        'cell-fixed-right': col.fixed === 'right',
-        'cell-is-last-fixedLeft': !!col._lastLeftFixed,
-        'cell-is-first-fixedRight': !!col._firstRightFixed,
-        'cell-ignore-right-border': col._ignoreRightBorder,
-        [colClassName]: !!col.className,
+        'cell-fixed-left': column.fixed === 'left',
+        'cell-fixed-right': column.fixed === 'right',
+        'cell-is-last-fixedLeft': !!column._lastLeftFixed,
+        'cell-is-first-fixedRight': !!column._firstRightFixed,
+        'cell-ignore-right-border': column._ignoreRightBorder,
+        [colClassName]: !!column.className,
         [cellClassName]: !!cellClassName,
       };
 
+      const isSelectionExpand =
+        'type' in column && column.type && ['expand', 'checkbox', 'radio'].includes(column.type);
+
       const cls = classnames({
-        'cell-align-center': col.align === 'center',
-        'cell-align-right': col.align === 'right',
-        'selection-expand-column': col?.type && col.type !== 'default',
+        'cell-align-center': column.align === 'center',
+        'cell-align-right': column.align === 'right',
+        'selection-expand-column': isSelectionExpand,
         ...classes,
       });
 
       let styles: React.CSSProperties = {};
       if (typeof headerCellStyle === 'function') {
         styles = headerCellStyle(
-          omit(col, ['_ignoreRightBorder', '_lastLeftFixed', '_firstRightFixed']),
+          omit(column, ['_ignoreRightBorder', '_lastLeftFixed', '_firstRightFixed', '_width']),
           rowIndex,
           colIndex,
         );
       }
 
       let baseProps: ThProps<T> = {
-        defaultColumnKey: pos ? `${pos}_${colIndex}` : colIndex,
-        column: col,
+        column,
         colIndex,
         rowIndex,
         locale,
@@ -207,62 +181,85 @@ function Thead<T>(props: TheadProps<T>) {
         bordered,
         style: styles,
         sorterStates,
-        renderSorter,
         filterStates,
+        onSort,
+        onFilterChange,
+        columnKey: getColumnKey(column, pos ? `${pos}_${colIndex}` : colIndex),
       } as ThProps<T>;
 
-      switch (col.type) {
-        case 'checkbox':
-        case 'radio':
-        case 'expand':
-          baseProps = Object.assign({}, baseProps, {
-            rowSpan: totalRows,
-            className: cls,
-            onSelectAll: handleChange,
+      if (isSelectionExpand) {
+        baseProps = { ...baseProps, rowSpan: totalRows, className: cls, onSelectAll: handleChange };
+        return trs[rowIndex].push(renderCell(baseProps));
+      } else {
+        if ('children' in column && column?.children.length) {
+          baseProps = {
+            ...baseProps,
+            rowSpan: 1,
+            className: classnames({
+              'cell-align-center': true,
+              'cell-ellipsis': !!column.ellipsis,
+              ...classes,
+            }),
+          };
+          trs[rowIndex].push(renderCell(baseProps));
+          column.children.forEach((col, i) => {
+            renderCells(col, trs, rowIndex + 1, i, colIndex);
           });
-          return trs[rowIndex].push(createTh(baseProps));
-        default: {
-          if ('children' in col && col?.children.length) {
-            baseProps = Object.assign({}, baseProps, {
-              rowSpan: 1,
-              className: classnames({
-                'cell-align-center': true,
-                'cell-ellipsis': !!col.ellipsis,
-                ...classes,
-              }),
-            });
-            trs[rowIndex].push(createTh(baseProps));
-            col.children.forEach((c, i) => {
-              renderTh(c, trs, rowIndex + 1, i, colIndex);
-            });
-          } else {
-            baseProps = Object.assign({}, baseProps, {
-              rowSpan: totalRows - rowIndex,
-              className: cls,
-              onSort,
-              onFilterChange,
-              onMouseDown,
-            });
-            trs[rowIndex].push(createTh(baseProps));
-          }
+        } else {
+          baseProps = { ...baseProps, rowSpan: totalRows - rowIndex, className: cls, onMouseDown };
+          trs[rowIndex].push(renderCell(baseProps));
         }
       }
+
+      // switch (column.type) {
+      //   case 'checkbox':
+      //   case 'radio':
+      //   case 'expand':
+      //     baseProps = Object.assign({}, baseProps, {
+      //       rowSpan: totalRows,
+      //       className: cls,
+      //       onSelectAll: handleChange,
+      //     });
+      //     return trs[rowIndex].push(createTh(baseProps));
+      //   default: {
+      //     if ('children' in column && column?.children.length) {
+      //       baseProps = Object.assign({}, baseProps, {
+      //         rowSpan: 1,
+      //         className: classnames({
+      //           'cell-align-center': true,
+      //           'cell-ellipsis': !!column.ellipsis,
+      //           ...classes,
+      //         }),
+      //       });
+      //       trs[rowIndex].push(createTh(baseProps));
+      //       column.children.forEach((c, i) => {
+      //         renderCells(c, trs, rowIndex + 1, i, colIndex);
+      //       });
+      //     } else {
+      //       baseProps = Object.assign({}, baseProps, {
+      //         rowSpan: totalRows - rowIndex,
+      //         className: cls,
+      //         onSort,
+      //         onFilterChange,
+      //         onMouseDown,
+      //       });
+      //       trs[rowIndex].push(createTh(baseProps));
+      //     }
+      //   }
+      // }
     },
     [
       checked,
       bordered,
       sorterStates,
-      renderSorter,
       filterStates,
-      rowSelection,
-      expandable,
-      handleChange,
-      createTh,
+      renderCell,
       onSort,
       onFilterChange,
       onMouseDown,
-      headerCellClassName,
+      handleChange,
       headerCellStyle,
+      headerCellClassName,
     ],
   );
 
@@ -270,14 +267,14 @@ function Thead<T>(props: TheadProps<T>) {
     const trs: React.ReactNode[][] = [];
     computeTrs(columns, 0, trs);
     const headerColumns = parseHeaderColumns(columns);
-    headerColumns.forEach((col, i) => renderTh(col, trs, 0, i));
+    headerColumns.forEach((column, i) => renderCells(column, trs, 0, i));
     return trs;
-  }, [columns, computeTrs, parseHeaderColumns, renderTh]);
+  }, [columns, computeTrs, parseHeaderColumns, renderCells]);
 
   return (
     <thead>
-      {headerTrs.map((tr, i) => {
-        return <tr key={i}>{tr}</tr>;
+      {headerTrs.map((cells, i) => {
+        return <tr key={i}>{cells}</tr>;
       })}
     </thead>
   );

@@ -1,15 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getColumnKey } from '../utils/util';
-import { PrivateColumnsType, Sorter, SortState } from '../interface1';
+import { ColumnGroupType, ColumnType, PrivateColumnsType, Sorter, SortState } from '../interface1';
 
 function useSorter<T extends { key?: React.Key; children?: T[] }>(
   mergeColumns: PrivateColumnsType<T>,
+  onSort?: (sortResult: {
+    column: ColumnType<T>;
+    order: 'asc' | 'desc' | null;
+    field: string | undefined;
+  }) => void,
 ) {
   const generateSortStates = useCallback((columns: PrivateColumnsType<T>, columnIndex?: number) => {
     const sortStates: SortState<T>[] = [];
 
     columns.forEach((column, index) => {
-      if ('sorter' in column) {
+      if ('sorter' in column && (column?.defaultSortOrder || column?.sortOrder)) {
         const sorterState = {
           key: getColumnKey(column, columnIndex ? `${columnIndex}_${index}` : index),
           order: column.sortOrder || column.defaultSortOrder || null,
@@ -33,9 +38,68 @@ function useSorter<T extends { key?: React.Key; children?: T[] }>(
     return generateSortStates(mergeColumns);
   });
 
-  const updateSorterStates = useCallback((newSorterStates: SortState<T>[]) => {
-    setSorterStates(newSorterStates);
-  }, []);
+  const handleSortChange = useCallback(
+    (column: ColumnGroupType<T> | ColumnType<T>, order: 'asc' | 'desc', columnKey: React.Key) => {
+      const index = sorterStates.findIndex((sorterState) => sorterState.key === columnKey);
+      const isCancel = index >= 0 && sorterStates[index].order === order;
+
+      if (isCancel) {
+        const filterResult = sorterStates.filter((sorterState) => sorterState.key !== columnKey);
+        if (!('sortOrder' in column)) {
+          setSorterStates(filterResult);
+        }
+        onSort &&
+          onSort({
+            column,
+            order: null,
+            field: 'dataIndex' in column ? column.dataIndex : undefined,
+          });
+        return;
+      }
+      if (typeof column?.sorter === 'object') {
+        if (index >= 0) {
+          const copyList = [...sorterStates];
+          const item = sorterStates[index];
+          item.order = order;
+          copyList.splice(index, 1, item);
+          if (!('sortOrder' in column)) {
+            setSorterStates(copyList);
+          }
+        } else {
+          const newSorterStates =
+            sorterStates.length === 1 && sorterStates[0]?.weight === undefined
+              ? []
+              : [...sorterStates];
+          newSorterStates.push({
+            order,
+            key: columnKey,
+            sorter: (column.sorter as Sorter<T>).compare,
+            weight: (column.sorter as Sorter<T>).weight,
+          });
+          if (!('sortOrder' in column)) {
+            setSorterStates(newSorterStates);
+          }
+        }
+      } else if (typeof column?.sorter === 'function') {
+        if (!('sortOrder' in column)) {
+          setSorterStates([
+            {
+              key: columnKey,
+              order,
+              sorter: column.sorter as (rowA: T, rowB: T) => number,
+            },
+          ]);
+        }
+      }
+      onSort &&
+        onSort({
+          column: column,
+          order,
+          field: 'dataIndex' in column ? column.dataIndex : undefined,
+        });
+    },
+    [sorterStates, onSort],
+  );
 
   const getSortData = useCallback(
     (data: T[]) => {
@@ -91,8 +155,8 @@ function useSorter<T extends { key?: React.Key; children?: T[] }>(
       const newSorterStates = generateSortStates(mergeColumns);
       setSorterStates(newSorterStates);
     }
-  }, [mergeColumns]);
+  }, [mergeColumns, generateSortStates]);
 
-  return [sorterStates, updateSorterStates, getSortData] as const;
+  return [sorterStates, getSortData, handleSortChange] as const;
 }
 export default useSorter;

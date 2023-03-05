@@ -7,19 +7,19 @@ import Icon from '../Icon';
 import { ReactComponent as FilterIcon } from '@/assets/filter.svg';
 import { ReactComponent as QueryIcon } from '@/assets/query.svg';
 import { ReactComponent as EmptyIcon } from '@/assets/empty.svg';
-import type { FilterMenusType } from '../interface';
-import './index.less';
+import type { FilterMenus } from '../interface';
 import { generateUUID } from '../utils/util';
+import './index.less';
 
 interface FilterProps {
   locale: Record<string, string>;
-  filters: FilterMenusType[];
+  filters: FilterMenus[];
   filterMultiple: boolean;
   filteredValue: React.Key[];
   onReset: () => void;
   onChange: (filteredValue: React.Key[]) => void;
   filterIcon?: (filtered: boolean) => React.ReactNode;
-  filterSearch?: ((value: string, record: FilterMenusType) => boolean) | boolean;
+  filterSearch?: ((value: string, record: FilterMenus) => boolean) | boolean;
 }
 
 const Filter = (props: FilterProps) => {
