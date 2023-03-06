@@ -9,9 +9,6 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
   selectionType?: 'checkbox' | 'radio',
 ) {
   const isRadio = selectionType === 'radio';
-  // const isRadio = rowSelection?.type === 'radio';
-  // const initSelectedKeys =
-  //   rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
 
   const findParentByKey = useCallback(
     (data: T[], targetKey: React.Key, parentData?: T): T | undefined => {

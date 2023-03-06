@@ -44,7 +44,6 @@ import type {
   ColumnGroupType,
   PrivateColumnsType,
   PrivateColumnType,
-  Sorter,
   PrivateColumnGroupType,
 } from '../interface1';
 import VirtualList from '../VirtualList';
@@ -92,13 +91,13 @@ export interface TableProps<T> {
   size?: 'default' | 'small' | 'large';
   /** 表格行的类名 */
   rowClassName?: (record: T, index: number) => string;
-  /** 表头单元格的类名 todo 未实现 列类型 */
+  /** 表头单元格的类名 */
   headerCellClassName?: (
     column: ColumnType<T> | ColumnGroupType<T>,
     rowIndex: number,
     colIndex: number,
   ) => string | string;
-  /** 表头单元格的style todo 未实现 列类型 */
+  /** 表头单元格的style */
   headerCellStyle?: (
     column: ColumnType<T> | ColumnGroupType<T>,
     rowIndex: number,
@@ -148,13 +147,6 @@ export interface TableProps<T> {
   ) => void;
   /** 表格行是否可选择配置项 todo header 需要表头空一行 */
   rowSelection?: RowSelection<T>;
-  // /** 自定义排序图标 todo 废弃 */
-  // renderSorter: (params: {
-  //   activeAsc: boolean;
-  //   activeDesc: boolean;
-  //   triggerAsc: () => void;
-  //   triggerDesc: () => void;
-  // }) => React.ReactNode;
   // /** 排序取消事件 */
   // onSortCancel?: (col: ColumnsType<T>, order: 'asc' | 'desc') => void;
   /** 排序事件 */
@@ -278,7 +270,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   }, []);
 
   const { maxTreeLevel, keyLevelMap, levelRecordMap } = useMemo(() => {
-    return getLevelInfo(dataSource);
+    return getLevelInfo(dataSource, 0);
   }, [dataSource, getLevelInfo]);
 
   const selectionType = useMemo(() => {
@@ -292,8 +284,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const initSelectedKeys = useMemo(() => {
     return rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
   }, [rowSelection?.selectedRowKeys, rowSelection?.defaultSelectedRowKeys]);
-
-  // const flattenRecords = useFlattenData(dataSource);
 
   const flattenDataSource = useMemo(() => {
     return flatRecords(dataSource);
@@ -329,6 +319,33 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     getRecordKey,
     treeProps,
   );
+
+  // todo 待测试有没有考虑树形中children data 的排序 过滤
+  const totalData = useMemo(() => {
+    return getFilterData(getSortData(dataSource));
+  }, [dataSource, getSortData, getFilterData]);
+
+  const currentPageData = useMemo(() => {
+    if (pagination) {
+      if (totalData.length <= pageSize) {
+        return totalData;
+      } else {
+        const start = (currentPage - 1) * pageSize;
+        return totalData.slice(start, start + pageSize);
+      }
+    }
+    return totalData;
+  }, [pagination, pageSize, currentPage, totalData]);
+
+  const flattenCurrentPageData = useMemo(() => {
+    return flatRecords(currentPageData);
+  }, [flatRecords, currentPageData]);
+
+  const currentPageAllKeys = useMemo(() => {
+    return flattenCurrentPageData.map((data) => {
+      return getRecordKey(data);
+    });
+  }, [flattenCurrentPageData, getRecordKey]);
 
   const resizeLineRef = useRef<HTMLDivElement>(null);
   const tableContainer = useRef<HTMLDivElement>(null);
@@ -395,7 +412,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     [rowKey],
   );
 
-  // todo bug 没有考虑树形中children data 的排序 过滤 getSortData
   // const totalData = useMemo(() => {
   //   let records: T[] = [...dataSource];
   //   filterStates.forEach((filterState) => {
@@ -430,28 +446,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   //   return records;
   // }, [dataSource, filterStates, sorterStates]);
 
-  const totalData = useMemo(() => {
-    return getFilterData(getSortData(dataSource));
-  }, [dataSource, getSortData, getFilterData]);
+  // const { records: currPageRecords, keys: currPageKeys } = useMemo(() => {
+  //   return flatData(currentPageData);
+  // }, [flatData, currentPageData]);
 
-  const currentPageData = useMemo(() => {
-    if (pagination) {
-      if (totalData.length <= pageSize) {
-        return totalData;
-      } else {
-        const start = (currentPage - 1) * pageSize;
-        return totalData.slice(start, start + pageSize);
-      }
-    }
-    return totalData;
-  }, [pagination, pageSize, currentPage, totalData]);
-
-  // todo 待更改
-  const { records: currPageRecords, keys: currPageKeys } = useMemo(() => {
-    return flatData(currentPageData);
-  }, [flatData, currentPageData]);
-
-  const [colWidths, setColWidths] = useState<number[]>([]);
+  // const [colWidths, setColWidths] = useState<number[]>([]);
 
   const [virtualContainerHeight, setVirtualContainerHeight] = useState<number>(0);
 
@@ -944,20 +943,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     // }
   };
 
-  const flattenCurrentPageData = useMemo(() => {
-    return flatRecords(currentPageData);
-  }, [flatRecords, currentPageData]);
-
-  const currentPageAllKeys = useMemo(() => {
-    return flattenCurrentPageData.map((data) => {
-      return getRecordKey(data);
-    });
-  }, [flattenCurrentPageData, getRecordKey]);
-
-  // 2.待测试--分页的话只勾选当页的数据
-  // todo 待优化 currPageRecords currPageKeys 待测试
-  // todo 选择的keys 和records 如果存在分页的话则应该选择所有的页面的 要拼接 但是currPageRecords 这里应该是指当页所有选择的数据包括展开的
-  // todo currPageRecords 这里应该是指当页所有选择的数据包括展开的
   const handleSelectAll = (selected: boolean) => {
     let selectedRecords: T[];
     let finalSelectedKeys: React.Key[];
@@ -976,165 +961,19 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
 
     if (rowSelection?.onSelectAll) {
-      // 3. 待测试--分页情况下currPageRecords 也是当前current页面操作的数据
-      // flatRecords(dataSource)
-      // rowSelection.onSelectAll(selected, selectedRecords, currPageRecords);
       rowSelection.onSelectAll(selected, selectedRecords, flattenCurrentPageData);
     }
     if (rowSelection?.onChange) {
       rowSelection.onChange(finalSelectedKeys, selectedRecords);
     }
 
-    if (!('selectedRowKeys' in rowSelection!)) {
+    if (rowSelection && !('selectedRowKeys' in rowSelection)) {
       updateSelectedKeys(finalSelectedKeys);
     }
-
-    // let selectedRows: T[];
-    // let selectKeys: (number | string)[];
-    // if (selected) {
-    //   const { checkedKeys, checkedRowWithKey, halfCheckedKeys } =
-    //     fillMissSelectedKeys(currPageKeys);
-    //   selectKeys = checkedKeys;
-    //   selectedRows = Object.values(checkedRowWithKey);
-    //   setHalfSelectedKeys(halfCheckedKeys);
-    // } else {
-    //   selectKeys = [];
-    //   selectedRows = [];
-    //   setHalfSelectedKeys([]);
-    // }
-    //
-    // if (rowSelection?.onSelectAll) {
-    //   // 3. 待测试--分页情况下currPageRecords 也是当前current页面操作的数据
-    //   rowSelection.onSelectAll(selected, selectedRows, currPageRecords);
-    // }
-    // if (rowSelection?.onChange) {
-    //   rowSelection.onChange(selectKeys, selectedRows);
-    // }
-    //
-    // if (!('selectedRowKeys' in rowSelection!) || rowSelection?.selectedRowKeys === undefined) {
-    //   setSelectedKeys(selectKeys);
-    // }
   };
 
-  // const handleSortChange = (col: ColumnType<T>, order: 'asc' | 'desc', columnKey: React.Key) => {
-  //   const index = sorterStates.findIndex((sorterState) => sorterState.key === columnKey);
-  //   const isCancel = index >= 0 && sorterStates[index].order === order;
-  //
-  //   if (isCancel) {
-  //     const filterResult = sorterStates.filter((sorterState) => sorterState.key !== columnKey);
-  //     if (!('sortOrder' in col)) {
-  //       updateSorterStates(filterResult);
-  //     }
-  //     // setSorterState(filterResult);
-  //     // setSorterState((prev) => {
-  //     //   return prev.filter((p) => p.dataIndex !== col.dataIndex);
-  //     // });
-  //     // if (typeof onSortCancel === 'function') {
-  //     //   onSortCancel(omit(col, ['colSpan', 'type']) as ColumnsType<T>, order);
-  //     // }
-  //     // const sortInfos = filterResult.map((f) => ({ field: f.dataIndex, order: f.order }));
-  //     onSort &&
-  //       onSort({
-  //         column: col,
-  //         order: null,
-  //         field: col.dataIndex,
-  //       });
-  //     return;
-  //   }
-  //   if (typeof col?.sorter === 'object') {
-  //     if (index >= 0) {
-  //       const copyList = [...sorterStates];
-  //       const item = sorterStates[index];
-  //       item.order = order;
-  //       copyList.splice(index, 1, item);
-  //       if (!('sortOrder' in col)) {
-  //         updateSorterStates(copyList);
-  //       }
-  //       // setSorterState(copyList);
-  //       // onSort && onSort(copyList.map((c) => ({ field: c.dataIndex, order: c.order })));
-  //       // onSort && onSort({
-  //       //   column: col,
-  //       //   order,
-  //       //   field: col.dataIndex
-  //       // });
-  //     } else {
-  //       const newSorterStates =
-  //         sorterStates.length === 1 && sorterStates[0]?.weight === undefined ? [] : [...sorterStates];
-  //       newSorterStates.push({
-  //         order,
-  //         key: columnKey,
-  //         sorter: (col.sorter as Sorter<T>).compare,
-  //         weight: (col.sorter as Sorter<T>).weight,
-  //       });
-  //       if (!('sortOrder' in col)) {
-  //         updateSorterStates(newSorterStates);
-  //       }
-  //       // const list =
-  //       //   sorterStates.length === 1 && sorterStates[0]?.weight === undefined ? [] : [...sorterStates];
-  //       // list.push({
-  //       //   key: columnKey,
-  //       //   order,
-  //       //   sorter: (col.sorter as Sorter<T>).compare,
-  //       //   weight: (col.sorter as Sorter<T>).weight,
-  //       // });
-  //       // // list.push({
-  //       // //   order,
-  //       // //   dataIndex: col.dataIndex,
-  //       // //   sorter: (col.sorter as SorterType<T>).compare,
-  //       // //   weight: (col.sorter as SorterType<T>).weight,
-  //       // // });
-  //       // list.sort((a, b) => {
-  //       //   const a1 = (a.weight || 0).toString();
-  //       //   const b1 = (b.weight || 0).toString();
-  //       //   return a1.localeCompare(b1);
-  //       // });
-  //       // if (!('sortOrder' in col)) {
-  //       //   updateSorterStates(list);
-  //       // }
-  //       // // setSorterState(list);
-  //       // // const sortInfo = list.map((l) => {
-  //       // //   return { field: l.dataIndex, order: l.order };
-  //       // // });
-  //       // // onSort && onSort(sortInfo);
-  //     }
-  //     onSort &&
-  //       onSort({
-  //         column: col,
-  //         order,
-  //         field: col.dataIndex,
-  //       });
-  //     return;
-  //   }
-  //   if (typeof col?.sorter === 'function') {
-  //     if (!('sortOrder' in col)) {
-  //       updateSorterStates([
-  //         {
-  //           key: columnKey,
-  //           order,
-  //           sorter: col.sorter as (rowA: T, rowB: T) => number,
-  //         },
-  //       ]);
-  //     }
-  //     // setSorterState([
-  //     //   {
-  //     //     order,
-  //     //     dataIndex: col.dataIndex,
-  //     //     sorter: col.sorter as (rowA: T, rowB: T) => number,
-  //     //   },
-  //     // ]);
-  //     // onSort && onSort([{ field: col.dataIndex, order }]);
-  //
-  //     onSort &&
-  //       onSort({
-  //         column: col,
-  //         order,
-  //         field: col.dataIndex,
-  //       });
-  //   }
-  // };
-
   const handleFilterChange = (
-    col: PrivateColumnType<T>,
+    col: PrivateColumnType<T> | PrivateColumnGroupType<T>,
     checkedValue: React.Key[],
     columnKey: React.Key,
   ) => {
@@ -1146,7 +985,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       copyFilterState.splice(index, 1, item);
       if (!('filteredValue' in col)) {
         updateFilterStates(copyFilterState);
-        // setFilterState(copyFilterState);
       }
       if (typeof onFilter === 'function') {
         const filterInfo: Record<React.Key, React.Key[]> = {};
@@ -1156,7 +994,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         onFilter(filterInfo);
       }
       if (pagination && !('current' in pagination)) {
-        // setCurrentPage(1);
         updateCurrentPage(1);
       }
       if (typeof pagination?.onChange === 'function') {
