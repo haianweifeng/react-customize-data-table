@@ -1,7 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import omit from 'omit.js';
 import type {
-  ColumnType,
   ColumnsType,
   RowSelection,
   Expandable,
@@ -99,6 +97,7 @@ function useColumns<T>(
           title: rowSelection?.columnTitle || '',
           width: rowSelection?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
         });
+        return;
       }
       if ('type' in column && column?.type === 'expand') {
         existExpand = typeof column?.render === 'function';
@@ -111,16 +110,16 @@ function useColumns<T>(
             width: expandable?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
           });
         }
-      } else {
-        const mergeColumn = { ...column, _columnKey: getColumnKey(column, index) };
-        if ('children' in column && column.children.length) {
-          (mergeColumn as PrivateColumnGroupType<T>).children = addColumnKeyForColumn(
-            column.children,
-            index,
-          );
-        }
-        mergeColumns.push(mergeColumn);
+        return;
       }
+      const mergeColumn = { ...column, _columnKey: getColumnKey(column, index) };
+      if ('children' in column && column.children.length) {
+        (mergeColumn as PrivateColumnGroupType<T>).children = addColumnKeyForColumn(
+          column.children,
+          index,
+        );
+      }
+      mergeColumns.push(mergeColumn);
     });
 
     if (!existExpand && expandable && expandable?.expandedRowRender) {
@@ -208,27 +207,26 @@ function useColumns<T>(
   const updateMergeColumns = useCallback((columns: PrivateColumnsType<T>) => {
     setMergeColumns(columns);
   }, []);
-  // todo 待修改
+
   const addWidthForColumns = useCallback(
-    (columnsWidth: Map<React.Key, number>, columns: PrivateColumnsType<T>, pos?: number) => {
+    (columnsWidth: Map<React.Key, number>, columns: PrivateColumnsType<T>) => {
       const widthColumns: PrivateColumnsType<T> = [];
-      columns.map((column, index) => {
-        const columnKey = getColumnKey(column, pos ? `${pos}_${index}` : index);
+      columns.map((column) => {
         if ('children' in column && column.children.length) {
-          if (columnsWidth.get(columnKey)) {
+          if (columnsWidth.get(column._columnKey)) {
             widthColumns.push({
               ...column,
-              _width: columnsWidth.get(columnKey),
-              children: addWidthForColumns(columnsWidth, column.children, index),
+              _width: columnsWidth.get(column._columnKey),
+              children: addWidthForColumns(columnsWidth, column.children),
             });
           } else {
             widthColumns.push({
               ...column,
-              children: addWidthForColumns(columnsWidth, column.children, index),
+              children: addWidthForColumns(columnsWidth, column.children),
             });
           }
-        } else if (columnsWidth.get(columnKey)) {
-          widthColumns.push({ ...column, _width: columnsWidth.get(columnKey) });
+        } else if (columnsWidth.get(column._columnKey)) {
+          widthColumns.push({ ...column, _width: columnsWidth.get(column._columnKey) });
         } else {
           widthColumns.push({ ...column });
         }

@@ -54,6 +54,7 @@ const columns: ColumnsType<DataType>[] = [
             dataIndex: 'street',
             key: 'street',
             width: 150,
+            resizable: true,
           },
           {
             title: 'Block',
@@ -64,6 +65,7 @@ const columns: ColumnsType<DataType>[] = [
                 dataIndex: 'building',
                 key: 'building',
                 width: 100,
+                resizable: true,
                 // headerColSpan: 2,
               },
               {
@@ -72,6 +74,7 @@ const columns: ColumnsType<DataType>[] = [
                 key: 'number',
                 width: 100,
                 fixed: 'left',
+                resizable: true,
                 // headerColSpan: 0,
               },
             ],
@@ -88,12 +91,14 @@ const columns: ColumnsType<DataType>[] = [
         dataIndex: 'companyAddress',
         key: 'companyAddress',
         width: 200,
+        resizable: true,
       },
       {
         title: 'Company Name',
         dataIndex: 'companyName',
         key: 'companyName',
         width: 200,
+        resizable: true,
       },
     ],
   },
@@ -123,12 +128,25 @@ for (let i = 0; i < 100; i++) {
 }
 
 const App = () => {
+  const handleColumnResize = (
+    newWidth: number,
+    oldWidth: number,
+    column: ColumnsType<DataType>,
+    event: Event,
+  ) => {
+    console.log(`newWidth: ${newWidth}`);
+    console.log(`oldWidth: ${oldWidth}`);
+    console.log(column);
+    console.log(event);
+  };
+
   return (
     <Table
       columns={columns}
       dataSource={data}
       bordered
       rowKey="key"
+      onColumnResize={handleColumnResize}
       // rowSelection={{}}
       // expandable={{
       // insertBeforeColumnName: 'Gender',

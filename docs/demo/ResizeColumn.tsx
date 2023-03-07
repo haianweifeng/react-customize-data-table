@@ -11,6 +11,17 @@ interface DataType {
 
 const App = () => {
   const columns: ColumnsType<DataType>[] = [
+    // {
+    //   type: 'checkbox',
+    //   resizable: true,
+    // },
+    // {
+    //   type: 'expand',
+    //   resizable: true,
+    //   render: () => {
+    //     return 'hahah';
+    //   }
+    // },
     {
       title: 'Date',
       dataIndex: 'date',

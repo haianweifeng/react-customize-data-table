@@ -641,7 +641,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         let noWidthColumnsCount = 0;
         const noMaxWidthColumnKeys: React.Key[] = [];
         const tbodyWidth = width || tbodyRef.current.offsetWidth;
-        console.log(`tbodyWidth: ${tbodyWidth}`);
 
         const columnsWidth = new Map<React.Key, number>();
 
@@ -709,7 +708,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     },
     [width, flatColumns, addWidthForColumns],
   );
-  console.log(`scrollWidth: ${scrollWidth}`);
 
   // todo 这里没有添加依赖项看eslint 在提交时候会不会报错
   useEffect(() => {
@@ -717,7 +715,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       handleResize(initMergeColumns);
     }
   }, [initMergeColumns, handleResize, isMount]);
-  console.log(mergeColumns);
+  // console.log(mergeColumns);
 
   useEffect(() => {
     setIsMount(true);
@@ -930,7 +928,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   };
 
-  // todo
   const handleHeaderMouseDown = (resizeInfo: ResizeInfo, col: PrivateColumnType<T>) => {
     const resizeEl = resizeLineRef.current;
     const { resizingRect, startPosX } = resizeInfo;
@@ -947,20 +944,38 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       const deltaX = event.clientX - startPosX;
       resizeEl.style.cssText = `left: ${initLeft + deltaX}px; display: block`;
     };
-
+    // 由于是取flatColumns 所以是最后一层的columns 所以只能限制成没有column.children 的才能伸缩列
     const handleHeaderMouseUp = (event: Event) => {
+      let oldWidth = 0;
       const columnWidth =
         parseInt(resizeEl.style.left, 10) - (resizingRect.left - tableContainerRect.left);
-      const copyMergeColumns = [...mergeColumns];
-      const index = copyMergeColumns.findIndex((c) => c._columnKey === col._columnKey);
-      if (index >= 0) {
-        const column = copyMergeColumns[index];
-        const oldWidth = column._width;
-        copyMergeColumns.splice(index, 1, { ...col, width: columnWidth });
-        handleResize(copyMergeColumns);
-        onColumnResize &&
-          onColumnResize(columnWidth, oldWidth as number, omitColumnProps(column), event);
-      }
+
+      const modifyWidthForColumns = (
+        columnWidth: number,
+        columnKey: React.Key,
+        targetColumns: PrivateColumnsType<T>,
+      ) => {
+        const widthColumns: PrivateColumnsType<T> = [];
+        targetColumns.map((column) => {
+          if ('children' in column && column.children.length) {
+            widthColumns.push({
+              ...column,
+              children: modifyWidthForColumns(columnWidth, columnKey, column.children),
+            });
+          } else {
+            if (column._columnKey === columnKey) {
+              oldWidth = column._width as number;
+              widthColumns.push({ ...column, width: columnWidth });
+            } else {
+              widthColumns.push({ ...column });
+            }
+          }
+        });
+        return widthColumns;
+      };
+
+      handleResize(modifyWidthForColumns(columnWidth, col._columnKey, mergeColumns));
+      onColumnResize && onColumnResize(columnWidth, oldWidth, omitColumnProps(col), event);
       resizeEl.style.cssText = `display: none`;
 
       document.removeEventListener('mousemove', handleHeaderMouseMove);

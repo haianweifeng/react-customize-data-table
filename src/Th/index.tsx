@@ -31,7 +31,7 @@ export interface ThProps<T> {
   onSelectAll?: (selected: boolean) => void;
   onMouseDown?: (resizeInfo: ResizeInfo, col: PrivateColumnType<T>) => void;
 }
-// todo 可选择 可扩展列需要支持伸缩功能
+
 function Th<T>(props: ThProps<T>) {
   const {
     column,
@@ -118,11 +118,21 @@ function Th<T>(props: ThProps<T>) {
     }
   };
 
+  const renderResizeContent = () => {
+    return bordered &&
+      !('children' in column) &&
+      !column._ignoreRightBorder &&
+      column?.resizable ? (
+      <div className="cell-header-resizable" onMouseDown={handleMouseDown} />
+    ) : null;
+  };
+
   const renderSelection = (columnType: 'checkbox' | 'radio') => {
     return (
       <th key={column._columnKey} rowSpan={rowSpan} className={className} style={style}>
         {column.title ||
           (columnType === 'radio' ? null : <Checkbox checked={checked} onChange={handleChange} />)}
+        {renderResizeContent()}
       </th>
     );
   };
@@ -131,6 +141,7 @@ function Th<T>(props: ThProps<T>) {
     return (
       <th key={column._columnKey} rowSpan={rowSpan} className={className} style={style}>
         {column.title || null}
+        {renderResizeContent()}
       </th>
     );
   };
@@ -171,6 +182,7 @@ function Th<T>(props: ThProps<T>) {
   }, [column, locale, onFilterChange, filterStates]);
 
   // todo 多级表头也需要配置排序 过滤
+  // todo type 有可能是default
   const renderContent = () => {
     if ('type' in column) {
       switch (column.type) {
@@ -213,16 +225,7 @@ function Th<T>(props: ThProps<T>) {
             </div>
           ) : null}
         </div>
-        {/*{rowIndex === 0 &&*/}
-        {/*bordered &&*/}
-        {/*!('children' in column) &&*/}
-        {/*!column._ignoreRightBorder &&*/}
-        {/*column?.resizable ? (*/}
-        {/*  <div className="cell-header-resizable" onMouseDown={handleMouseDown} />*/}
-        {/*) : null}*/}
-        {bordered && !('children' in column) && !column._ignoreRightBorder && column?.resizable ? (
-          <div className="cell-header-resizable" onMouseDown={handleMouseDown} />
-        ) : null}
+        {renderResizeContent()}
       </th>
     );
     // switch (column.type) {
