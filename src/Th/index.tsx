@@ -181,7 +181,6 @@ function Th<T>(props: ThProps<T>) {
     );
   }, [column, locale, onFilterChange, filterStates]);
 
-  // todo 多级表头也需要配置排序 过滤
   const renderContent = () => {
     if ('type' in column && column.type && ['expand', 'checkbox', 'radio'].includes(column.type)) {
       switch (column.type) {

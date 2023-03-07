@@ -24,19 +24,39 @@ const columns: ColumnsType<DataType>[] = [
     resizable: true,
     filters: [
       {
-        text: 'Joe',
+        label: 'Joe',
         value: 'Joe',
       },
       {
-        text: 'John',
+        label: 'John',
         value: 'John',
       },
     ],
-    // onFilter: (value: string, record: DataType) => record.name.indexOf(value) === 0,
+    filterMethod: (value: string, record: DataType) => record.name.indexOf(value) === 0,
   },
   {
     title: 'Other',
     // fixed: 'left',
+    filters: [
+      {
+        label: 'A',
+        value: 'A',
+      },
+      {
+        label: 'B',
+        value: 'B',
+      },
+      {
+        label: 'C',
+        value: 'C',
+      },
+      {
+        label: 'D',
+        value: 'D',
+      },
+    ],
+    filterMethod: (value: string, record: DataType) => record.building.indexOf(value) === 0,
+    sorter: (a: DataType, b: DataType) => a.age - b.age,
     children: [
       {
         title: 'Age',
@@ -44,7 +64,7 @@ const columns: ColumnsType<DataType>[] = [
         key: 'age',
         width: 150,
         resizable: true,
-        sorter: (a: DataType, b: DataType) => a.age - b.age,
+        // sorter: (a: DataType, b: DataType) => a.age - b.age,
       },
       {
         title: 'Address',
@@ -111,6 +131,8 @@ const columns: ColumnsType<DataType>[] = [
   },
 ];
 
+const buildings = ['A', 'B', 'C', 'D'];
+
 const data: DataType[] = [];
 for (let i = 0; i < 100; i++) {
   data.push({
@@ -118,7 +140,7 @@ for (let i = 0; i < 100; i++) {
     name: 'John Brown',
     age: i + 1,
     street: 'Lake Park',
-    building: 'C',
+    building: buildings[i % 4],
     number: 2035,
     companyAddress: 'Lake Street 42',
     companyName: 'SoftLake Co',
@@ -146,6 +168,10 @@ const App = () => {
       dataSource={data}
       bordered
       rowKey="key"
+      pagination={{
+        defaultCurrent: 1,
+        pageSize: 10,
+      }}
       onColumnResize={handleColumnResize}
       // rowSelection={{}}
       // expandable={{

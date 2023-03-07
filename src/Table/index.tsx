@@ -164,6 +164,7 @@ export interface TableProps<T> {
   /** 配置树形数据属性 */
   treeProps?: TreeExpandable<T>;
 }
+// todo bug 多级表头中选中B D 两个过滤 最后一列fixed:right 出现问题
 // todo 还未测试列宽设为百分比的情况
 // todo bug columnWidth: '160' 不起作用
 // todo bug 如果dataIndex 在data 中找不到对应字段数据 是不是要加个key 给用户自己设置
@@ -991,7 +992,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const handlePaginationChange = (current: number, size: number) => {
     // todo current 条件是否成立
     if (pagination && !('current' in pagination)) {
-      updateCurrentPage(1);
+      updateCurrentPage(current);
       // setCurrentPage(current);
     }
     if (pagination && !('pageSize' in pagination)) {
