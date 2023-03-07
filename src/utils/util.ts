@@ -1,7 +1,12 @@
 import React from 'react';
 import omit from 'omit.js';
 import type { RowKeyType } from '../interface';
-import type { PrivateColumnType } from '../interface1';
+import type {
+  ColumnGroupType,
+  ColumnType,
+  PrivateColumnGroupType,
+  PrivateColumnType,
+} from '../interface1';
 
 export function generateUUID() {
   const time = new Date().getTime().toString(36);
@@ -10,14 +15,24 @@ export function generateUUID() {
   return `${random}${time}`;
 }
 
-export function getColumnKey<T>(column: PrivateColumnType<T>, defaultKey: React.Key) {
+export function getColumnKey<T>(column: ColumnGroupType<T> | ColumnType<T>, defaultKey: React.Key) {
   if ('key' in column && column.key !== null && column.key !== undefined) {
     return column.key;
   }
-  if (column.dataIndex) {
+  if ('dataIndex' in column && column.dataIndex) {
     return column.dataIndex;
   }
   return defaultKey;
+}
+
+export function omitColumnProps<T>(column: PrivateColumnGroupType<T> | PrivateColumnType<T>) {
+  return omit(column, [
+    '_width',
+    '_columnKey',
+    '_lastLeftFixed',
+    '_firstRightFixed',
+    '_ignoreRightBorder',
+  ]);
 }
 
 // todo 待测试如果用的数据不存在的字段 record.desc  desc 不存在

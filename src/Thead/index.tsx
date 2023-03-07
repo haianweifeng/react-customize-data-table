@@ -1,5 +1,4 @@
 import React, { useMemo, useCallback } from 'react';
-import omit from 'omit.js';
 import classnames from 'classnames';
 import type {
   ResizeInfo,
@@ -13,7 +12,7 @@ import type {
 } from '../interface1';
 import Th from '../Th';
 import type { ThProps } from '../Th';
-import { getColumnKey } from '../utils/util';
+import { omitColumnProps } from '../utils/util';
 
 interface TheadProps<T> {
   bordered: boolean;
@@ -33,17 +32,12 @@ interface TheadProps<T> {
     colIndex: number,
   ) => React.CSSProperties | React.CSSProperties;
   onSelectAll: (selected: boolean) => void;
-  onSort: (
-    col: ColumnGroupType<T> | ColumnType<T>,
-    order: 'asc' | 'desc',
-    columnKey: React.Key,
-  ) => void;
+  onSort: (col: PrivateColumnType<T> | PrivateColumnGroupType<T>, order: 'asc' | 'desc') => void;
   onFilterChange: (
     col: PrivateColumnType<T> | PrivateColumnGroupType<T>,
     filteredValue: React.Key[],
-    columnKey: React.Key,
   ) => void;
-  onMouseDown: (resizeInfo: ResizeInfo, col: PrivateColumnType<T>, colIndex: number) => void;
+  onMouseDown: (resizeInfo: ResizeInfo, col: PrivateColumnType<T>) => void;
 }
 // todo onHeaderRowEvents
 function Thead<T>(props: TheadProps<T>) {
@@ -121,7 +115,7 @@ function Thead<T>(props: TheadProps<T>) {
   );
 
   const renderCell = useCallback((thProps: ThProps<T>) => {
-    return <Th {...thProps} key={thProps.columnKey} />;
+    return <Th {...thProps} key={thProps.column._columnKey} />;
   }, []);
 
   const renderCells = useCallback(
@@ -130,17 +124,12 @@ function Thead<T>(props: TheadProps<T>) {
       trs: React.ReactNode[][],
       rowIndex: number,
       colIndex: number,
-      pos?: number,
     ) => {
       const totalRows = trs.length;
       const colClassName = column.className || '';
       const cellClassName =
         typeof headerCellClassName === 'function'
-          ? headerCellClassName(
-              omit(column, ['_ignoreRightBorder', '_lastLeftFixed', '_firstRightFixed', '_width']),
-              rowIndex,
-              colIndex,
-            )
+          ? headerCellClassName(omitColumnProps(column), rowIndex, colIndex)
           : headerCellClassName || '';
 
       const classes = {
@@ -165,17 +154,11 @@ function Thead<T>(props: TheadProps<T>) {
 
       let styles: React.CSSProperties = {};
       if (typeof headerCellStyle === 'function') {
-        styles = headerCellStyle(
-          omit(column, ['_ignoreRightBorder', '_lastLeftFixed', '_firstRightFixed', '_width']),
-          rowIndex,
-          colIndex,
-        );
+        styles = headerCellStyle(omitColumnProps(column), rowIndex, colIndex);
       }
 
       let baseProps: ThProps<T> = {
         column,
-        colIndex,
-        rowIndex,
         locale,
         checked,
         bordered,
@@ -184,11 +167,12 @@ function Thead<T>(props: TheadProps<T>) {
         filterStates,
         onSort,
         onFilterChange,
-        columnKey: getColumnKey(column, pos ? `${pos}_${colIndex}` : colIndex),
+        onMouseDown,
+        onSelectAll: handleChange,
       } as ThProps<T>;
-
+      // todo cell-ellipsis 是不是需要应用到selection-expand column 中
       if (isSelectionExpand) {
-        baseProps = { ...baseProps, rowSpan: totalRows, className: cls, onSelectAll: handleChange };
+        baseProps = { ...baseProps, rowSpan: totalRows, className: cls };
         return trs[rowIndex].push(renderCell(baseProps));
       } else {
         if ('children' in column && column?.children.length) {
@@ -203,10 +187,10 @@ function Thead<T>(props: TheadProps<T>) {
           };
           trs[rowIndex].push(renderCell(baseProps));
           column.children.forEach((col, i) => {
-            renderCells(col, trs, rowIndex + 1, i, colIndex);
+            renderCells(col, trs, rowIndex + 1, i);
           });
         } else {
-          baseProps = { ...baseProps, rowSpan: totalRows - rowIndex, className: cls, onMouseDown };
+          baseProps = { ...baseProps, rowSpan: totalRows - rowIndex, className: cls };
           trs[rowIndex].push(renderCell(baseProps));
         }
       }

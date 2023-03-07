@@ -2,3 +2,11 @@
 export const BAR_WIDTH = 16;
 
 export const SELECTION_EXPAND_COLUMN_WIDTH = 44;
+
+export const omitColumnProps = [
+  '_width',
+  '_columnKey',
+  '_lastLeftFixed',
+  '_firstRightFixed',
+  '_ignoreRightBorder',
+];

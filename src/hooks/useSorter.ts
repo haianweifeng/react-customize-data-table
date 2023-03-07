@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getColumnKey } from '../utils/util';
-import { ColumnGroupType, ColumnType, PrivateColumnsType, Sorter, SortState } from '../interface1';
+import {
+  ColumnType,
+  PrivateColumnGroupType,
+  PrivateColumnsType,
+  PrivateColumnType,
+  Sorter,
+  SortState,
+} from '../interface1';
 
 function useSorter<T extends { key?: React.Key; children?: T[] }>(
   mergeColumns: PrivateColumnsType<T>,
@@ -10,13 +16,13 @@ function useSorter<T extends { key?: React.Key; children?: T[] }>(
     field: string | undefined;
   }) => void,
 ) {
-  const generateSortStates = useCallback((columns: PrivateColumnsType<T>, columnIndex?: number) => {
+  const generateSortStates = useCallback((columns: PrivateColumnsType<T>) => {
     const sortStates: SortState<T>[] = [];
 
-    columns.forEach((column, index) => {
+    columns.forEach((column) => {
       if ('sorter' in column && (column?.defaultSortOrder || column?.sortOrder)) {
         const sorterState = {
-          key: getColumnKey(column, columnIndex ? `${columnIndex}_${index}` : index),
+          key: column._columnKey,
           order: column.sortOrder || column.defaultSortOrder || null,
         } as SortState<T>;
         if (typeof column.sorter === 'object') {
@@ -28,7 +34,7 @@ function useSorter<T extends { key?: React.Key; children?: T[] }>(
         sortStates.push(sorterState);
       }
       if ('children' in column && column.children.length) {
-        sortStates.push(...generateSortStates(column.children, index));
+        sortStates.push(...generateSortStates(column.children));
       }
     });
     return sortStates;
@@ -39,12 +45,14 @@ function useSorter<T extends { key?: React.Key; children?: T[] }>(
   });
 
   const handleSortChange = useCallback(
-    (column: ColumnGroupType<T> | ColumnType<T>, order: 'asc' | 'desc', columnKey: React.Key) => {
-      const index = sorterStates.findIndex((sorterState) => sorterState.key === columnKey);
+    (column: PrivateColumnType<T> | PrivateColumnGroupType<T>, order: 'asc' | 'desc') => {
+      const index = sorterStates.findIndex((sorterState) => sorterState.key === column._columnKey);
       const isCancel = index >= 0 && sorterStates[index].order === order;
 
       if (isCancel) {
-        const filterResult = sorterStates.filter((sorterState) => sorterState.key !== columnKey);
+        const filterResult = sorterStates.filter(
+          (sorterState) => sorterState.key !== column._columnKey,
+        );
         if (!('sortOrder' in column)) {
           setSorterStates(filterResult);
         }
@@ -72,7 +80,7 @@ function useSorter<T extends { key?: React.Key; children?: T[] }>(
               : [...sorterStates];
           newSorterStates.push({
             order,
-            key: columnKey,
+            key: column._columnKey,
             sorter: (column.sorter as Sorter<T>).compare,
             weight: (column.sorter as Sorter<T>).weight,
           });
@@ -84,7 +92,7 @@ function useSorter<T extends { key?: React.Key; children?: T[] }>(
         if (!('sortOrder' in column)) {
           setSorterStates([
             {
-              key: columnKey,
+              key: column._columnKey,
               order,
               sorter: column.sorter as (rowA: T, rowB: T) => number,
             },

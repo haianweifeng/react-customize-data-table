@@ -1,31 +1,27 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { PrivateColumnsType, FilterState } from '../interface1';
-import { getColumnKey } from '../utils/util';
 
 function useFilter<T extends { key?: React.Key; children?: T[] }>(
   mergeColumns: PrivateColumnsType<T>,
 ) {
-  const generateFilterStates = useCallback(
-    (columns: PrivateColumnsType<T>, columnIndex?: number) => {
-      const filterStates: FilterState<T>[] = [];
+  const generateFilterStates = useCallback((columns: PrivateColumnsType<T>) => {
+    const filterStates: FilterState<T>[] = [];
 
-      columns.forEach((column, index) => {
-        if (column.filters || typeof column.filterMethod === 'function') {
-          filterStates.push({
-            key: getColumnKey(column, columnIndex ? `${columnIndex}_${index}` : index),
-            filteredValue: column?.filteredValue || column?.defaultFilteredValue || [],
-            filterMethod: column?.filterMethod,
-          });
-        }
-        if ('children' in column && column.children.length) {
-          filterStates.push(...generateFilterStates(column.children, index));
-        }
-      });
+    columns.forEach((column) => {
+      if (column.filters || typeof column.filterMethod === 'function') {
+        filterStates.push({
+          key: column._columnKey,
+          filteredValue: column?.filteredValue || column?.defaultFilteredValue || [],
+          filterMethod: column?.filterMethod,
+        });
+      }
+      if ('children' in column && column.children.length) {
+        filterStates.push(...generateFilterStates(column.children));
+      }
+    });
 
-      return filterStates;
-    },
-    [],
-  );
+    return filterStates;
+  }, []);
 
   const [filterStates, setFilterStates] = useState<FilterState<T>[]>(() => {
     return generateFilterStates(mergeColumns);

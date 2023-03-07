@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import omit from 'omit.js';
 import classnames from 'classnames';
 import Tooltip from '../Tooltip';
 import Checkbox from '../Checkbox';
@@ -15,38 +14,27 @@ import {
 } from '../interface1';
 
 export interface ThProps<T> {
-  colIndex: number;
-  rowIndex: number;
   rowSpan: number;
   bordered: boolean;
   className: string;
-  columnKey: React.Key;
   style: React.CSSProperties;
   locale: Record<string, string>;
   checked: boolean | 'indeterminate';
   column: PrivateColumnType<T> | PrivateColumnGroupType<T>;
   sorterStates: SortState<T>[];
   filterStates: FilterState<T>[];
-  onSort?: (
-    col: PrivateColumnType<T> | PrivateColumnGroupType<T>,
-    order: 'asc' | 'desc',
-    columnKey: React.Key,
-  ) => void;
+  onSort?: (col: PrivateColumnType<T> | PrivateColumnGroupType<T>, order: 'asc' | 'desc') => void;
   onFilterChange?: (
     col: PrivateColumnType<T> | PrivateColumnGroupType<T>,
     filteredValue: React.Key[],
-    columnKey: React.Key,
   ) => void;
   onSelectAll?: (selected: boolean) => void;
-  onMouseDown?: (resizeInfo: ResizeInfo, col: PrivateColumnType<T>, colIndex: number) => void;
+  onMouseDown?: (resizeInfo: ResizeInfo, col: PrivateColumnType<T>) => void;
 }
-
+// todo 可选择 可扩展列需要支持伸缩功能
 function Th<T>(props: ThProps<T>) {
   const {
     column,
-    columnKey,
-    colIndex,
-    rowIndex,
     rowSpan,
     locale,
     checked,
@@ -111,7 +99,7 @@ function Th<T>(props: ThProps<T>) {
         startPosX: event.clientX,
         resizingRect,
       };
-      onMouseDown && onMouseDown(resizeInfo, column, colIndex);
+      onMouseDown && onMouseDown(resizeInfo, column);
     }
   };
 
@@ -132,7 +120,7 @@ function Th<T>(props: ThProps<T>) {
 
   const renderSelection = (columnType: 'checkbox' | 'radio') => {
     return (
-      <th key={columnKey} rowSpan={rowSpan} className={className} style={style}>
+      <th key={column._columnKey} rowSpan={rowSpan} className={className} style={style}>
         {column.title ||
           (columnType === 'radio' ? null : <Checkbox checked={checked} onChange={handleChange} />)}
       </th>
@@ -141,14 +129,14 @@ function Th<T>(props: ThProps<T>) {
 
   const renderExpand = () => {
     return (
-      <th key={columnKey} rowSpan={rowSpan} className={className} style={style}>
+      <th key={column._columnKey} rowSpan={rowSpan} className={className} style={style}>
         {column.title || null}
       </th>
     );
   };
 
   const renderSorterContent = useCallback(() => {
-    const item = sorterStates.find((s) => s.key === columnKey);
+    const item = sorterStates.find((s) => s.key === column._columnKey);
 
     return (
       <Sorter
@@ -156,19 +144,14 @@ function Th<T>(props: ThProps<T>) {
         activeDesc={item?.order === 'desc'}
         renderSorter={column.renderSorter}
         onChange={(order) => {
-          onSort &&
-            onSort(
-              omit(column, ['_ignoreRightBorder', '_lastLeftFixed', '_firstRightFixed', '_width']),
-              order,
-              columnKey,
-            );
+          onSort && onSort(column, order);
         }}
       />
     );
-  }, [sorterStates, onSort]);
+  }, [sorterStates, onSort, column]);
 
   const renderFilterContent = useCallback(() => {
-    const curr = filterStates.find((f) => f.key === columnKey);
+    const curr = filterStates.find((f) => f.key === column._columnKey);
     return (
       <Filter
         locale={locale}
@@ -178,14 +161,14 @@ function Th<T>(props: ThProps<T>) {
         filterSearch={column?.filterSearch}
         filteredValue={curr?.filteredValue || []}
         onReset={() => {
-          onFilterChange && onFilterChange(column, [], columnKey);
+          onFilterChange && onFilterChange(column, []);
         }}
         onChange={(checkedValue: React.Key[]) => {
-          onFilterChange && onFilterChange(column, checkedValue, columnKey);
+          onFilterChange && onFilterChange(column, checkedValue);
         }}
       />
     );
-  }, [locale, onFilterChange, filterStates]);
+  }, [column, locale, onFilterChange, filterStates]);
 
   // todo 多级表头也需要配置排序 过滤
   const renderContent = () => {
@@ -201,7 +184,7 @@ function Th<T>(props: ThProps<T>) {
     return (
       <th
         ref={cellRef}
-        key={columnKey}
+        key={column._columnKey}
         style={style}
         className={className}
         colSpan={column.colSpan}
@@ -230,11 +213,14 @@ function Th<T>(props: ThProps<T>) {
             </div>
           ) : null}
         </div>
-        {rowIndex === 0 &&
-        bordered &&
-        !('children' in column) &&
-        !column._ignoreRightBorder &&
-        column?.resizable ? (
+        {/*{rowIndex === 0 &&*/}
+        {/*bordered &&*/}
+        {/*!('children' in column) &&*/}
+        {/*!column._ignoreRightBorder &&*/}
+        {/*column?.resizable ? (*/}
+        {/*  <div className="cell-header-resizable" onMouseDown={handleMouseDown} />*/}
+        {/*) : null}*/}
+        {bordered && !('children' in column) && !column._ignoreRightBorder && column?.resizable ? (
           <div className="cell-header-resizable" onMouseDown={handleMouseDown} />
         ) : null}
       </th>

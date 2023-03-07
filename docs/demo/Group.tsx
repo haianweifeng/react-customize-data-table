@@ -21,6 +21,7 @@ const columns: ColumnsType<DataType>[] = [
     key: 'name',
     width: 100,
     fixed: 'left',
+    resizable: true,
     filters: [
       {
         text: 'Joe',
@@ -42,6 +43,7 @@ const columns: ColumnsType<DataType>[] = [
         dataIndex: 'age',
         key: 'age',
         width: 150,
+        resizable: true,
         sorter: (a: DataType, b: DataType) => a.age - b.age,
       },
       {
@@ -91,6 +93,7 @@ const columns: ColumnsType<DataType>[] = [
         title: 'Company Name',
         dataIndex: 'companyName',
         key: 'companyName',
+        width: 200,
       },
     ],
   },

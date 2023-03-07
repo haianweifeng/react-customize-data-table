@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import omit from 'omit.js';
 import type {
   ColumnType,
@@ -10,6 +10,7 @@ import type {
   PrivateColumnsType,
 } from '../interface1';
 import { SELECTION_EXPAND_COLUMN_WIDTH } from '../utils/constant';
+import { getColumnKey } from '../utils/util';
 // todo 考虑如果是children的列不能再设置type
 function useColumns<T>(
   originColumns: ColumnsType<T>,
@@ -51,13 +52,32 @@ function useColumns<T>(
     [],
   );
 
+  const addColumnKeyForColumn = useCallback((columns: ColumnsType<T>, pos?: number) => {
+    const mergeColumns: PrivateColumnsType<T> = [];
+    columns.map((column, index) => {
+      if ('children' in column && column.children.length) {
+        mergeColumns.push({
+          ...column,
+          _columnKey: getColumnKey(column, pos ? `${pos}_${index}` : index),
+          children: addColumnKeyForColumn(column.children, index),
+        });
+      } else {
+        mergeColumns.push({
+          ...column,
+          _columnKey: getColumnKey(column, pos ? `${pos}_${index}` : index),
+        });
+      }
+    });
+    return mergeColumns;
+  }, []);
+
   const flatColumns = useCallback((columns: PrivateColumnsType<T>) => {
     const flattenColumns: PrivateColumnsType<T> = [];
     columns.map((column) => {
       if ('children' in column && column?.children.length) {
         flattenColumns.push(...flatColumns(column.children));
       } else {
-        flattenColumns.push(column);
+        flattenColumns.push({ ...column });
       }
     });
     return flattenColumns;
@@ -66,51 +86,64 @@ function useColumns<T>(
   const getMergeColumns = useCallback(() => {
     let existExpand = false;
     let existSelection = false;
-    const selectionColumn: ColumnType<T> = {};
 
     const mergeColumns: PrivateColumnsType<T> = [];
 
-    if (rowSelection) {
-      selectionColumn.key = 'selection';
-      selectionColumn.type = rowSelection.type || 'checkbox';
-      selectionColumn.width = rowSelection.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH;
-      selectionColumn.title = rowSelection?.columnTitle || '';
-    }
-
-    originColumns.map((column) => {
+    originColumns.map((column, index) => {
       if ('type' in column && (column?.type === 'checkbox' || column?.type === 'radio')) {
         existSelection = true;
-        mergeColumns.push({ ...column, ...omit(selectionColumn, ['type']) });
+        mergeColumns.push({
+          key: 'SELECTION_COLUMN',
+          ...column,
+          _columnKey: getColumnKey(column, 'SELECTION_COLUMN'),
+          title: rowSelection?.columnTitle || '',
+          width: rowSelection?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
+        });
       }
       if ('type' in column && column?.type === 'expand') {
         existExpand = typeof column?.render === 'function';
-        if (expandable && (expandable?.expandedRowRender || typeof column?.render === 'function')) {
+        if ((expandable && expandable?.expandedRowRender) || existExpand) {
           mergeColumns.push({
+            key: 'EXPAND_COLUMN',
             ...column,
-            key: 'expand',
-            title: expandable.columnTitle || '',
+            _columnKey: getColumnKey(column, 'EXPAND_COLUMN'),
+            title: expandable?.columnTitle || '',
             width: expandable?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
           });
         }
       } else {
-        mergeColumns.push({ ...column });
+        const mergeColumn = { ...column, _columnKey: getColumnKey(column, index) };
+        if ('children' in column && column.children.length) {
+          (mergeColumn as PrivateColumnGroupType<T>).children = addColumnKeyForColumn(
+            column.children,
+            index,
+          );
+        }
+        mergeColumns.push(mergeColumn);
       }
     });
 
     if (!existExpand && expandable && expandable?.expandedRowRender) {
       mergeColumns.unshift({
         type: 'expand',
-        key: 'expand',
-        width: expandable?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
+        key: 'EXPAND_COLUMN',
+        _columnKey: 'EXPAND_COLUMN',
         title: expandable.columnTitle || '',
+        width: expandable?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
       });
     }
     if (!existSelection && rowSelection) {
-      mergeColumns.unshift(selectionColumn);
+      mergeColumns.unshift({
+        type: rowSelection.type || 'checkbox',
+        key: 'SELECTION_COLUMN',
+        _columnKey: 'SELECTION_COLUMN',
+        title: rowSelection?.columnTitle || '',
+        width: rowSelection.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
+      });
     }
     return mergeColumns;
     // eslint-disable-line react-hooks/exhaustive-deps
-  }, [originColumns]);
+  }, [originColumns, addColumnKeyForColumn]);
 
   const initMergeColumns = useMemo(() => {
     return getMergeColumns();
@@ -167,7 +200,7 @@ function useColumns<T>(
         return col;
       });
   }, [mergeColumns, existFixedInColumn, addFixedToColumn]);
-  // 如果是表头分级 只会计算第一层的宽度
+
   const flattenColumns = useMemo(() => {
     return flatColumns(fixedColumns);
   }, [fixedColumns, flatColumns]);
@@ -175,6 +208,35 @@ function useColumns<T>(
   const updateMergeColumns = useCallback((columns: PrivateColumnsType<T>) => {
     setMergeColumns(columns);
   }, []);
+  // todo 待修改
+  const addWidthForColumns = useCallback(
+    (columnsWidth: Map<React.Key, number>, columns: PrivateColumnsType<T>, pos?: number) => {
+      const widthColumns: PrivateColumnsType<T> = [];
+      columns.map((column, index) => {
+        const columnKey = getColumnKey(column, pos ? `${pos}_${index}` : index);
+        if ('children' in column && column.children.length) {
+          if (columnsWidth.get(columnKey)) {
+            widthColumns.push({
+              ...column,
+              _width: columnsWidth.get(columnKey),
+              children: addWidthForColumns(columnsWidth, column.children, index),
+            });
+          } else {
+            widthColumns.push({
+              ...column,
+              children: addWidthForColumns(columnsWidth, column.children, index),
+            });
+          }
+        } else if (columnsWidth.get(columnKey)) {
+          widthColumns.push({ ...column, _width: columnsWidth.get(columnKey) });
+        } else {
+          widthColumns.push({ ...column });
+        }
+      });
+      return widthColumns;
+    },
+    [],
+  );
 
   return [
     mergeColumns,
@@ -182,6 +244,8 @@ function useColumns<T>(
     flattenColumns,
     updateMergeColumns,
     initMergeColumns,
+    flatColumns,
+    addWidthForColumns,
   ] as const;
 }
 export default useColumns;

@@ -175,12 +175,14 @@ export type ColumnGroupType<T> = Omit<ColumnType<T>, 'dataIndex' | 'type'> & {
 export type ColumnsType<T> = (ColumnGroupType<T> | ColumnType<T>)[];
 
 export type PrivateColumnType<T> = ColumnType<T> & {
-  _ignoreRightBorder?: boolean;
+  _width?: number;
+  _columnKey: React.Key;
   _lastLeftFixed?: boolean;
   _firstRightFixed?: boolean;
-  _width?: number;
+  _ignoreRightBorder?: boolean;
 };
 
+// todo 约束children 的伸缩功能
 export type PrivateColumnGroupType<T> = Omit<PrivateColumnType<T>, 'dataIndex' | 'type'> & {
   children: Omit<PrivateColumnsType<T>, 'type'>;
 };

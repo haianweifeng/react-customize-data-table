@@ -45,6 +45,7 @@ import type {
   PrivateColumnsType,
   PrivateColumnType,
   PrivateColumnGroupType,
+  ResizeInfo,
 } from '../interface1';
 import VirtualList from '../VirtualList';
 import type { PaginationProps } from '../index';
@@ -58,6 +59,7 @@ import {
   getColumnKey,
 } from '../utils/util';
 import { BAR_WIDTH } from '../utils/constant';
+import { omitColumnProps } from '../utils/util';
 import LocaleContext from '../LocalProvider/context';
 import ScrollBar from '../ScrollBar';
 import ScrollBars from '../ScrollBars';
@@ -289,8 +291,15 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return flatRecords(dataSource);
   }, [dataSource]);
 
-  const [mergeColumns, fixedColumns, flattenColumns, updateMergeColumns, initMergeColumns] =
-    useColumns(columns, rowSelection, expandable);
+  const [
+    mergeColumns,
+    fixedColumns,
+    flattenColumns,
+    updateMergeColumns,
+    initMergeColumns,
+    flatColumns,
+    addWidthForColumns,
+  ] = useColumns(columns, rowSelection, expandable);
 
   const [
     selectedKeys,
@@ -631,64 +640,20 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         let widthSum = 0;
         let noWidthColumnsCount = 0;
         const noMaxWidthColumnKeys: React.Key[] = [];
-        const noMaxWidthColumnIndexs: number[] = [];
         const tbodyWidth = width || tbodyRef.current.offsetWidth;
+        console.log(`tbodyWidth: ${tbodyWidth}`);
 
         const columnsWidth = new Map<React.Key, number>();
 
-        const addWidthForColumns = (targetColumns: PrivateColumnsType<T>, pos?: string) => {
-          const widthColumns: PrivateColumnsType<T> = [];
-          targetColumns.map((column, index) => {
-            const columnKey = getColumnKey(column, pos ? `${pos}_${index}` : `${index}`);
-            if ('children' in column && column.children.length) {
-              if (columnsWidth.get(columnKey)) {
-                widthColumns.push({
-                  ...column,
-                  _width: columnsWidth.get(columnKey),
-                  children: addWidthForColumns(column.children, `${index}`),
-                });
-              } else {
-                widthColumns.push({
-                  ...column,
-                  children: addWidthForColumns(column.children, `${index}`),
-                });
-              }
-            } else if (columnsWidth.get(columnKey)) {
-              widthColumns.push({ ...column, _width: columnsWidth.get(columnKey) });
-            } else {
-              widthColumns.push({ ...column });
-            }
-          });
-          return widthColumns;
-        };
-
-        const flatColumns = (targetColumns: PrivateColumnsType<T>, pos?: string) => {
-          const flattenColumns: ((PrivateColumnGroupType<T> | PrivateColumnType<T>) & {
-            columnKey: React.Key;
-          })[] = [];
-          targetColumns.map((column, index) => {
-            if ('children' in column && column?.children.length) {
-              flattenColumns.push(...flatColumns(column.children, `${index}`));
-            } else {
-              flattenColumns.push({
-                ...column,
-                columnKey: getColumnKey(column, pos ? `${pos}_${index}` : `${index}`),
-              });
-            }
-          });
-          return flattenColumns;
-        };
-
         const flattenTargetColumns = flatColumns(targetColumns);
 
-        flattenTargetColumns.map((column, index) => {
+        flattenTargetColumns.map((column) => {
           if (column.width) {
             widthSum += parseInt(`${column.width}`, 10);
           } else {
             noWidthColumnsCount++;
             if (!column.maxWidth) {
-              noMaxWidthColumnKeys.push(column.columnKey);
-              // noMaxWidthColumnIndexs.push(index);
+              noMaxWidthColumnKeys.push(column._columnKey);
             }
           }
         });
@@ -701,7 +666,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
         flattenTargetColumns.map((column) => {
           if (column.width) {
-            columnsWidth.set(column.columnKey, parseInt(`${column.width}`, 10));
+            columnsWidth.set(column._columnKey, parseInt(`${column.width}`, 10));
           } else {
             let columnWidth = averageWidth;
             if (column.minWidth) {
@@ -718,16 +683,16 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
                 averageWidth = parseInt(`${remainWidth / noWidthColumnsCount}`, 10);
               }
             }
-            columnsWidth.set(column.columnKey, parseInt(`${columnWidth}`, 10));
+            columnsWidth.set(column._columnKey, Math.max(parseInt(`${columnWidth}`, 10), 0));
           }
         });
 
         if (remainWidth > 0) {
           averageWidth = parseInt(`${remainWidth / noMaxWidthColumnKeys.length}`, 10);
           flattenTargetColumns.map((c) => {
-            if (noMaxWidthColumnKeys.indexOf(c.columnKey) >= 0) {
-              const oldWidth = columnsWidth.get(c.columnKey);
-              columnsWidth.set(c.columnKey, parseInt(`${Number(oldWidth) + averageWidth}`, 10));
+            if (noMaxWidthColumnKeys.indexOf(c._columnKey) >= 0) {
+              const oldWidth = columnsWidth.get(c._columnKey);
+              columnsWidth.set(c._columnKey, parseInt(`${Number(oldWidth) + averageWidth}`, 10));
             }
           });
         }
@@ -736,51 +701,15 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           return total + columnWidth;
         }, 0);
 
-        const widthColumns = addWidthForColumns(targetColumns);
+        const widthColumns = addWidthForColumns(columnsWidth, targetColumns);
 
-        // let widthColumns = targetColumns.map((column) => {
-        //   if (column.width)
-        //     return {
-        //       ...column,
-        //       width: parseInt(`${column.width}`, 10),
-        //       _width: parseInt(`${column.width}`, 10),
-        //     };
-        //   let columnWidth = averageWidth;
-        //   if (column.minWidth) {
-        //     columnWidth = Math.max(averageWidth, parseInt(`${column.minWidth}`, 10));
-        //   }
-        //   if (column.maxWidth) {
-        //     columnWidth = Math.min(averageWidth, parseInt(`${column.maxWidth}`, 10));
-        //   }
-        //   remainWidth -= columnWidth;
-        //   noWidthColumnsCount--;
-        //   const diff = averageWidth - columnWidth;
-        //   if (diff) {
-        //     if (noWidthColumnsCount > 0) {
-        //       averageWidth = parseInt(`${remainWidth / noWidthColumnsCount}`, 10);
-        //     }
-        //   }
-        //   return Object.assign({}, column, { _width: columnWidth });
-        // });
-        //
-        // if (remainWidth > 0) {
-        //   averageWidth = parseInt(`${remainWidth / noMaxWidthColumnIndexs.length}`, 10);
-        //   widthColumns = widthColumns.map((c, index) => {
-        //     if (noMaxWidthColumnIndexs.indexOf(index) >= 0) {
-        //       return { ...c, _width: Number(c._width) + averageWidth };
-        //     }
-        //     return c;
-        //   });
-        // }
-        // const tableWidth = widthColumns.reduce((total, column) => {
-        //   return total + column._width;
-        // }, 0);
         setScrollWidth(tableWidth);
         updateMergeColumns(widthColumns);
       }
     },
-    [width],
+    [width, flatColumns, addWidthForColumns],
   );
+  console.log(`scrollWidth: ${scrollWidth}`);
 
   // todo 这里没有添加依赖项看eslint 在提交时候会不会报错
   useEffect(() => {
@@ -788,7 +717,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       handleResize(initMergeColumns);
     }
   }, [initMergeColumns, handleResize, isMount]);
-  // console.log(mergeColumns);
+  console.log(mergeColumns);
 
   useEffect(() => {
     setIsMount(true);
@@ -975,9 +904,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const handleFilterChange = (
     col: PrivateColumnType<T> | PrivateColumnGroupType<T>,
     checkedValue: React.Key[],
-    columnKey: React.Key,
   ) => {
-    const index = filterStates.findIndex((filterState) => filterState.key === columnKey);
+    const index = filterStates.findIndex((filterState) => filterState.key === col._columnKey);
     if (index >= 0) {
       const copyFilterState = [...filterStates];
       const item = copyFilterState[index];
@@ -1003,12 +931,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   };
 
   // todo
-  const handleHeaderMouseDown = (
-    resizeInfo: ResizeInfoType,
-    col: PrivateColumnType<T>,
-    // col: ColumnsWithType<T>,
-    colIndex: number,
-  ) => {
+  const handleHeaderMouseDown = (resizeInfo: ResizeInfo, col: PrivateColumnType<T>) => {
     const resizeEl = resizeLineRef.current;
     const { resizingRect, startPosX } = resizeInfo;
     if (!resizeEl || !tableContainer.current) return;
@@ -1029,25 +952,16 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       const columnWidth =
         parseInt(resizeEl.style.left, 10) - (resizingRect.left - tableContainerRect.left);
       const copyMergeColumns = [...mergeColumns];
-      const oldWidth = copyMergeColumns[colIndex]._width;
-      copyMergeColumns[colIndex] = { ...col, width: columnWidth };
-      handleResize(copyMergeColumns);
-      // updateMergeColumns(copyMergeColumns);
-      // const copyColumns = [...columns];
-      // const oldWidth = columnsWithWidth[colIndex].width;
-      // copyColumns[colIndex] = { ...col, width: columnWidth };
-      // setColWidths([]);
-      // setColumns(copyColumns);
+      const index = copyMergeColumns.findIndex((c) => c._columnKey === col._columnKey);
+      if (index >= 0) {
+        const column = copyMergeColumns[index];
+        const oldWidth = column._width;
+        copyMergeColumns.splice(index, 1, { ...col, width: columnWidth });
+        handleResize(copyMergeColumns);
+        onColumnResize &&
+          onColumnResize(columnWidth, oldWidth as number, omitColumnProps(column), event);
+      }
       resizeEl.style.cssText = `display: none`;
-
-      // const column = copyColumns[colIndex] as ColumnsType<T>;
-      onColumnResize &&
-        onColumnResize(
-          columnWidth,
-          oldWidth as number,
-          omit(copyMergeColumns[colIndex], ['_width']),
-          event,
-        );
 
       document.removeEventListener('mousemove', handleHeaderMouseMove);
       document.removeEventListener('mouseup', handleHeaderMouseUp);
