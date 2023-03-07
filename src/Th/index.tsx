@@ -182,9 +182,8 @@ function Th<T>(props: ThProps<T>) {
   }, [column, locale, onFilterChange, filterStates]);
 
   // todo 多级表头也需要配置排序 过滤
-  // todo type 有可能是default
   const renderContent = () => {
-    if ('type' in column) {
+    if ('type' in column && column.type && ['expand', 'checkbox', 'radio'].includes(column.type)) {
       switch (column.type) {
         case 'checkbox':
         case 'radio':

@@ -174,25 +174,24 @@ function Thead<T>(props: TheadProps<T>) {
       if (isSelectionExpand) {
         baseProps = { ...baseProps, rowSpan: totalRows, className: cls };
         return trs[rowIndex].push(renderCell(baseProps));
+      }
+      if ('children' in column && column?.children.length) {
+        baseProps = {
+          ...baseProps,
+          rowSpan: 1,
+          className: classnames({
+            'cell-align-center': true,
+            'cell-ellipsis': !!column.ellipsis,
+            ...classes,
+          }),
+        };
+        trs[rowIndex].push(renderCell(baseProps));
+        column.children.forEach((col, i) => {
+          renderCells(col, trs, rowIndex + 1, i);
+        });
       } else {
-        if ('children' in column && column?.children.length) {
-          baseProps = {
-            ...baseProps,
-            rowSpan: 1,
-            className: classnames({
-              'cell-align-center': true,
-              'cell-ellipsis': !!column.ellipsis,
-              ...classes,
-            }),
-          };
-          trs[rowIndex].push(renderCell(baseProps));
-          column.children.forEach((col, i) => {
-            renderCells(col, trs, rowIndex + 1, i);
-          });
-        } else {
-          baseProps = { ...baseProps, rowSpan: totalRows - rowIndex, className: cls };
-          trs[rowIndex].push(renderCell(baseProps));
-        }
+        baseProps = { ...baseProps, rowSpan: totalRows - rowIndex, className: cls };
+        trs[rowIndex].push(renderCell(baseProps));
       }
 
       // switch (column.type) {
