@@ -149,6 +149,7 @@ function Thead<T>(props: TheadProps<T>) {
         'cell-align-center': column.align === 'center',
         'cell-align-right': column.align === 'right',
         'selection-expand-column': isSelectionExpand,
+        'cell-ellipsis': isSelectionExpand && !!column.ellipsis,
         ...classes,
       });
 
@@ -170,7 +171,6 @@ function Thead<T>(props: TheadProps<T>) {
         onMouseDown,
         onSelectAll: handleChange,
       } as ThProps<T>;
-      // todo cell-ellipsis 是不是需要应用到selection-expand column 中
       if (isSelectionExpand) {
         baseProps = { ...baseProps, rowSpan: totalRows, className: cls };
         return trs[rowIndex].push(renderCell(baseProps));
@@ -181,7 +181,6 @@ function Thead<T>(props: TheadProps<T>) {
           rowSpan: 1,
           className: classnames({
             'cell-align-center': true,
-            'cell-ellipsis': !!column.ellipsis,
             ...classes,
           }),
         };

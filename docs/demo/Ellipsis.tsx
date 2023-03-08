@@ -41,17 +41,34 @@ const App = () => {
 
   const columns: ColumnsType<DataType>[] = [
     {
+      type: 'checkbox',
+      title: '多选框',
+      resizable: true,
+      ellipsis: { tooltip: true },
+    },
+    {
+      type: 'expand',
+      title: '扩展列',
+      resizable: true,
+      ellipsis: { tooltip: true },
+      render: () => {
+        return 'hahah';
+      },
+    },
+    {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
       render: (text: string) => <a>{text}</a>,
       width: 150,
+      resizable: true,
     },
     {
       title: 'Age',
       dataIndex: 'age',
       key: 'age',
       width: 80,
+      resizable: true,
     },
     {
       title: 'Address',
@@ -59,6 +76,7 @@ const App = () => {
       key: 'address 1',
       ellipsis: { tooltip: true },
       resizable: true,
+      width: 157,
     },
     {
       title: 'Long Column Long Column Long Column',
@@ -79,6 +97,7 @@ const App = () => {
       ],
       filterMethod: (value: string, record: DataType) => record.address.startsWith(value),
       render: (text: string) => <span>{text}</span>,
+      width: 157,
     },
     {
       title: 'Long Column Long Column',
@@ -87,6 +106,7 @@ const App = () => {
       resizable: true,
       // ellipsis: true,
       ellipsis: { tooltip: true, tooltipTheme: 'light' },
+      width: 157,
     },
     {
       title: 'Long Column',
@@ -94,6 +114,7 @@ const App = () => {
       key: 'address 4',
       // ellipsis: true,
       ellipsis: { tooltip: true, tooltipTheme: 'light' },
+      width: 157,
     },
   ];
 

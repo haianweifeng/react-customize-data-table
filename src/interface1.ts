@@ -127,7 +127,7 @@ export type ColumnType<T> = {
   /** 表头列合并 todo 表头不考虑设置onHeaderCell */
   colSpan?: number;
   // headerColSpan?: number;
-  /** 是否允许拖拽调整宽度 需开启 border 属性，且设置 width 不支持表头分组的调整宽度 */
+  /** 是否允许拖拽调整宽度 需开启 border 属性，对于多级表头只支持最后一级表头拖拽调整宽度 */
   resizable?: boolean;
   /** 设置单元格属性 */
   onCell?: (record: T, rowIndex: number) => CellType;
@@ -135,11 +135,11 @@ export type ColumnType<T> = {
   // sortDirections?: ['ascend', 'descend'];
   /** 默认排序 defaultSortOrder */
   defaultSortOrder?: 'asc' | 'desc';
-  // /** 排序的受控属性,外界可用此控制列的排序 todo 未实现 */
+  // /** 排序的受控属性,外界可用此控制列的排序 */
   sortOrder?: 'asc' | 'desc' | null;
   /** 排序函数 */
   sorter?: (rowA: T, rowB: T) => number | Sorter<T>;
-  /** 自定义排序图标 todo 未实现 */
+  /** 自定义排序图标 */
   renderSorter?: (params: {
     activeAsc: boolean;
     activeDesc: boolean;

@@ -94,7 +94,7 @@ function useColumns<T>(
           key: 'SELECTION_COLUMN',
           ...column,
           _columnKey: getColumnKey(column, 'SELECTION_COLUMN'),
-          title: rowSelection?.columnTitle || '',
+          title: rowSelection?.columnTitle || column.title || '',
           width: rowSelection?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
         });
         return;
@@ -106,7 +106,7 @@ function useColumns<T>(
             key: 'EXPAND_COLUMN',
             ...column,
             _columnKey: getColumnKey(column, 'EXPAND_COLUMN'),
-            title: expandable?.columnTitle || '',
+            title: expandable?.columnTitle || column.title || '',
             width: expandable?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
           });
         }

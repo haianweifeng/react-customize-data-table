@@ -2,9 +2,9 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import classnames from 'classnames';
 import Tooltip from '../Tooltip';
 import Checkbox from '../Checkbox';
-import { getParent, getPropertyValueSum } from '../utils/util';
 import Sorter from '../Sorter';
 import Filter from '../Filter';
+import { getParent, getPropertyValueSum } from '../utils/util';
 import {
   ResizeInfo,
   SortState,
@@ -57,12 +57,11 @@ function Th<T>(props: ThProps<T>) {
 
   const showTooltip = typeof column?.ellipsis === 'object' && column.ellipsis?.tooltip;
 
-  // todo 待测试如果把column 依赖项改成column._width
   useEffect(() => {
     const cellEl = cellRef.current;
     const columnTitleEl = columnTitleRef.current;
     const targetEl = column.sorter || column.filters ? columnTitleEl : cellEl;
-    if (targetEl && column.ellipsis) {
+    if (targetEl && column.ellipsis && column.title) {
       const firstChild =
         column.sorter || column.filters
           ? columnTitleEl?.firstElementChild
@@ -127,11 +126,30 @@ function Th<T>(props: ThProps<T>) {
     ) : null;
   };
 
+  const renderTitle = () => {
+    return showTooltip && isOverflow ? (
+      renderTooltip(column.title)
+    ) : !!column.ellipsis ? (
+      <span className="cell-tooltip-content">{column.title}</span>
+    ) : (
+      column.title
+    );
+  };
+
   const renderSelection = (columnType: 'checkbox' | 'radio') => {
     return (
-      <th key={column._columnKey} rowSpan={rowSpan} className={className} style={style}>
-        {column.title ||
-          (columnType === 'radio' ? null : <Checkbox checked={checked} onChange={handleChange} />)}
+      <th
+        ref={cellRef}
+        key={column._columnKey}
+        rowSpan={rowSpan}
+        className={className}
+        style={style}
+      >
+        {column.title ? (
+          renderTitle()
+        ) : columnType === 'radio' ? null : (
+          <Checkbox checked={checked} onChange={handleChange} />
+        )}
         {renderResizeContent()}
       </th>
     );
@@ -139,8 +157,14 @@ function Th<T>(props: ThProps<T>) {
 
   const renderExpand = () => {
     return (
-      <th key={column._columnKey} rowSpan={rowSpan} className={className} style={style}>
-        {column.title || null}
+      <th
+        ref={cellRef}
+        key={column._columnKey}
+        rowSpan={rowSpan}
+        className={className}
+        style={style}
+      >
+        {column.title ? renderTitle() : null}
         {renderResizeContent()}
       </th>
     );
@@ -208,13 +232,7 @@ function Th<T>(props: ThProps<T>) {
               'column-title-ellipsis': !!column.ellipsis,
             })}
           >
-            {showTooltip && isOverflow ? (
-              renderTooltip(column.title)
-            ) : !!column.ellipsis ? (
-              <span className="cell-tooltip-content">{column.title}</span>
-            ) : (
-              column.title
-            )}
+            {renderTitle()}
           </span>
           {column.sorter || column.filters ? (
             <div className="sorter-filter">
@@ -226,129 +244,6 @@ function Th<T>(props: ThProps<T>) {
         {renderResizeContent()}
       </th>
     );
-    // switch (column.type) {
-    //   case 'checkbox':
-    //   case 'radio':
-    //     return renderSelection();
-    //   case 'expand':
-    //     return renderExpand();
-    //   default: {
-    //     return (
-    //       <th
-    //         rowSpan={'children' in column && column?.children.length ? 1 : rowSpan}
-    //         key={`${rowIndex}_${colIndex}`}
-    //         colSpan={column.colSpan}
-    //         className={className}
-    //         style={style}
-    //         ref={cellRef}
-    //       >
-    //         <div className="cell-header">
-    //           <span
-    //             ref={columnTitleRef}
-    //             className={classnames({
-    //               'column-title': true,
-    //               'column-title-ellipsis': !!column.ellipsis,
-    //             })}
-    //           >
-    //             {showTooltip && isOverflow ? (
-    //               renderTooltip(column.title)
-    //             ) : !!column.ellipsis ? (
-    //               <span className="cell-tooltip-content">{column.title}</span>
-    //             ) : (
-    //               column.title
-    //             )}
-    //           </span>
-    //           {column.sorter || column.filters ? (
-    //             <div className="sorter-filter">
-    //               {column.sorter ? renderSorterContent(column) : null}
-    //               {column.filters ? renderFilterContent(column) : null}
-    //             </div>
-    //           ) : null}
-    //         </div>
-    //         {rowIndex === 0 &&
-    //         bordered &&
-    //         !('children' in column) &&
-    //         !column._ignoreRightBorder &&
-    //         column?.resizable ? (
-    //           <div
-    //             className="cell-header-resizable"
-    //             onMouseDown={handleMouseDown}
-    //             // onMouseDown={(event) => {
-    //             //   handleMouseDown(event, column, colIndex);
-    //             // }}
-    //           />
-    //         ) : null}
-    //       </th>
-    //     );
-    //     // if ('children' in column && column?.children.length) {
-    //     //   return (
-    //     //     <th
-    //     //       key={`${rowIndex}_${colIndex}`}
-    //     //       colSpan={column.colSpan}
-    //     //       className={className}
-    //     //       style={style}
-    //     //       ref={cellRef}
-    //     //     >
-    //     //       {showTooltip && isOverflow ? (
-    //     //         renderTooltip(column.title)
-    //     //       ) : !!column.ellipsis ? (
-    //     //         <span className="cell-tooltip-content">{column.title}</span>
-    //     //       ) : (
-    //     //         column.title
-    //     //       )}
-    //     //     </th>
-    //     //   );
-    //     // } else {
-    //     //   return (
-    //     //     <th
-    //     //       rowSpan={rowSpan}
-    //     //       key={`${rowIndex}_${colIndex}`}
-    //     //       colSpan={column.colSpan}
-    //     //       className={className}
-    //     //       style={style}
-    //     //       ref={cellRef}
-    //     //     >
-    //     //       <div className="cell-header">
-    //     //         <span
-    //     //           ref={columnTitleRef}
-    //     //           className={classnames({
-    //     //             'column-title': true,
-    //     //             'column-title-ellipsis': !!column.ellipsis,
-    //     //           })}
-    //     //         >
-    //     //           {showTooltip && isOverflow ? (
-    //     //             renderTooltip(column.title)
-    //     //           ) : !!column.ellipsis ? (
-    //     //             <span className="cell-tooltip-content">{column.title}</span>
-    //     //           ) : (
-    //     //             column.title
-    //     //           )}
-    //     //         </span>
-    //     //         {column.sorter || column.filters ? (
-    //     //           <div className="sorter-filter">
-    //     //             {column.sorter ? renderSorterContent(column) : null}
-    //     //             {column.filters ? renderFilterContent(column) : null}
-    //     //           </div>
-    //     //         ) : null}
-    //     //       </div>
-    //     //       {rowIndex === 0 &&
-    //     //       bordered &&
-    //     //       !('children' in column) &&
-    //     //       !column.ignoreRightBorder &&
-    //     //       column?.resizable ? (
-    //     //         <div
-    //     //           className="cell-header-resizable"
-    //     //           onMouseDown={handleMouseDown}
-    //     //           // onMouseDown={(event) => {
-    //     //           //   handleMouseDown(event, column, colIndex);
-    //     //           // }}
-    //     //         />
-    //     //       ) : null}
-    //     //     </th>
-    //     //   );
-    //     // }
-    //   }
-    // }
   };
 
   return renderContent();
