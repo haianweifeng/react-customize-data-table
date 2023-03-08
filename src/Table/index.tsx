@@ -78,7 +78,6 @@ export interface TableProps<T> {
   dataSource: T[];
   /** 表格列的配置 */
   columns: ColumnsType<T>;
-  // columns: ColumnsType<T>[] | ColumnsGroupType<T>[];
   /** 表格行 key 默认取值key */
   rowKey: RowKeyType<T>;
   /** 是否显示交错斑马底纹 */
@@ -105,8 +104,10 @@ export interface TableProps<T> {
     rowIndex: number,
     colIndex: number,
   ) => React.CSSProperties | React.CSSProperties;
-  // /** 表头行的类名 todo 未实现 */
-  // headerRowClassName?: (rowIndex: number) => string;
+  /** 表头行的类名 */
+  headerRowClassName?: (rowIndex: number) => string | string;
+  /** 表头行的style */
+  headerRowStyle?: (rowIndex: number) => React.CSSProperties | React.CSSProperties;
   // /** 设置头部行属性 todo */
   // onHeaderRow?: (columns: ColumnsType<T>[], index: number) => any;
   /** 设置行属性 todo 改成onRowEvents 表头增加 onHeaderRowEvents */
@@ -135,12 +136,6 @@ export interface TableProps<T> {
   /** 滚动条滚动后回调函数 todo */
   onScroll?: (x: number, y: number) => void;
   /** 列宽伸缩后的回调 */
-  // onColumnResize?: (
-  //   newWidth: number,
-  //   oldWidth: number,
-  //   column: ColumnsType<T>,
-  //   event: Event,
-  // ) => void;
   onColumnResize?: (
     newWidth: number,
     oldWidth: number,
@@ -197,8 +192,10 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     empty = 'No data',
     onColumnResize,
     locale = localeContext.table,
-    headerCellClassName,
     headerCellStyle,
+    headerCellClassName,
+    headerRowStyle,
+    headerRowClassName,
   } = props;
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 44;
@@ -1599,6 +1596,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             filterStates={filterStates}
             headerCellStyle={headerCellStyle}
             headerCellClassName={headerCellClassName}
+            headerRowStyle={headerRowStyle}
+            headerRowClassName={headerRowClassName}
             onSort={handleSortChange}
             onSelectAll={handleSelectAll}
             onFilterChange={handleFilterChange}

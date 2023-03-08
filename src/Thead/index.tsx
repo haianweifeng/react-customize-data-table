@@ -31,6 +31,8 @@ interface TheadProps<T> {
     rowIndex: number,
     colIndex: number,
   ) => React.CSSProperties | React.CSSProperties;
+  headerRowClassName?: (rowIndex: number) => string | string;
+  headerRowStyle?: (rowIndex: number) => React.CSSProperties | React.CSSProperties;
   onSelectAll: (selected: boolean) => void;
   onSort: (col: PrivateColumnType<T> | PrivateColumnGroupType<T>, order: 'asc' | 'desc') => void;
   onFilterChange: (
@@ -54,6 +56,8 @@ function Thead<T>(props: TheadProps<T>) {
     onMouseDown,
     headerCellClassName,
     headerCellStyle,
+    headerRowStyle,
+    headerRowClassName,
   } = props;
 
   const parseHeaderColumns = useCallback(
@@ -153,10 +157,10 @@ function Thead<T>(props: TheadProps<T>) {
         ...classes,
       });
 
-      let styles: React.CSSProperties = {};
-      if (typeof headerCellStyle === 'function') {
-        styles = headerCellStyle(omitColumnProps(column), rowIndex, colIndex);
-      }
+      let styles: React.CSSProperties =
+        typeof headerCellStyle === 'function'
+          ? headerCellStyle(omitColumnProps(column), rowIndex, colIndex)
+          : headerCellStyle || {};
 
       let baseProps: ThProps<T> = {
         column,
@@ -231,6 +235,7 @@ function Thead<T>(props: TheadProps<T>) {
       // }
     },
     [
+      locale,
       checked,
       bordered,
       sorterStates,
@@ -242,6 +247,7 @@ function Thead<T>(props: TheadProps<T>) {
       handleChange,
       headerCellStyle,
       headerCellClassName,
+      omitColumnProps,
     ],
   );
 
@@ -256,7 +262,17 @@ function Thead<T>(props: TheadProps<T>) {
   return (
     <thead>
       {headerTrs.map((cells, i) => {
-        return <tr key={i}>{cells}</tr>;
+        const rowClassName =
+          typeof headerRowClassName === 'function'
+            ? headerRowClassName(i)
+            : headerRowClassName || '';
+        let styles: React.CSSProperties =
+          typeof headerRowStyle === 'function' ? headerRowStyle(i) : headerRowStyle || {};
+        return (
+          <tr key={i} className={rowClassName} style={styles}>
+            {cells}
+          </tr>
+        );
       })}
     </thead>
   );

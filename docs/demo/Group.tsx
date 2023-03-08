@@ -173,6 +173,18 @@ const App = () => {
         pageSize: 10,
       }}
       onColumnResize={handleColumnResize}
+      headerRowClassName={(rowIndex: number) => {
+        if (rowIndex % 2 === 0) {
+          return 'even-row';
+        }
+        return 'odd-row';
+      }}
+      headerRowStyle={(rowIndex: number) => {
+        if (rowIndex % 2 === 0) {
+          return { backgroundColor: 'red', color: 'red' };
+        }
+        return { backgroundColor: 'orange', color: 'orange' };
+      }}
       // rowSelection={{}}
       // expandable={{
       // insertBeforeColumnName: 'Gender',
