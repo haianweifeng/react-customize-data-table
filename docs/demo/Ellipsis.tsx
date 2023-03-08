@@ -40,15 +40,15 @@ const App = () => {
   };
 
   const columns: ColumnsType<DataType>[] = [
-    {
-      type: 'checkbox',
-      title: '多选框',
-      resizable: true,
-      ellipsis: { tooltip: true },
-    },
+    // {
+    //   type: 'checkbox',
+    //   // title: '多选框',
+    //   resizable: true,
+    //   ellipsis: { tooltip: true },
+    // },
     {
       type: 'expand',
-      title: '扩展列',
+      // title: '扩展列',
       resizable: true,
       ellipsis: { tooltip: true },
       render: () => {
@@ -118,6 +118,30 @@ const App = () => {
     },
   ];
 
-  return <Table columns={columns} dataSource={data} bordered />;
+  return (
+    <Table
+      columns={columns}
+      dataSource={data}
+      bordered
+      rowSelection={{}}
+      onHeaderRowEvents={(rowIndex: number) => {
+        return {
+          onClick: () => {
+            // console.log(`rowIndex: ${rowIndex}`);
+            console.log('header row click');
+          },
+        };
+      }}
+      onHeaderCellEvents={(column, rowIndex) => {
+        return {
+          onClick: () => {
+            console.log(column);
+            console.log(`rowIndex: ${rowIndex}`);
+            console.log('cell click');
+          },
+        };
+      }}
+    />
+  );
 };
 export default App;

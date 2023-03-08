@@ -55,6 +55,7 @@ const columns: ColumnsType<DataType>[] = [
         value: 'D',
       },
     ],
+    filterSearch: true,
     filterMethod: (value: string, record: DataType) => record.building.indexOf(value) === 0,
     sorter: (a: DataType, b: DataType) => a.age - b.age,
     children: [
@@ -184,6 +185,41 @@ const App = () => {
           return { backgroundColor: 'red', color: 'red' };
         }
         return { backgroundColor: 'orange', color: 'orange' };
+      }}
+      onHeaderRowEvents={(rowIndex: number) => {
+        return {
+          onClick: () => {
+            // console.log(`rowIndex: ${rowIndex}`);
+            console.log('header row click');
+          },
+          // onMouseEnter: () => {
+          //   console.log('row mouse enter');
+          // },
+          // onMouseLeave: () => {
+          //   console.log('row mouse leave');
+          // }
+          // onDoubleClick: () => {
+          //   console.log('row double click')
+          // }
+        };
+      }}
+      onHeaderCellEvents={(column, rowIndex) => {
+        return {
+          onClick: () => {
+            // console.log(column);
+            // console.log(`rowIndex: ${rowIndex}`);
+            console.log('cell click');
+          },
+          // onMouseEnter: () => {
+          //   console.log('cell mouse enter');
+          // },
+          // onMouseLeave: () => {
+          //   console.log('cell mouse leave');
+          // }
+          // onDoubleClick: () => {
+          //   console.log(' cell double click')
+          // }
+        };
       }}
       // rowSelection={{}}
       // expandable={{

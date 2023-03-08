@@ -108,7 +108,10 @@ export interface TableProps<T> {
   headerRowClassName?: (rowIndex: number) => string | string;
   /** 表头行的style */
   headerRowStyle?: (rowIndex: number) => React.CSSProperties | React.CSSProperties;
-  // /** 设置头部行属性 todo */
+  /** 设置头部行事件 */
+  onHeaderRowEvents?: (rowIndex: number) => object;
+  /** 设置头部单元格事件 */
+  onHeaderCellEvents?: (column: ColumnType<T> | ColumnGroupType<T>, rowIndex: number) => object;
   // onHeaderRow?: (columns: ColumnsType<T>[], index: number) => any;
   /** 设置行属性 todo 改成onRowEvents 表头增加 onHeaderRowEvents */
   onRow?: (record: T, index: number) => any;
@@ -196,6 +199,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     headerCellClassName,
     headerRowStyle,
     headerRowClassName,
+    onHeaderRowEvents,
+    onHeaderCellEvents,
   } = props;
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 44;
@@ -867,7 +872,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     //   rowSelection?.onChange(selectKeys, selectedRows);
     // }
   };
-
+  // todo bug 如果是手动type 配置可选择列触发不了
   const handleSelectAll = (selected: boolean) => {
     let selectedRecords: T[];
     let finalSelectedKeys: React.Key[];
@@ -1602,6 +1607,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             onSelectAll={handleSelectAll}
             onFilterChange={handleFilterChange}
             onMouseDown={handleHeaderMouseDown}
+            onHeaderRowEvents={onHeaderRowEvents}
+            onHeaderCellEvents={onHeaderCellEvents}
           />
         </table>
       </div>

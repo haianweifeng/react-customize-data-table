@@ -16,7 +16,7 @@ interface IconProps {
   component: ComponentType<CustomIconComponentProps>;
   style?: React.CSSProperties;
   className?: string;
-  onClick?: () => void;
+  onClick?: (event: React.MouseEvent) => void;
 }
 
 const Icon = (props: IconProps) => {
@@ -31,9 +31,9 @@ const Icon = (props: IconProps) => {
     'aria-hidden': true,
   };
 
-  const handleClick = () => {
+  const handleClick = (event: React.MouseEvent) => {
     if (typeof onClick === 'function') {
-      onClick();
+      onClick(event);
     }
   };
 

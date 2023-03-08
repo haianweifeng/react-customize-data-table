@@ -3,6 +3,7 @@ import omit from 'omit.js';
 import type { RowKeyType } from '../interface';
 import type {
   ColumnGroupType,
+  ColumnsType,
   ColumnType,
   PrivateColumnGroupType,
   PrivateColumnType,
@@ -26,6 +27,18 @@ export function getColumnKey<T>(column: ColumnGroupType<T> | ColumnType<T>, defa
 }
 
 export function omitColumnProps<T>(column: PrivateColumnGroupType<T> | PrivateColumnType<T>) {
+  if ('children' in column && column.children.length) {
+    const formatChildColumns: ColumnsType<T> = column.children.map((col) => {
+      return omitColumnProps(col);
+    });
+    return omit({ ...column, children: formatChildColumns }, [
+      '_width',
+      '_columnKey',
+      '_lastLeftFixed',
+      '_firstRightFixed',
+      '_ignoreRightBorder',
+    ]);
+  }
   return omit(column, [
     '_width',
     '_columnKey',

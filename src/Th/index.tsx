@@ -1,19 +1,22 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import classnames from 'classnames';
 import Tooltip from '../Tooltip';
 import Checkbox from '../Checkbox';
 import Sorter from '../Sorter';
 import Filter from '../Filter';
-import { getParent, getPropertyValueSum } from '../utils/util';
+import { getParent, getPropertyValueSum, omitColumnProps } from '../utils/util';
 import {
   ResizeInfo,
   SortState,
   FilterState,
   PrivateColumnType,
   PrivateColumnGroupType,
+  ColumnType,
+  ColumnGroupType,
 } from '../interface1';
 
 export interface ThProps<T> {
+  rowIndex: number;
   rowSpan: number;
   bordered: boolean;
   className: string;
@@ -28,8 +31,9 @@ export interface ThProps<T> {
     col: PrivateColumnType<T> | PrivateColumnGroupType<T>,
     filteredValue: React.Key[],
   ) => void;
-  onSelectAll?: (selected: boolean) => void;
+  onSelectAll?: (selected: boolean, event: any) => void;
   onMouseDown?: (resizeInfo: ResizeInfo, col: PrivateColumnType<T>) => void;
+  onHeaderCellEvents?: (column: ColumnType<T> | ColumnGroupType<T>, rowIndex: number) => object;
 }
 
 function Th<T>(props: ThProps<T>) {
@@ -39,6 +43,7 @@ function Th<T>(props: ThProps<T>) {
     locale,
     checked,
     bordered,
+    rowIndex,
     style = {},
     className = '',
     sorterStates,
@@ -47,6 +52,7 @@ function Th<T>(props: ThProps<T>) {
     onFilterChange,
     onSelectAll,
     onMouseDown,
+    onHeaderCellEvents,
   } = props;
 
   const cellRef = useRef<HTMLTableCellElement>(null);
@@ -85,8 +91,17 @@ function Th<T>(props: ThProps<T>) {
     }
   }, [column]);
 
-  const handleChange = (selected: boolean) => {
-    onSelectAll && onSelectAll(selected);
+  const cellEvents = useMemo(() => {
+    return typeof onHeaderCellEvents === 'function'
+      ? onHeaderCellEvents(omitColumnProps(column), rowIndex)
+      : {};
+  }, [onHeaderCellEvents, rowIndex, column, omitColumnProps]);
+
+  const handleChange = (selected: boolean, event: any) => {
+    if (typeof (cellEvents as any)?.onClick === 'function') {
+      (cellEvents as any)?.onClick(event);
+    }
+    onSelectAll && onSelectAll(selected, event);
   };
 
   const handleMouseDown = (event: any) => {
@@ -144,6 +159,7 @@ function Th<T>(props: ThProps<T>) {
         rowSpan={rowSpan}
         className={className}
         style={style}
+        {...cellEvents}
       >
         {column.title ? (
           renderTitle()
@@ -163,6 +179,7 @@ function Th<T>(props: ThProps<T>) {
         rowSpan={rowSpan}
         className={className}
         style={style}
+        {...cellEvents}
       >
         {column.title ? renderTitle() : null}
         {renderResizeContent()}
@@ -178,8 +195,9 @@ function Th<T>(props: ThProps<T>) {
         activeAsc={item?.order === 'asc'}
         activeDesc={item?.order === 'desc'}
         renderSorter={column.renderSorter}
-        onChange={(order) => {
+        onChange={(order, event: React.MouseEvent) => {
           onSort && onSort(column, order);
+          event.stopPropagation();
         }}
       />
     );
@@ -223,6 +241,7 @@ function Th<T>(props: ThProps<T>) {
         className={className}
         colSpan={column.colSpan}
         rowSpan={'children' in column && column?.children.length ? 1 : rowSpan}
+        {...cellEvents}
       >
         <div className="cell-header">
           <span

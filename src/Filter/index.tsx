@@ -152,11 +152,12 @@ const Filter = (props: FilterProps) => {
     }
   };
 
-  const handleClick = () => {
+  const handleClick = (event: React.MouseEvent) => {
     if (!visible) {
       createPopper();
     }
     setVisible((prev) => !prev);
+    event.stopPropagation();
   };
 
   useEffect(() => {
@@ -213,6 +214,9 @@ const Filter = (props: FilterProps) => {
           'filter-popper-show': visible,
           'filter-popper-hidden': !visible,
         })}
+        onClick={(event: React.MouseEvent) => {
+          event.stopPropagation();
+        }}
       >
         {!!filterSearch && filters.length ? (
           <div className="filter-search">

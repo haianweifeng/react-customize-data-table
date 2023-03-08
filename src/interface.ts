@@ -243,4 +243,5 @@ export type LocalType = {
   filterResult: string;
   filterConfirm: string;
   filterReset: string;
+  // test: React.HTMLAttributes<any> | React.TdHTMLAttributes<any>;
 };

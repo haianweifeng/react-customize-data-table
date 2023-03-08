@@ -143,8 +143,8 @@ export type ColumnType<T> = {
   renderSorter?: (params: {
     activeAsc: boolean;
     activeDesc: boolean;
-    triggerAsc: () => void;
-    triggerDesc: () => void;
+    triggerAsc: (event: React.MouseEvent) => void;
+    triggerDesc: (event: React.MouseEvent) => void;
   }) => React.ReactNode;
   /** 默认筛选值 */
   defaultFilteredValue?: string[];

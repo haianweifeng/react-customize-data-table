@@ -40,8 +40,10 @@ interface TheadProps<T> {
     filteredValue: React.Key[],
   ) => void;
   onMouseDown: (resizeInfo: ResizeInfo, col: PrivateColumnType<T>) => void;
+  onHeaderRowEvents?: (rowIndex: number) => object;
+  onHeaderCellEvents?: (column: ColumnType<T> | ColumnGroupType<T>, rowIndex: number) => object;
 }
-// todo onHeaderRowEvents
+
 function Thead<T>(props: TheadProps<T>) {
   const {
     locale,
@@ -58,6 +60,8 @@ function Thead<T>(props: TheadProps<T>) {
     headerCellStyle,
     headerRowStyle,
     headerRowClassName,
+    onHeaderRowEvents,
+    onHeaderCellEvents,
   } = props;
 
   const parseHeaderColumns = useCallback(
@@ -97,7 +101,7 @@ function Thead<T>(props: TheadProps<T>) {
   );
 
   const computeTrs = useCallback(
-    (cols: PrivateColumnsType<T>, rowIndex = 0, trs: React.ReactNode[][]) => {
+    (cols: PrivateColumnsType<T>, rowIndex = 0, trs: ThProps<T>[][]) => {
       for (let i = 0; i < cols.length; i++) {
         const col = cols[i];
         if (!Array.isArray(trs[rowIndex])) {
@@ -111,21 +115,21 @@ function Thead<T>(props: TheadProps<T>) {
     [],
   );
 
-  const handleChange = useCallback(
-    (selected: boolean) => {
-      onSelectAll(selected);
-    },
-    [onSelectAll],
-  );
+  // const handleChange = useCallback(
+  //   (selected: boolean) => {
+  //     onSelectAll(selected);
+  //   },
+  //   [onSelectAll],
+  // );
 
-  const renderCell = useCallback((thProps: ThProps<T>) => {
-    return <Th {...thProps} key={thProps.column._columnKey} />;
-  }, []);
+  // const renderCell = useCallback((thProps: ThProps<T>) => {
+  //   return <Th {...thProps} key={thProps.column._columnKey} />;
+  // }, []);
 
-  const renderCells = useCallback(
+  const getCellsProps = useCallback(
     (
       column: PrivateColumnType<T> | PrivateColumnGroupType<T>,
-      trs: React.ReactNode[][],
+      trs: ThProps<T>[][],
       rowIndex: number,
       colIndex: number,
     ) => {
@@ -173,11 +177,11 @@ function Thead<T>(props: TheadProps<T>) {
         onSort,
         onFilterChange,
         onMouseDown,
-        onSelectAll: handleChange,
       } as ThProps<T>;
       if (isSelectionExpand) {
         baseProps = { ...baseProps, rowSpan: totalRows, className: cls };
-        return trs[rowIndex].push(renderCell(baseProps));
+        return trs[rowIndex].push(baseProps);
+        // return trs[rowIndex].push(renderCell(baseProps));
       }
       if ('children' in column && column?.children.length) {
         baseProps = {
@@ -188,13 +192,16 @@ function Thead<T>(props: TheadProps<T>) {
             ...classes,
           }),
         };
-        trs[rowIndex].push(renderCell(baseProps));
+        trs[rowIndex].push(baseProps);
+        // trs[rowIndex].push(renderCell(baseProps));
         column.children.forEach((col, i) => {
-          renderCells(col, trs, rowIndex + 1, i);
+          // renderCells(col, trs, rowIndex + 1, i);
+          getCellsProps(col, trs, rowIndex + 1, i);
         });
       } else {
         baseProps = { ...baseProps, rowSpan: totalRows - rowIndex, className: cls };
-        trs[rowIndex].push(renderCell(baseProps));
+        // trs[rowIndex].push(renderCell(baseProps));
+        trs[rowIndex].push(baseProps);
       }
 
       // switch (column.type) {
@@ -240,11 +247,9 @@ function Thead<T>(props: TheadProps<T>) {
       bordered,
       sorterStates,
       filterStates,
-      renderCell,
       onSort,
       onFilterChange,
       onMouseDown,
-      handleChange,
       headerCellStyle,
       headerCellClassName,
       omitColumnProps,
@@ -252,25 +257,46 @@ function Thead<T>(props: TheadProps<T>) {
   );
 
   const headerTrs = useMemo(() => {
-    const trs: React.ReactNode[][] = [];
+    // const trs: React.ReactNode[][] = [];
+    const trs: ThProps<T>[][] = [];
     computeTrs(columns, 0, trs);
     const headerColumns = parseHeaderColumns(columns);
-    headerColumns.forEach((column, i) => renderCells(column, trs, 0, i));
+    headerColumns.forEach((column, i) => getCellsProps(column, trs, 0, i));
     return trs;
-  }, [columns, computeTrs, parseHeaderColumns, renderCells]);
+  }, [columns, computeTrs, parseHeaderColumns, getCellsProps]);
 
   return (
     <thead>
-      {headerTrs.map((cells, i) => {
+      {headerTrs.map((cellsProps, i) => {
         const rowClassName =
           typeof headerRowClassName === 'function'
             ? headerRowClassName(i)
             : headerRowClassName || '';
+
         let styles: React.CSSProperties =
           typeof headerRowStyle === 'function' ? headerRowStyle(i) : headerRowStyle || {};
+
+        const rowEvents = typeof onHeaderRowEvents === 'function' ? onHeaderRowEvents(i) : {};
+
         return (
-          <tr key={i} className={rowClassName} style={styles}>
-            {cells}
+          <tr key={i} className={rowClassName} style={styles} {...rowEvents}>
+            {/*{cells}*/}
+            {cellsProps.map((cellProps) => {
+              return (
+                <Th
+                  {...cellProps}
+                  rowIndex={i}
+                  key={cellProps.column._columnKey}
+                  onHeaderCellEvents={onHeaderCellEvents}
+                  onSelectAll={(selected: boolean, event: any) => {
+                    onSelectAll(selected);
+                    if (typeof (rowEvents as any)?.onClick === 'function') {
+                      (rowEvents as any)?.onClick(event);
+                    }
+                  }}
+                />
+              );
+            })}
           </tr>
         );
       })}

@@ -8,24 +8,24 @@ import './index.less';
 interface SorterProps {
   activeAsc: boolean;
   activeDesc: boolean;
-  onChange: (order: 'asc' | 'desc') => void;
+  onChange: (order: 'asc' | 'desc', event: any) => void;
   renderSorter?: (params: {
     activeAsc: boolean;
     activeDesc: boolean;
-    triggerAsc: () => void;
-    triggerDesc: () => void;
+    triggerAsc: (event: React.MouseEvent) => void;
+    triggerDesc: (event: React.MouseEvent) => void;
   }) => React.ReactNode;
 }
 
 const Sorter = (props: SorterProps) => {
   const { activeAsc, activeDesc, renderSorter, onChange } = props;
 
-  const handleAsc = () => {
-    onChange('asc');
+  const handleAsc = (event: React.MouseEvent) => {
+    onChange('asc', event);
   };
 
-  const handleDesc = () => {
-    onChange('desc');
+  const handleDesc = (event: React.MouseEvent) => {
+    onChange('desc', event);
   };
 
   const defaultContent = (
