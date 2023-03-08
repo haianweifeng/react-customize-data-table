@@ -872,7 +872,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     //   rowSelection?.onChange(selectKeys, selectedRows);
     // }
   };
-  // todo bug 如果是手动type 配置可选择列触发不了
+
   const handleSelectAll = (selected: boolean) => {
     let selectedRecords: T[];
     let finalSelectedKeys: React.Key[];

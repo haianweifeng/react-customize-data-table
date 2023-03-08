@@ -115,17 +115,6 @@ function Thead<T>(props: TheadProps<T>) {
     [],
   );
 
-  // const handleChange = useCallback(
-  //   (selected: boolean) => {
-  //     onSelectAll(selected);
-  //   },
-  //   [onSelectAll],
-  // );
-
-  // const renderCell = useCallback((thProps: ThProps<T>) => {
-  //   return <Th {...thProps} key={thProps.column._columnKey} />;
-  // }, []);
-
   const getCellsProps = useCallback(
     (
       column: PrivateColumnType<T> | PrivateColumnGroupType<T>,
@@ -181,7 +170,6 @@ function Thead<T>(props: TheadProps<T>) {
       if (isSelectionExpand) {
         baseProps = { ...baseProps, rowSpan: totalRows, className: cls };
         return trs[rowIndex].push(baseProps);
-        // return trs[rowIndex].push(renderCell(baseProps));
       }
       if ('children' in column && column?.children.length) {
         baseProps = {
@@ -193,53 +181,13 @@ function Thead<T>(props: TheadProps<T>) {
           }),
         };
         trs[rowIndex].push(baseProps);
-        // trs[rowIndex].push(renderCell(baseProps));
         column.children.forEach((col, i) => {
-          // renderCells(col, trs, rowIndex + 1, i);
           getCellsProps(col, trs, rowIndex + 1, i);
         });
       } else {
         baseProps = { ...baseProps, rowSpan: totalRows - rowIndex, className: cls };
-        // trs[rowIndex].push(renderCell(baseProps));
         trs[rowIndex].push(baseProps);
       }
-
-      // switch (column.type) {
-      //   case 'checkbox':
-      //   case 'radio':
-      //   case 'expand':
-      //     baseProps = Object.assign({}, baseProps, {
-      //       rowSpan: totalRows,
-      //       className: cls,
-      //       onSelectAll: handleChange,
-      //     });
-      //     return trs[rowIndex].push(createTh(baseProps));
-      //   default: {
-      //     if ('children' in column && column?.children.length) {
-      //       baseProps = Object.assign({}, baseProps, {
-      //         rowSpan: 1,
-      //         className: classnames({
-      //           'cell-align-center': true,
-      //           'cell-ellipsis': !!column.ellipsis,
-      //           ...classes,
-      //         }),
-      //       });
-      //       trs[rowIndex].push(createTh(baseProps));
-      //       column.children.forEach((c, i) => {
-      //         renderCells(c, trs, rowIndex + 1, i, colIndex);
-      //       });
-      //     } else {
-      //       baseProps = Object.assign({}, baseProps, {
-      //         rowSpan: totalRows - rowIndex,
-      //         className: cls,
-      //         onSort,
-      //         onFilterChange,
-      //         onMouseDown,
-      //       });
-      //       trs[rowIndex].push(createTh(baseProps));
-      //     }
-      //   }
-      // }
     },
     [
       locale,
@@ -257,7 +205,6 @@ function Thead<T>(props: TheadProps<T>) {
   );
 
   const headerTrs = useMemo(() => {
-    // const trs: React.ReactNode[][] = [];
     const trs: ThProps<T>[][] = [];
     computeTrs(columns, 0, trs);
     const headerColumns = parseHeaderColumns(columns);
@@ -280,7 +227,6 @@ function Thead<T>(props: TheadProps<T>) {
 
         return (
           <tr key={i} className={rowClassName} style={styles} {...rowEvents}>
-            {/*{cells}*/}
             {cellsProps.map((cellProps) => {
               return (
                 <Th
