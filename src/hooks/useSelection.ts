@@ -1,11 +1,12 @@
 import React, { useCallback, useState, useMemo } from 'react';
+import { RowSelection } from '../interface1';
 
 function useSelection<T extends { key?: React.Key; children?: T[] }>(
   dataSource: T[],
   maxTreeLevel: number,
   levelRecordMap: Map<number, Set<T>>,
   getRecordKey: (record: T) => any,
-  initSelectedKeys: React.Key[],
+  rowSelection?: RowSelection<T>,
   selectionType?: 'checkbox' | 'radio',
 ) {
   const isRadio = selectionType === 'radio';
@@ -211,6 +212,10 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
     [dataSource, getRecordKey, maxTreeLevel, levelRecordMap, findParentByKey],
   );
 
+  const initSelectedKeys = useMemo(() => {
+    return rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
+  }, [rowSelection?.selectedRowKeys, rowSelection?.defaultSelectedRowKeys]);
+
   const { checkedKeys: initCheckedKeys, halfCheckedKeys: initHalfCheckedKeys } = useMemo(() => {
     return fillMissSelectedKeys(initSelectedKeys);
   }, [initSelectedKeys, fillMissSelectedKeys]);
@@ -231,11 +236,78 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
     setSelectedKeys(keys);
   }, []);
 
+  const handleSelect = useCallback(
+    (
+      isRadio: boolean,
+      isChecked: boolean,
+      record: T,
+      recordKey: React.Key,
+      selected: boolean,
+      event: Event,
+    ) => {
+      let keys: React.Key[];
+      let halfKeys: React.Key[] = [...halfSelectedKeys];
+      let selectedRecords: T[];
+      let finalSelectedKeys: React.Key[];
+      if (!isChecked) {
+        keys = isRadio ? [recordKey] : [...selectedKeys, recordKey];
+      } else {
+        keys = selectedKeys.filter((key) => key !== recordKey);
+        halfKeys = halfSelectedKeys.filter((halfKey) => halfKey !== recordKey);
+      }
+      if (selected) {
+        if (!isRadio) {
+          const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(keys);
+          finalSelectedKeys = checkedKeys;
+          selectedRecords = [...checkedKeyRecordMap.values()];
+          setHalfSelectedKeys(halfCheckedKeys);
+          // updateHalfSelectedKeys(halfCheckedKeys);
+        } else {
+          finalSelectedKeys = [...keys];
+          selectedRecords = [record];
+          setHalfSelectedKeys([]);
+          // updateHalfSelectedKeys([]);
+        }
+      } else {
+        if (!isRadio) {
+          const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = removeUselessKeys(
+            keys,
+            halfKeys,
+          );
+          finalSelectedKeys = checkedKeys;
+          selectedRecords = [...checkedKeyRecordMap.values()];
+          setHalfSelectedKeys(halfCheckedKeys);
+          // updateHalfSelectedKeys(halfCheckedKeys);
+        } else {
+          finalSelectedKeys = [];
+          selectedRecords = [];
+          setHalfSelectedKeys([]);
+          // updateHalfSelectedKeys([]);
+        }
+      }
+
+      if (!('selectedRowKeys' in rowSelection!)) {
+        // updateSelectedKeys(finalSelectedKeys);
+        setSelectedKeys(finalSelectedKeys);
+      }
+
+      if (typeof rowSelection?.onSelect === 'function') {
+        rowSelection.onSelect(record, selected, selectedRecords, event);
+      }
+
+      if (typeof rowSelection?.onChange === 'function') {
+        rowSelection?.onChange(finalSelectedKeys, selectedRecords);
+      }
+    },
+    [selectedKeys, halfSelectedKeys],
+  );
+
   return [
     selectedKeys,
     halfSelectedKeys,
     fillMissSelectedKeys,
     removeUselessKeys,
+    handleSelect,
     updateHalfSelectedKeys,
     updateSelectedKeys,
   ] as const;

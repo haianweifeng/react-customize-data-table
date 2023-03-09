@@ -20,12 +20,12 @@ const columns: ColumnsType<DataType>[] = [
     title: 'Age',
     dataIndex: 'age',
     key: 'age',
-    width: '12%',
+    //  width: '12%',
   },
   {
     title: 'Address',
     dataIndex: 'address',
-    width: '30%',
+    // width: '30%',
     key: 'address',
   },
 ];

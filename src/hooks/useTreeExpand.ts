@@ -1,17 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { TreeExpandable } from '../interface1';
 
 function useTreeExpand<T extends { key?: React.Key; children?: T[] }>(
-  flattenRecords: T[],
-  getRecordKey: (record: T) => any,
+  allKeys: React.Key[],
   treeProps?: TreeExpandable<T>,
 ) {
-  const allKeys = useMemo(() => {
-    return flattenRecords.map((record) => {
-      return getRecordKey(record);
-    });
-  }, [flattenRecords, getRecordKey]);
-
   const [treeExpandKeys, setTreeExpandKeys] = useState<React.Key[]>(() => {
     if (
       treeProps?.defaultExpandAllRows &&

@@ -4,6 +4,7 @@ import omit from 'omit.js';
 import useColumns from '../hooks/useColumns';
 import useSorter from '../hooks/useSorter';
 import useFilter from '../hooks/useFilter';
+import useExpand from '../hooks/useExpand';
 import useSelection from '../hooks/useSelection';
 import usePagination from '../hooks/usePagination';
 import useTreeExpand from '../hooks/useTreeExpand';
@@ -201,6 +202,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     headerRowClassName,
     onHeaderRowEvents,
     onHeaderCellEvents,
+    striped,
+    onRow,
+    rowClassName,
   } = props;
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 44;
@@ -286,13 +290,19 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return rowSelection ? rowSelection?.type || 'checkbox' : undefined;
   }, [columns, rowSelection?.type]);
 
-  const initSelectedKeys = useMemo(() => {
-    return rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
-  }, [rowSelection?.selectedRowKeys, rowSelection?.defaultSelectedRowKeys]);
+  // const initSelectedKeys = useMemo(() => {
+  //   return rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
+  // }, [rowSelection?.selectedRowKeys, rowSelection?.defaultSelectedRowKeys]);
 
   const flattenDataSource = useMemo(() => {
     return flatRecords(dataSource);
   }, [dataSource]);
+
+  const allKeys = useMemo(() => {
+    return flattenDataSource.map((record) => {
+      return getRecordKey(record);
+    });
+  }, [flattenDataSource, getRecordKey]);
 
   const [
     mergeColumns,
@@ -309,6 +319,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     halfSelectedKeys,
     fillMissSelectedKeys,
     removeUselessKeys,
+    handleSelect,
     updateHalfSelectedKeys,
     updateSelectedKeys,
   ] = useSelection(
@@ -316,7 +327,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     maxTreeLevel,
     levelRecordMap,
     getRecordKey,
-    initSelectedKeys,
+    rowSelection,
     selectionType,
   );
 
@@ -326,11 +337,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const [currentPage, pageSize, updateCurrentPage, updatePageSize] = usePagination(pagination);
 
-  const [treeExpandKeys, handleTreeExpand] = useTreeExpand(
-    flattenDataSource,
-    getRecordKey,
-    treeProps,
-  );
+  const [expandedRowKeys, handleExpand] = useExpand(allKeys, expandable);
+
+  const [treeExpandKeys, handleTreeExpand] = useTreeExpand(allKeys, treeProps);
 
   // todo 待测试有没有考虑树形中children data 的排序 过滤
   const totalData = useMemo(() => {
@@ -799,79 +808,79 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     [cachePosition],
   );
 
-  const handleSelect = (
-    keys: React.Key[],
-    halfKeys: React.Key[],
-    record: T,
-    selected: boolean,
-    event: Event,
-  ) => {
-    let selectedRecords: T[];
-    let finalSelectedKeys: React.Key[];
-    if (selected) {
-      if (selectionType === 'checkbox') {
-        const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(keys);
-        finalSelectedKeys = checkedKeys;
-        selectedRecords = [...checkedKeyRecordMap.values()];
-        updateHalfSelectedKeys(halfCheckedKeys);
-      } else {
-        finalSelectedKeys = [...keys];
-        selectedRecords = [record];
-        updateHalfSelectedKeys([]);
-      }
-    } else {
-      if (selectionType === 'checkbox') {
-        const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = removeUselessKeys(
-          keys,
-          halfKeys,
-        );
-        finalSelectedKeys = checkedKeys;
-        selectedRecords = [...checkedKeyRecordMap.values()];
-        updateHalfSelectedKeys(halfCheckedKeys);
-      } else {
-        finalSelectedKeys = [];
-        selectedRecords = [];
-        updateHalfSelectedKeys([]);
-      }
-    }
-
-    if (!('selectedRowKeys' in rowSelection!)) {
-      updateSelectedKeys(finalSelectedKeys);
-    }
-
-    if (typeof rowSelection?.onSelect === 'function') {
-      rowSelection.onSelect(record, selected, selectedRecords, event);
-    }
-
-    if (typeof rowSelection?.onChange === 'function') {
-      rowSelection?.onChange(finalSelectedKeys, selectedRecords);
-    }
-
-    // let selectedRows: T[];
-    // let selectKeys: (number | string)[];
-    // if (selected) {
-    //   const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(keys);
-    //   selectKeys = isRadio ? keys : checkedKeys;
-    //   selectedRows = isRadio ? [record] : Object.values(checkedRowWithKey);
-    //   setHalfSelectedKeys(halfCheckedKeys);
-    // } else {
-    //   const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = removeUselessKeys(keys, halfKeys);
-    //   selectKeys = isRadio ? [] : checkedKeys;
-    //   selectedRows = isRadio ? [] : Object.values(checkedRowWithKey);
-    //   setHalfSelectedKeys(halfCheckedKeys);
-    // }
-    // if (!('selectedRowKeys' in rowSelection!) || rowSelection?.selectedRowKeys === undefined) {
-    //   setSelectedKeys(selectKeys);
-    // }
-    //
-    // if (typeof rowSelection?.onSelect === 'function') {
-    //   rowSelection.onSelect(record, selected, selectedRows, event);
-    // }
-    //
-    // if (typeof rowSelection?.onChange === 'function') {
-    //   rowSelection?.onChange(selectKeys, selectedRows);
-    // }
-  };
+  // const handleSelect = (
+  //   keys: React.Key[],
+  //   halfKeys: React.Key[],
+  //   record: T,
+  //   selected: boolean,
+  //   event: Event,
+  // ) => {
+  //   let selectedRecords: T[];
+  //   let finalSelectedKeys: React.Key[];
+  //   if (selected) {
+  //     if (selectionType === 'checkbox') {
+  //       const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(keys);
+  //       finalSelectedKeys = checkedKeys;
+  //       selectedRecords = [...checkedKeyRecordMap.values()];
+  //       updateHalfSelectedKeys(halfCheckedKeys);
+  //     } else {
+  //       finalSelectedKeys = [...keys];
+  //       selectedRecords = [record];
+  //       updateHalfSelectedKeys([]);
+  //     }
+  //   } else {
+  //     if (selectionType === 'checkbox') {
+  //       const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = removeUselessKeys(
+  //         keys,
+  //         halfKeys,
+  //       );
+  //       finalSelectedKeys = checkedKeys;
+  //       selectedRecords = [...checkedKeyRecordMap.values()];
+  //       updateHalfSelectedKeys(halfCheckedKeys);
+  //     } else {
+  //       finalSelectedKeys = [];
+  //       selectedRecords = [];
+  //       updateHalfSelectedKeys([]);
+  //     }
+  //   }
+  //
+  //   if (!('selectedRowKeys' in rowSelection!)) {
+  //     updateSelectedKeys(finalSelectedKeys);
+  //   }
+  //
+  //   if (typeof rowSelection?.onSelect === 'function') {
+  //     rowSelection.onSelect(record, selected, selectedRecords, event);
+  //   }
+  //
+  //   if (typeof rowSelection?.onChange === 'function') {
+  //     rowSelection?.onChange(finalSelectedKeys, selectedRecords);
+  //   }
+  //
+  //   // let selectedRows: T[];
+  //   // let selectKeys: (number | string)[];
+  //   // if (selected) {
+  //   //   const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(keys);
+  //   //   selectKeys = isRadio ? keys : checkedKeys;
+  //   //   selectedRows = isRadio ? [record] : Object.values(checkedRowWithKey);
+  //   //   setHalfSelectedKeys(halfCheckedKeys);
+  //   // } else {
+  //   //   const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = removeUselessKeys(keys, halfKeys);
+  //   //   selectKeys = isRadio ? [] : checkedKeys;
+  //   //   selectedRows = isRadio ? [] : Object.values(checkedRowWithKey);
+  //   //   setHalfSelectedKeys(halfCheckedKeys);
+  //   // }
+  //   // if (!('selectedRowKeys' in rowSelection!) || rowSelection?.selectedRowKeys === undefined) {
+  //   //   setSelectedKeys(selectKeys);
+  //   // }
+  //   //
+  //   // if (typeof rowSelection?.onSelect === 'function') {
+  //   //   rowSelection.onSelect(record, selected, selectedRows, event);
+  //   // }
+  //   //
+  //   // if (typeof rowSelection?.onChange === 'function') {
+  //   //   rowSelection?.onChange(selectKeys, selectedRows);
+  //   // }
+  // };
 
   const handleSelectAll = (selected: boolean) => {
     let selectedRecords: T[];
@@ -1138,10 +1147,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   //   const data = list.filter((d) => d?.children && d.children.length);
   //   return data.length > 0;
   // }, [list]);
+  // todo 是不是需要放到Tbody 中判断 如果是虚拟列表发生了截取呢
   const isTree = useMemo(() => {
     const data = currentPageData.filter((d) => d?.children && d.children.length);
     return data.length > 0;
   }, [currentPageData]);
+  // console.log(`isTree: ${isTree}`);
 
   // todo columns
   // const scrollWidth = useMemo(() => {
@@ -1374,18 +1385,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             // }}
           >
             <table style={{ width: scrollWidth }}>
-              <Colgroup
-                // colWidths={colWidths}
-                // columns={columnsWithWidth}
-                columns={flattenColumns}
-              />
+              <Colgroup columns={flattenColumns} />
               <Tbody
-                {...props}
-                bordered
-                empty={empty}
                 isTree={isTree}
-                scrollLeft={scrollLeft}
-                offsetRight={offsetRight}
+                empty={empty}
+                selectionType={selectionType}
                 startRowIndex={startRowIndex}
                 // startRowIndex={0}
                 // dataSource={list}
@@ -1397,16 +1401,25 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
                 columns={flattenColumns}
                 // columns={columnsWithWidth}
                 keyLevelMap={keyLevelMap}
-                // treeLevelMap={treeLevel.current}
-                treeExpandKeys={treeExpandKeys}
                 selectedKeys={selectedKeys}
                 halfSelectedKeys={halfSelectedKeys}
-                onSelect={handleSelect}
-                onTreeExpand={handleTreeExpand}
-                // onBodyRender={handleBodyRender}
-                onBodyRender={() => {}}
+                expandedRowKeys={expandedRowKeys}
+                handleExpand={handleExpand}
+                treeExpandKeys={treeExpandKeys}
+                handleTreeExpand={handleTreeExpand}
+                // onSelect={handleSelect}
+                // onTreeExpand={handleTreeExpand}
+                // onBodyRender={() => {}}
                 onUpdateRowHeight={handleUpdateRowHeight}
                 getRecordKey={getRecordKey}
+                handleSelect={handleSelect}
+                striped={!!striped}
+                bordered={!!bordered}
+                expandable={expandable}
+                rowSelection={rowSelection}
+                treeProps={treeProps}
+                onRow={onRow}
+                rowClassName={rowClassName}
               />
             </table>
           </div>
@@ -1495,18 +1508,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           // }}
         >
           <table style={{ width: scrollWidth }}>
-            <Colgroup
-              // colWidths={colWidths}
-              // columns={columnsWithWidth}
-              columns={flattenColumns}
-            />
+            <Colgroup columns={flattenColumns} />
             <Tbody
-              {...props}
-              bordered
-              empty={empty}
               isTree={isTree}
-              scrollLeft={scrollLeft}
-              offsetRight={offsetRight}
+              empty={empty}
+              selectionType={selectionType}
               startRowIndex={startRowIndex}
               // startRowIndex={0}
               dataSource={currentPageData}
@@ -1515,15 +1521,25 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
               columns={flattenColumns}
               // columns={columnsWithWidth}
               keyLevelMap={keyLevelMap}
-              // treeLevelMap={treeLevel.current}
-              treeExpandKeys={treeExpandKeys}
               selectedKeys={selectedKeys}
               halfSelectedKeys={halfSelectedKeys}
-              onSelect={handleSelect}
-              onTreeExpand={handleTreeExpand}
-              onBodyRender={() => {}}
+              expandedRowKeys={expandedRowKeys}
+              handleExpand={handleExpand}
+              treeExpandKeys={treeExpandKeys}
+              handleTreeExpand={handleTreeExpand}
+              // onSelect={handleSelect}
+              // onTreeExpand={handleTreeExpand}
+              // onBodyRender={() => {}}
               onUpdateRowHeight={handleUpdateRowHeight}
               getRecordKey={getRecordKey}
+              handleSelect={handleSelect}
+              striped={!!striped}
+              bordered={!!bordered}
+              expandable={expandable}
+              rowSelection={rowSelection}
+              treeProps={treeProps}
+              onRow={onRow}
+              rowClassName={rowClassName}
             />
           </table>
         </div>

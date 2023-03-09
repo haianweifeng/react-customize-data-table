@@ -2,16 +2,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Expandable } from '../interface1';
 
 function useExpand<T extends { key?: React.Key; children?: T[] }>(
-  flattenRecords: T[],
-  getRecordKey: (record: T) => any,
+  allKeys: React.Key[],
   expandable?: Expandable<T>,
 ) {
-  const allKeys = useMemo(() => {
-    return flattenRecords.map((record) => {
-      return getRecordKey(record);
-    });
-  }, [flattenRecords, getRecordKey]);
-
   const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>(() => {
     if (
       expandable?.defaultExpandAllRows &&
