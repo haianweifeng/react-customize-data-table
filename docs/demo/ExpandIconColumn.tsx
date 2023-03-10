@@ -24,9 +24,6 @@ const columns: ColumnsType<DataType>[] = [
   },
   {
     type: 'expand',
-    render: (value: any, record: DataType, rowIndex: number) => {
-      return `${rowIndex}_${record.description}`;
-    },
   },
   {
     title: 'Address',
@@ -98,7 +95,7 @@ const App = () => {
         }
       }}
       expandable={{
-        // expandedRowRender: (record: DataType) => <p style={{ margin: 0 }}>{record.description}</p>,
+        expandedRowRender: (record: DataType) => <p style={{ margin: 0 }}>{record.description}</p>,
         rowExpandable: (record: DataType) => record.name !== 'Jim Green',
         // expandedRowClassName: (record, index) => {
         //   // todo 待验证样式

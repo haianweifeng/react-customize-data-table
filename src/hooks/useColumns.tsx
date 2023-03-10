@@ -100,8 +100,7 @@ function useColumns<T>(
         return;
       }
       if ('type' in column && column?.type === 'expand') {
-        existExpand = typeof column?.render === 'function';
-        if ((expandable && expandable?.expandedRowRender) || existExpand) {
+        if (expandable && expandable?.expandedRowRender) {
           existExpand = true;
           mergeColumns.push({
             key: 'EXPAND_COLUMN',

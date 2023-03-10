@@ -136,16 +136,9 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
 
   // todo 待验证如果是固定列滚动这一行的展示效果
   const renderExpandRow = () => {
-    // if (
-    //   !expandable ||
-    //   !expandable?.expandedRowRender ||
-    //   !expanded ||
-    //   (expandable?.rowExpandable && !expandable?.rowExpandable(rowData))
-    // )
-    //   return;
     const expandColumn = columns.find((column) => {
       if ('type' in column && column.type && column.type === 'expand') {
-        return true;
+        return column;
       }
     });
     if (
@@ -165,10 +158,11 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
           colSpan={columns.length}
           className={classnames({ 'cell-ignore-right-border': bordered })}
         >
-          {expandable?.expandedRowRender
-            ? expandable?.expandedRowRender(rowData, rowIndex, expanded)
-            : expandColumn.render && expandColumn.render(rowData, rowData, rowIndex)}
-          {/*{expandable.expandedRowRender(rowData, rowIndex, expanded)}*/}
+          {/*{expandable?.expandedRowRender*/}
+          {/*  ? expandable?.expandedRowRender(rowData, rowIndex, expanded)*/}
+          {/*  : expandColumn.render && expandColumn.render(rowData, rowData, rowIndex)}*/}
+          {expandable?.expandedRowRender &&
+            expandable?.expandedRowRender(rowData, rowIndex, expanded)}
         </td>
       </tr>
     );

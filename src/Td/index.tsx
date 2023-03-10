@@ -214,6 +214,9 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
 
     return (
       <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles}>
+        {/*{expandable?.expandIcon*/}
+        {/*  ? expandable.expandIcon(rowData, expanded, expandable?.onExpand)*/}
+        {/*  : expandIcon}*/}
         {expandable?.expandIcon
           ? expandable.expandIcon(rowData, expanded, expandable?.onExpand)
           : expandIcon}
