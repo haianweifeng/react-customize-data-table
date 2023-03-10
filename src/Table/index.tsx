@@ -1068,25 +1068,20 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // }, [pagination]);
 
   // todo rowSelection 待测试
-  useEffect(() => {
-    if (rowSelection && 'selectedRowKeys' in rowSelection) {
-      if (selectionType === 'checkbox') {
-        const { checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(
-          rowSelection.selectedRowKeys || [],
-        );
-        updateHalfSelectedKeys(halfCheckedKeys);
-        updateSelectedKeys(checkedKeys);
-      } else {
-        updateHalfSelectedKeys([]);
-        updateSelectedKeys(rowSelection.selectedRowKeys || []);
-      }
-      // const { checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(
-      //   rowSelection.selectedRowKeys || [],
-      // );
-      // setSelectedKeys(checkedKeys);
-      // setHalfSelectedKeys(halfCheckedKeys);
-    }
-  }, [selectionType, rowSelection?.selectedRowKeys, fillMissSelectedKeys]);
+  // useEffect(() => {
+  //   if (rowSelection && 'selectedRowKeys' in rowSelection) {
+  //     if (selectionType === 'checkbox') {
+  //       const { checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(
+  //         rowSelection.selectedRowKeys || [],
+  //       );
+  //       updateHalfSelectedKeys(halfCheckedKeys);
+  //       updateSelectedKeys(checkedKeys);
+  //     } else {
+  //       updateHalfSelectedKeys([]);
+  //       updateSelectedKeys(rowSelection.selectedRowKeys || []);
+  //     }
+  //   }
+  // }, [selectionType, rowSelection?.selectedRowKeys, fillMissSelectedKeys]);
 
   // useEffect(() => {
   //   if (treeProps?.expandedRowKeys) {
@@ -1387,7 +1382,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             <table style={{ width: scrollWidth }}>
               <Colgroup columns={flattenColumns} />
               <Tbody
-                isTree={isTree}
+                // isTree={isTree}
                 empty={empty}
                 selectionType={selectionType}
                 startRowIndex={startRowIndex}
@@ -1510,7 +1505,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           <table style={{ width: scrollWidth }}>
             <Colgroup columns={flattenColumns} />
             <Tbody
-              isTree={isTree}
+              // isTree={isTree}
               empty={empty}
               selectionType={selectionType}
               startRowIndex={startRowIndex}

@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useMemo } from 'react';
+import React, { useCallback, useState, useMemo, useEffect } from 'react';
 import { RowSelection } from '../interface1';
 
 function useSelection<T extends { key?: React.Key; children?: T[] }>(
@@ -301,6 +301,21 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
     },
     [selectedKeys, halfSelectedKeys],
   );
+
+  useEffect(() => {
+    if (rowSelection && 'selectedRowKeys' in rowSelection) {
+      if (selectionType === 'checkbox') {
+        const { checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(
+          rowSelection.selectedRowKeys || [],
+        );
+        setHalfSelectedKeys(halfCheckedKeys);
+        setSelectedKeys(checkedKeys);
+      } else {
+        setHalfSelectedKeys([]);
+        setSelectedKeys(rowSelection.selectedRowKeys || []);
+      }
+    }
+  }, [selectionType, rowSelection?.selectedRowKeys, fillMissSelectedKeys]);
 
   return [
     selectedKeys,

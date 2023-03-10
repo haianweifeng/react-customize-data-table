@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Expandable } from '../interface1';
 
 function useExpand<T extends { key?: React.Key; children?: T[] }>(
@@ -36,7 +36,7 @@ function useExpand<T extends { key?: React.Key; children?: T[] }>(
     if (expandable && 'expandedRowKeys' in expandable) {
       setExpandedRowKeys(expandable?.expandedRowKeys || []);
     }
-  }, [expandable]);
+  }, [expandable?.expandedRowKeys]);
 
   return [expandedRowKeys, handleExpand] as const;
 }

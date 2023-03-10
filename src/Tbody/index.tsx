@@ -15,7 +15,7 @@ import type {
 } from '../interface1';
 
 interface TbodyProps<T> {
-  isTree: boolean;
+  // isTree: boolean;
   empty: React.ReactNode;
   startRowIndex: number;
   dataSource: T[];
@@ -61,7 +61,7 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
     empty,
     bordered,
     striped,
-    isTree,
+    // isTree,
     columns,
     dataSource = [],
     startRowIndex,
@@ -200,11 +200,6 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
   //     setExpandedRowKeys(expandable.expandedRowKeys);
   //   }
   // }, [expandable]);
-
-  // const isTree = useMemo(() => {
-  //   const data = dataSource.filter((d) => d?.children && d.children.length);
-  //   return data.length > 0;
-  // }, [dataSource]);
 
   // const renderSelectionColumn = (
   //   rowData: T,
@@ -428,6 +423,26 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
   //   });
   // };
 
+  const isTree = useMemo(() => {
+    const data = dataSource.filter((d) => d?.children && d.children.length);
+    return data.length > 0;
+  }, [dataSource]);
+
+  const flatRecords = useCallback(
+    (data: T[]) => {
+      const records: T[] = [];
+      data.map((d) => {
+        records.push(d);
+        const recordKey = getRecordKey(d);
+        if (d.children && d.children.length && treeExpandKeys.indexOf(recordKey) >= 0) {
+          records.push(...flatRecords(d.children));
+        }
+      });
+      return records;
+    },
+    [treeExpandKeys, getRecordKey],
+  );
+
   const renderTr = (rowData: T, rowIndex: number) => {
     const recordKey = getRecordKey(rowData);
     let checked: boolean | 'indeterminate' = false;
@@ -479,21 +494,6 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
       />
     );
   };
-
-  const flatRecords = useCallback(
-    (data: T[]) => {
-      const records: T[] = [];
-      data.map((d) => {
-        records.push(d);
-        const recordKey = getRecordKey(d);
-        if (d.children && d.children.length && treeExpandKeys.indexOf(recordKey) >= 0) {
-          records.push(...flatRecords(d.children));
-        }
-      });
-      return records;
-    },
-    [treeExpandKeys, getRecordKey],
-  );
 
   return (
     <tbody ref={tbodyRef}>

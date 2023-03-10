@@ -134,7 +134,7 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
   //   return tds;
   // };
 
-  // todo 需要考虑如果是列设置了expand
+  // todo 待验证如果是固定列滚动这一行的展示效果
   const renderExpandRow = () => {
     // if (
     //   !expandable ||
@@ -148,25 +148,26 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
         return true;
       }
     });
-    if (!expandColumn) return;
+    if (
+      !expandColumn ||
+      (expandable?.rowExpandable && !expandable?.rowExpandable(rowData)) ||
+      !expanded
+    )
+      return;
 
     const cls =
       expandable?.expandedRowClassName && expandable.expandedRowClassName(rowData, rowIndex);
-    // todo 这里的固定列需要考虑去掉
     // const existFixed = cols.some((c) => c.fixed === 'left' || c.fixed === 'right');
     // const styles = existFixed ? { transform: `translate(${scrollLeft}px, 0)` } : {};
-    // todo 考虑列为expand 的render
     return (
-      <tr key="1" className={cls} ref={expandTrRef}>
+      <tr key={`${rowIndex}_expand`} className={cls} ref={expandTrRef}>
         <td
           colSpan={columns.length}
-          // colSpan={cols.length}
-          // style={styles}
           className={classnames({ 'cell-ignore-right-border': bordered })}
         >
-          {(expandable?.expandedRowRender &&
-            expandable.expandedRowRender(rowData, rowIndex, expanded)) ||
-            (expandColumn.render && expandColumn.render(rowData, rowData, rowIndex))}
+          {expandable?.expandedRowRender
+            ? expandable?.expandedRowRender(rowData, rowIndex, expanded)
+            : expandColumn.render && expandColumn.render(rowData, rowData, rowIndex)}
           {/*{expandable.expandedRowRender(rowData, rowIndex, expanded)}*/}
         </td>
       </tr>
@@ -222,10 +223,8 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
         rowSpan = cellProps?.rowSpan ?? 1;
       }
       if (!colSpan || !rowSpan) continue;
-      const ignoreRightBorder = !!(
-        bordered &&
-        (i === columns.length - 1 || colSpan === columns.length)
-      );
+      const ignoreRightBorder =
+        bordered && (i === columns.length - 1 || colSpan === columns.length);
       cells.push(
         <Td
           key={i}
@@ -258,7 +257,7 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
 
   return (
     <>
-      <tr key="0" className={cls} ref={trRef} {...rowProps} onClick={handleRowClick}>
+      <tr key={rowIndex} className={cls} ref={trRef} {...rowProps} onClick={handleRowClick}>
         {/*{renderTds()}*/}
         {renderCells()}
       </tr>

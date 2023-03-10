@@ -1,20 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 import classnames from 'classnames';
-import type {
-  CellProps,
-  ColumnType,
-  Expandable,
-  PrivateColumnType,
-  RowSelection,
-  TreeExpandable,
-} from '../interface1';
+import type { Expandable, PrivateColumnType, RowSelection, TreeExpandable } from '../interface1';
 import Tooltip from '../Tooltip';
 import { getPropertyValueSum } from '../utils/util';
 import '../style/index.less';
 import Radio from '../Radio';
 import Checkbox from '../Checkbox';
-
-// type TdProps = CellProps & { scrollLeft: number; offsetRight: number; ignoreRightBorder: boolean };
 
 interface TdProps<T> {
   rowData: T;
@@ -85,6 +76,7 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
     ignoreRightBorder,
     isFirstDefaultColumn,
   } = props;
+  // todo className style 还没有修改
 
   const cellRef = useRef<HTMLTableCellElement>(null);
 
@@ -128,22 +120,12 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
     'cell-fixed-right': fixedRight,
     'cell-is-last-fixedLeft': !!column?._lastLeftFixed,
     'cell-is-first-fixedRight': !!column?._firstRightFixed,
-    // 'cell-fixed-last-left': !!lastLeftFixed && !!scrollLeft,
-    // 'cell-fixed-first-right': !!fistRightFixed && !!offsetRight,
     [`cell-align-${align}`]: !!align,
     'selection-expand-column': isSelectionExpand,
     'cell-ignore-right-border': ignoreRightBorder,
     [column?.className ?? '']: !!column?.className,
   });
   const styles: any = {};
-  // if (fixedLeft) {
-  //   styles.transform = `translate(${scrollLeft}px, 0)`;
-  // }
-  // if (fixedRight) {
-  //   styles.transform = `translate(-${offsetRight}px, 0)`;
-  // }
-
-  // const cellContent = typeof content === 'function' ? content() : content;
 
   const ellipsis = column.ellipsis;
 
@@ -163,6 +145,16 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
     }
   };
 
+  const renderContent = (content: React.ReactNode) => {
+    return showTooltip && isOverflow ? (
+      renderTooltip(content)
+    ) : !!column?.ellipsis ? (
+      <span className="cell-tooltip-content">{content}</span>
+    ) : (
+      content
+    );
+  };
+
   const renderSelectionCell = (columnType: 'radio' | 'checkbox') => {
     const checkboxProps =
       typeof rowSelection?.getCheckboxProps === 'function'
@@ -174,7 +166,7 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
         {...checkboxProps}
         checked={checked}
         onChange={(selected: boolean, event: Event) => {
-          handleSelect(isRadio, checked == true, rowData, recordKey, selected, event);
+          handleSelect(isRadio, checked === true, rowData, recordKey, selected, event);
           // handleSelect(isRadio, checked == true, rowData, rowIndex, recordKey, selected, event);
           event.stopPropagation();
         }}
@@ -184,29 +176,29 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
         {...checkboxProps}
         checked={checked}
         onChange={(selected: boolean, event: Event) => {
-          handleSelect(isRadio, checked == true, rowData, recordKey, selected, event);
+          handleSelect(isRadio, checked === true, rowData, recordKey, selected, event);
           // handleSelect(isRadio, checked == true, rowData, rowIndex, recordKey, selected, event);
           event.stopPropagation();
         }}
       />
     );
     // todo 待测试如果直接返回defaultContent 能不能触发内容handleSelect 函数
-
+    // todo 考虑column.render 待测试
     return (
       <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles}>
-        {typeof rowSelection?.renderCell === 'function'
-          ? rowSelection.renderCell(!!checked, rowData, rowIndex, defaultContent)
+        {rowSelection?.renderCell
+          ? rowSelection?.renderCell(!!checked, rowData, rowIndex, defaultContent)
+          : column?.render
+          ? column.render(rowData, rowData, rowIndex)
           : defaultContent}
       </td>
     );
   };
 
   const renderExpandCell = () => {
-    // let ableExpand = true;
-    //
-    // if (expandable?.rowExpandable && !expandable?.rowExpandable(rowData)) {
-    //   ableExpand = false;
-    // }
+    if (expandable?.rowExpandable && !expandable?.rowExpandable(rowData)) {
+      return <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles} />;
+    }
     const expandIcon = (
       <span
         className={classnames({
@@ -220,21 +212,13 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
       />
     );
 
-    const content =
-      typeof expandable?.expandIcon === 'function'
-        ? expandable.expandIcon(rowData, expanded, expandable?.onExpand)
-        : expandIcon;
-
     return (
       <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles}>
-        {content}
+        {expandable?.expandIcon
+          ? expandable.expandIcon(rowData, expanded, expandable?.onExpand)
+          : expandIcon}
       </td>
     );
-
-    // return {
-    //   ...cellProps,
-    //   content: ableExpand ? content : '',
-    // };
   };
 
   const renderCell = () => {
@@ -251,12 +235,9 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
       ((treeProps?.treeColumnsName && treeProps.treeColumnsName === column.title) ||
         (isFirstDefaultColumn && !treeProps?.treeColumnsName)) &&
       isTree;
-    // console.log(`isFirstDefaultColumn: ${isFirstDefaultColumn}`);
-    // console.log(`isTreeColumn: ${isTreeColumn}`);
 
     const hasChildren = rowData?.children && rowData.children.length > 0;
-    // console.log(`hasChildren: ${hasChildren}`);
-
+    // todo 考虑 属性中的ellipsis
     let content: React.ReactNode;
     if (typeof column?.render === 'function') {
       // todo bug 如果没有这个字段怎么办
@@ -267,7 +248,7 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
       );
       // content = render(rowData[dataIndex as keyof T] as string, rowData, rowIndex);
     } else {
-      content = rowData[column?.dataIndex as keyof T];
+      content = rowData[column?.dataIndex as keyof T] as React.ReactNode;
     }
 
     if (hasChildren && isTreeColumn) {
@@ -312,14 +293,8 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
       );
     }
     return (
-      <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles}>
-        {showTooltip && isOverflow ? (
-          renderTooltip(content)
-        ) : !!column?.ellipsis ? (
-          <span className="cell-tooltip-content">{content}</span>
-        ) : (
-          content
-        )}
+      <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles} ref={cellRef}>
+        {renderContent(content)}
       </td>
     );
   };

@@ -23,6 +23,12 @@ const columns: ColumnsType<DataType>[] = [
     align: 'right',
   },
   {
+    type: 'expand',
+    render: (value: any, record: DataType, rowIndex: number) => {
+      return `${record.description}---hhahah`;
+    },
+  },
+  {
     title: 'Address',
     dataIndex: 'address',
   },
@@ -53,7 +59,7 @@ const data: DataType[] = [
 ];
 
 const App = () => {
-  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(['3']);
 
   const rowSelection = {
     selections: true,
@@ -100,13 +106,30 @@ const App = () => {
       expandable={{
         expandedRowKeys,
         // defaultExpandedRowKeys: expandedRowKeys,
-        defaultExpandAllRows: true,
-        expandedRowRender: (record: DataType) => <p style={{ margin: 0 }}>{record.description}</p>,
+        // defaultExpandAllRows: true,
+        // expandedRowRender: (record: DataType) => <p style={{ margin: 0 }}>{record.description}</p>,
         rowExpandable: (record: DataType) => record.name !== 'Jim Green',
-        // expandedRowClassName: (record, index) => {
-        //   // todo 待验证样式
-        //   return 'expand-row';
-        // },
+        expandedRowClassName: (record: DataType, index: number) => {
+          // todo 待验证样式
+          return 'expand-row';
+        },
+        // 如果是自定义expandIcon 要配合expandedRowKeys，onExpand 使用，在onExpand 中控制expandedRowKeys
+        expandIcon: (
+          record: DataType,
+          expanded: boolean,
+          onExpand: (expanded: boolean, record: DataType) => void,
+        ) => {
+          return (
+            <span
+              onClick={() => {
+                onExpand(!expanded, record);
+              }}
+              style={{ cursor: 'pointer' }}
+            >
+              {expanded ? 'v' : '>'}
+            </span>
+          );
+        },
         onExpand: (expanded: boolean, record: DataType) => {
           console.log(`expanded: ${expanded}`, 'record: ', record);
           setExpandedRowKeys((prev) => {
