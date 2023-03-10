@@ -51,6 +51,15 @@ const data: DataType[] = [
 const App = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
+  // const handleClick = (record: DataType, checked: boolean) => {
+  //   setSelectedRowKeys((prevKeys: React.Key[]) => {
+  //     if (!checked) {
+  //       return [...prevKeys, record.key];
+  //     }
+  //     return prevKeys.filter((key: React.Key) => key !== record.key);
+  //   });
+  // };
+
   const rowSelection = {
     selectedRowKeys,
     onChange: (selectedKeys: (string | number)[], selectedRows: DataType[]) => {
@@ -72,6 +81,15 @@ const App = () => {
       disabled: record.name === 'Joe1 Black', // Column configuration not to be checked
       name: record.name,
     }),
+    // renderCell: (checked: boolean, record: DataType, rowIndex: number, originNode: React.ReactNode) => {
+    //   return (
+    //     <span onClick={() => {
+    //       handleClick(record, checked);
+    //     }}>
+    //       {checked ? '√' : '□'}
+    //     </span>
+    //   );
+    // }
   };
 
   return (

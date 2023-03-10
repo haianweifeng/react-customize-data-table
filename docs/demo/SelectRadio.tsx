@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { ColumnsType } from 'react-data-table';
 import { Table } from 'react-data-table';
 
@@ -48,28 +48,40 @@ const data: DataType[] = [
   },
 ];
 
-const rowSelection = {
-  type: 'radio',
-  onChange: (selectedRowKeys: (string | number)[], selectedRows: DataType[]) => {
-    console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-  },
-  onSelect: (record: DataType, selected: boolean, selectedRows: DataType[], nativeEvent: Event) => {
-    console.log(
-      'record: ',
-      record,
-      `selected: ${selected}`,
-      'selectedRows: ',
-      selectedRows,
-      'nativeEvent:',
-      nativeEvent,
-    );
-  },
-  getCheckboxProps: (record: DataType) => ({
-    disabled: record.name === 'Joe Black', // Column configuration not to be checked
-    name: record.name,
-  }),
+const App = () => {
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const rowSelection = {
+    type: 'radio',
+    // selectedRowKeys,
+    defaultSelectedRowKeys: ['3'],
+    onChange: (selectedKeys: (string | number)[], selectedRows: DataType[]) => {
+      // setSelectedRowKeys(selectedKeys);
+      console.log(`selectedRowKeys: ${selectedKeys}`, 'selectedRows: ', selectedRows);
+    },
+    onSelect: (
+      record: DataType,
+      selected: boolean,
+      selectedRows: DataType[],
+      nativeEvent: Event,
+    ) => {
+      console.log(
+        'record: ',
+        record,
+        `selected: ${selected}`,
+        'selectedRows: ',
+        selectedRows,
+        'nativeEvent:',
+        nativeEvent,
+      );
+    },
+    getCheckboxProps: (record: DataType) => ({
+      disabled: record.name === 'Joe Black', // Column configuration not to be checked
+      name: record.name,
+    }),
+  };
+  return (
+    <Table rowSelection={rowSelection} dataSource={data} columns={columns} bordered rowKey="key" />
+  );
 };
 
-export default () => (
-  <Table rowSelection={rowSelection} dataSource={data} columns={columns} bordered rowKey="key" />
-);
+export default App;

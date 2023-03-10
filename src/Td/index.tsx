@@ -167,7 +167,6 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
         checked={checked}
         onChange={(selected: boolean, event: Event) => {
           handleSelect(isRadio, checked === true, rowData, recordKey, selected, event);
-          // handleSelect(isRadio, checked == true, rowData, rowIndex, recordKey, selected, event);
           event.stopPropagation();
         }}
       />
@@ -177,19 +176,15 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
         checked={checked}
         onChange={(selected: boolean, event: Event) => {
           handleSelect(isRadio, checked === true, rowData, recordKey, selected, event);
-          // handleSelect(isRadio, checked == true, rowData, rowIndex, recordKey, selected, event);
           event.stopPropagation();
         }}
       />
     );
-    // todo 待测试如果直接返回defaultContent 能不能触发内容handleSelect 函数
-    // todo 考虑column.render 待测试
+
     return (
       <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles}>
         {rowSelection?.renderCell
           ? rowSelection?.renderCell(!!checked, rowData, rowIndex, defaultContent)
-          : column?.render
-          ? column.render(rowData, rowData, rowIndex)
           : defaultContent}
       </td>
     );
@@ -214,9 +209,6 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
 
     return (
       <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles}>
-        {/*{expandable?.expandIcon*/}
-        {/*  ? expandable.expandIcon(rowData, expanded, expandable?.onExpand)*/}
-        {/*  : expandIcon}*/}
         {expandable?.expandIcon
           ? expandable.expandIcon(rowData, expanded, expandable?.onExpand)
           : expandIcon}

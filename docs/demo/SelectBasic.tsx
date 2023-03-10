@@ -49,6 +49,7 @@ const data: DataType[] = [
 ];
 
 const rowSelection = {
+  // defaultSelectedRowKeys: ['1', '2', '3'],
   onSelectAll: (selected: boolean, selectedRows: DataType[], changeRows: DataType[]) => {
     console.log(`selected: ${selected}`);
     console.log('selectedRows:', selectedRows);
@@ -74,6 +75,10 @@ const rowSelection = {
   }),
 };
 
-export default () => (
-  <Table rowSelection={rowSelection} dataSource={data} columns={columns} bordered rowKey="key" />
-);
+const App = () => {
+  return (
+    <Table rowSelection={rowSelection} dataSource={data} columns={columns} bordered rowKey="key" />
+  );
+};
+
+export default App;

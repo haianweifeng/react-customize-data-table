@@ -158,9 +158,6 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
           colSpan={columns.length}
           className={classnames({ 'cell-ignore-right-border': bordered })}
         >
-          {/*{expandable?.expandedRowRender*/}
-          {/*  ? expandable?.expandedRowRender(rowData, rowIndex, expanded)*/}
-          {/*  : expandColumn.render && expandColumn.render(rowData, rowData, rowIndex)}*/}
           {expandable?.expandedRowRender &&
             expandable?.expandedRowRender(rowData, rowIndex, expanded)}
         </td>

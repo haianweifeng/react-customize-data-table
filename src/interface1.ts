@@ -40,7 +40,7 @@ export interface RowSelection<T> {
   columnWidth?: string | number;
   /** 选择框的默认属性配置 */
   getCheckboxProps?: (record: T) => any;
-  /** 渲染表体的勾选框 todo 怎么整合到列的render 中 */
+  /** 渲染表体的勾选框 适合不是树形数据中允许用户自定义 */
   renderCell?: (
     checked: boolean,
     record: T,

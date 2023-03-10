@@ -318,7 +318,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     selectedKeys,
     halfSelectedKeys,
     fillMissSelectedKeys,
-    removeUselessKeys,
     handleSelect,
     updateHalfSelectedKeys,
     updateSelectedKeys,

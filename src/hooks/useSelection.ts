@@ -30,7 +30,6 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
   const fillMissSelectedKeys = useCallback(
     (keys: React.Key[]) => {
       const checkedKeyRecordMap = new Map<React.Key, T>();
-      // const checkedRowWithKey: SelectedRowWithKey<T> = {} as SelectedRowWithKey<T>;
       const checkedKeys = new Set<React.Key>(keys);
       const halfCheckedKeys = new Set<React.Key>();
 
@@ -41,14 +40,6 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
           halfCheckedKeys: Array.from(halfCheckedKeys),
         };
       }
-
-      // if (isRadio) {
-      //   return {
-      //     checkedRowWithKey,
-      //     checkedKeys: Array.from(checkedKeys),
-      //     halfCheckedKeys: Array.from(halfCheckedKeys),
-      //   };
-      // }
 
       // from top to bottom
       for (let level = 0; level <= maxTreeLevel; level++) {
@@ -73,18 +64,14 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
         Array.from(records).forEach((record) => {
           const recordKey = getRecordKey(record);
           const parentData = findParentByKey(dataSource, recordKey);
-          // const parent = findParentByKey<T>(dataSource, key, rowKey);
           if (!parentData) return;
           const parentKey = getRecordKey(parentData);
-          // if (parentKey === undefined) return;
           if (existKeys.has(parentKey)) return;
 
           let allChecked = true;
           let isHalfChecked = false;
           (parentData.children || []).forEach((c) => {
             const childKey = getRecordKey(c);
-            // const cKey = getRowKey(rowKey, c);
-            // if (cKey === undefined) return;
             const exist = checkedKeys.has(childKey);
             if ((exist || halfCheckedKeys.has(childKey)) && !isHalfChecked) {
               isHalfChecked = true;
@@ -97,9 +84,6 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
           if (allChecked) {
             checkedKeys.add(parentKey);
             checkedKeyRecordMap.set(parentKey, parentData);
-            // if (!checkedRowWithKey[parentKey]) {
-            //   checkedRowWithKey[parentKey] = parent;
-            // }
           }
           if (isHalfChecked) {
             halfCheckedKeys.add(parentKey);
@@ -120,31 +104,18 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
   const removeUselessKeys = useCallback(
     (keys: React.Key[], halfSelectKeys: React.Key[]) => {
       const checkedKeyRecordMap = new Map<React.Key, T>();
-      // const checkedRowWithKey: SelectedRowWithKey<T> = {} as SelectedRowWithKey<T>;
       const checkedKeys = new Set<number | string>(keys);
       let halfCheckedKeys = new Set<number | string>(halfSelectKeys);
-
-      // if (isRadio) {
-      //   return {
-      //     checkedRowWithKey,
-      //     checkedKeys: Array.from(checkedKeys),
-      //     halfCheckedKeys: Array.from(halfCheckedKeys),
-      //   };
-      // }
 
       // from top to bottom
       for (let level = 0; level <= maxTreeLevel; level++) {
         const records = levelRecordMap.get(level) || new Set<T>();
         Array.from(records).forEach((record) => {
           const recordKey = getRecordKey(record);
-          // const key = getRowKey(rowKey, r);
-          // if (key === undefined) return;
           const checked = checkedKeys.has(recordKey);
           if (!checked && !halfCheckedKeys.has(recordKey)) {
             (record?.children || []).forEach((r) => {
               const childRecordKey = getRecordKey(r);
-              // const cKey = getRowKey(rowKey, c);
-              // if (cKey === undefined) return;
               checkedKeys.delete(childRecordKey);
               halfCheckedKeys.delete(childRecordKey);
             });
@@ -155,23 +126,16 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
       const existKeys = new Set<React.Key>();
       halfCheckedKeys = new Set<React.Key>();
       for (let level = maxTreeLevel; level >= 0; level--) {
-        // const records = levelRecord.current[i];
         const records = levelRecordMap.get(level) || new Set<T>();
 
         Array.from(records).forEach((record) => {
           const recordKey = getRecordKey(record);
-          // const key = getRowKey(rowKey, r);
-          // if (key === undefined) return;
-
           if (checkedKeys.has(recordKey)) {
             checkedKeyRecordMap.set(recordKey, record);
-            // checkedRowWithKey[key] = r;
           }
           const parentData = findParentByKey(dataSource, recordKey);
           if (!parentData) return;
           const parentKey = getRecordKey(parentData);
-          // const parentKey = getRowKey(rowKey, parent);
-          // if (parentKey === undefined) return;
           if (existKeys.has(parentKey)) return;
 
           let allChecked = true;
@@ -179,9 +143,6 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
 
           (parentData.children || []).forEach((c) => {
             const childRecordKey = getRecordKey(c);
-            // const cKey = getRowKey(rowKey, c);
-            // if (cKey === undefined) return;
-
             if (
               (checkedKeys.has(childRecordKey) || halfCheckedKeys.has(childRecordKey)) &&
               !isHalfChecked
@@ -261,12 +222,10 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
           finalSelectedKeys = checkedKeys;
           selectedRecords = [...checkedKeyRecordMap.values()];
           setHalfSelectedKeys(halfCheckedKeys);
-          // updateHalfSelectedKeys(halfCheckedKeys);
         } else {
           finalSelectedKeys = [...keys];
           selectedRecords = [record];
           setHalfSelectedKeys([]);
-          // updateHalfSelectedKeys([]);
         }
       } else {
         if (!isRadio) {
@@ -277,17 +236,14 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
           finalSelectedKeys = checkedKeys;
           selectedRecords = [...checkedKeyRecordMap.values()];
           setHalfSelectedKeys(halfCheckedKeys);
-          // updateHalfSelectedKeys(halfCheckedKeys);
         } else {
           finalSelectedKeys = [];
           selectedRecords = [];
           setHalfSelectedKeys([]);
-          // updateHalfSelectedKeys([]);
         }
       }
 
       if (!('selectedRowKeys' in rowSelection!)) {
-        // updateSelectedKeys(finalSelectedKeys);
         setSelectedKeys(finalSelectedKeys);
       }
 
@@ -299,7 +255,7 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
         rowSelection?.onChange(finalSelectedKeys, selectedRecords);
       }
     },
-    [selectedKeys, halfSelectedKeys],
+    [selectedKeys, halfSelectedKeys, rowSelection],
   );
 
   useEffect(() => {
@@ -308,8 +264,8 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
         const { checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(
           rowSelection.selectedRowKeys || [],
         );
-        setHalfSelectedKeys(halfCheckedKeys);
         setSelectedKeys(checkedKeys);
+        setHalfSelectedKeys(halfCheckedKeys);
       } else {
         setHalfSelectedKeys([]);
         setSelectedKeys(rowSelection.selectedRowKeys || []);
@@ -321,7 +277,6 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
     selectedKeys,
     halfSelectedKeys,
     fillMissSelectedKeys,
-    removeUselessKeys,
     handleSelect,
     updateHalfSelectedKeys,
     updateSelectedKeys,
