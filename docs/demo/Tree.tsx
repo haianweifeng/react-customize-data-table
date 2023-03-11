@@ -15,12 +15,17 @@ const columns: ColumnsType<DataType>[] = [
     title: 'Name',
     dataIndex: 'name',
     key: 'name',
+    width: 140,
+    resizable: true,
+    ellipsis: { tooltip: true },
   },
   {
     title: 'Age',
     dataIndex: 'age',
     key: 'age',
     // width: '12%',
+    resizable: true,
+    ellipsis: { tooltip: true },
   },
   {
     title: 'Address',

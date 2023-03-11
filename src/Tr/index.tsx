@@ -194,18 +194,19 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
 
   const renderCells = () => {
     const cells = [];
+    let isExist = false;
     let isFirstDefaultColumn = false;
     for (let i = 0; i < columns.length; i++) {
       let colSpan = 1;
       let rowSpan = 1;
       const column = columns[i];
       if (
-        !isFirstDefaultColumn &&
-        (('type' in column &&
+        ('type' in column &&
           column.type &&
           !['expand', 'radio', 'checkbox'].includes(column.type)) ||
-          !('type' in column))
+        (!('type' in column) && !isExist)
       ) {
+        isExist = true;
         isFirstDefaultColumn = true;
       }
       if (typeof column?.onCell === 'function') {
@@ -241,6 +242,7 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
           isFirstDefaultColumn={isFirstDefaultColumn}
         />,
       );
+      isFirstDefaultColumn = false;
     }
 
     return cells;

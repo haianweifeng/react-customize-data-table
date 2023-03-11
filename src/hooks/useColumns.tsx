@@ -80,7 +80,7 @@ function useColumns<T>(
     });
     return flattenColumns;
   }, []);
-  // todo 考虑expand checkbox radio 的render
+
   const getMergeColumns = useCallback(() => {
     let existExpand = false;
     let existSelection = false;

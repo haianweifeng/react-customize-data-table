@@ -226,11 +226,21 @@
     }
   }
 
-  &.cell-ellipsis {
+  &.cell-ellipsis,
+  .cell-content-ellipsis {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
     word-break: keep-all;
+  }
+
+  .cell-content-ellipsis {
+    flex: 1;
+  }
+
+  .cell-tree-container {
+    display: flex;
+    align-items: center;
   }
 
   .cell-tooltip-content {

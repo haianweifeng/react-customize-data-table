@@ -37,7 +37,7 @@ function useTreeExpand<T extends { key?: React.Key; children?: T[] }>(
     if (treeProps && 'expandedRowKeys' in treeProps) {
       setTreeExpandKeys(treeProps?.expandedRowKeys || []);
     }
-  }, [treeProps]);
+  }, [treeProps?.expandedRowKeys]);
 
   return [treeExpandKeys, handleTreeExpand] as const;
 }
