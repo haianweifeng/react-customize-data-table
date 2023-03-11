@@ -150,13 +150,30 @@ const App = () => {
   return (
     <Table
       treeProps={{
+        // defaultExpandedRowKeys: [131],
         expandedRowKeys,
+        // expandedRowKeys: undefined,
         // defaultExpandAllRows: true,
+        // treeColumnsName: 'Name',
         onExpand: (expanded: boolean, record: DataType) => {
-          setExpandedRowKeys((prev) => {
+          console.log(`expanded: ${expanded}`);
+          console.log(record);
+          setExpandedRowKeys((prev: React.Key[]) => {
             return expanded ? [...prev, record.key] : prev.filter((p) => p !== record.key);
           });
         },
+        // expandIcon: (record: DataType, expanded: boolean, onExpand: (expanded: boolean, record: DataType) => void) => {
+        //   return (
+        //     <span
+        //       onClick={() => {
+        //         onExpand(!expanded, record);
+        //       }}
+        //       style={{ cursor: 'pointer' }}
+        //     >
+        //       {expanded ? 'v' : '>'}
+        //     </span>
+        //   );
+        // }
       }}
       rowSelection={rowSelection}
       dataSource={data}

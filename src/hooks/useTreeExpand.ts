@@ -17,16 +17,16 @@ function useTreeExpand<T extends { key?: React.Key; children?: T[] }>(
 
   const handleTreeExpand = useCallback(
     (treeExpanded: boolean, record: T, recordKey: number | string) => {
-      if (treeProps && !('expandedRowKeys' in treeProps)) {
+      if (treeProps && !treeProps?.expandedRowKeys) {
         setTreeExpandKeys((prevKeys) => {
-          if (prevKeys.indexOf(recordKey) >= 0) {
+          if (!treeExpanded) {
             return prevKeys.filter((key) => key !== recordKey);
           } else {
             return [...prevKeys, recordKey];
           }
         });
       }
-      if (treeProps?.onExpand) {
+      if (typeof treeProps?.onExpand === 'function') {
         treeProps.onExpand(treeExpanded, record);
       }
     },
@@ -34,7 +34,7 @@ function useTreeExpand<T extends { key?: React.Key; children?: T[] }>(
   );
 
   useEffect(() => {
-    if (treeProps && 'expandedRowKeys' in treeProps) {
+    if (treeProps && 'expandedRowKeys' in treeProps && treeProps.expandedRowKeys) {
       setTreeExpandKeys(treeProps?.expandedRowKeys || []);
     }
   }, [treeProps?.expandedRowKeys]);
