@@ -243,7 +243,7 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
         }
       }
 
-      if (!('selectedRowKeys' in rowSelection!)) {
+      if (rowSelection && !rowSelection?.selectedRowKeys) {
         setSelectedKeys(finalSelectedKeys);
       }
 
@@ -259,7 +259,7 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
   );
 
   useEffect(() => {
-    if (rowSelection && 'selectedRowKeys' in rowSelection) {
+    if (rowSelection && rowSelection?.selectedRowKeys) {
       if (selectionType === 'checkbox') {
         const { checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(
           rowSelection.selectedRowKeys || [],

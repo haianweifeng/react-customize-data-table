@@ -905,7 +905,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       rowSelection.onChange(finalSelectedKeys, selectedRecords);
     }
 
-    if (rowSelection && !('selectedRowKeys' in rowSelection)) {
+    if (rowSelection && !rowSelection?.selectedRowKeys) {
       updateSelectedKeys(finalSelectedKeys);
     }
   };
