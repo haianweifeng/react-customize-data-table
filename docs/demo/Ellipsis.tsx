@@ -96,7 +96,9 @@ const App = () => {
         },
       ],
       filterMethod: (value: string, record: DataType) => record.address.startsWith(value),
-      render: (text: string) => <span>{text}</span>,
+      render: (text: string, record: DataType, rowIndex: number) => {
+        return <span>{text}</span>;
+      },
       width: 157,
     },
     {

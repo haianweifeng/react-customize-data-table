@@ -56,7 +56,7 @@ const data: DataType[] = [
 ];
 
 const App = () => {
-  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(['3']);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
 
   const rowSelection = {
     selections: true,
@@ -102,6 +102,7 @@ const App = () => {
       }}
       expandable={{
         expandedRowKeys,
+        // expandedRowKeys: undefined,
         // defaultExpandedRowKeys: expandedRowKeys,
         // defaultExpandAllRows: true,
         expandedRowRender: (record: DataType) => <p style={{ margin: 0 }}>{record.description}</p>,
@@ -111,22 +112,22 @@ const App = () => {
           return 'expand-row';
         },
         // 如果是自定义expandIcon 要配合expandedRowKeys，onExpand 使用，在onExpand 中控制expandedRowKeys
-        expandIcon: (
-          record: DataType,
-          expanded: boolean,
-          onExpand: (expanded: boolean, record: DataType) => void,
-        ) => {
-          return (
-            <span
-              onClick={() => {
-                onExpand(!expanded, record);
-              }}
-              style={{ cursor: 'pointer' }}
-            >
-              {expanded ? 'v' : '>'}
-            </span>
-          );
-        },
+        // expandIcon: (
+        //   record: DataType,
+        //   expanded: boolean,
+        //   onExpand: (expanded: boolean, record: DataType) => void,
+        // ) => {
+        //   return (
+        //     <span
+        //       onClick={() => {
+        //         onExpand(!expanded, record);
+        //       }}
+        //       style={{ cursor: 'pointer' }}
+        //     >
+        //       {expanded ? 'v' : '>'}
+        //     </span>
+        //   );
+        // },
         onExpand: (expanded: boolean, record: DataType) => {
           console.log(`expanded: ${expanded}`, 'record: ', record);
           setExpandedRowKeys((prev) => {

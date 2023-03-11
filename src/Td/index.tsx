@@ -120,7 +120,6 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
     }
   }, [isTreeColumn, column, isSelectionExpand]);
 
-  // todo 默认不知道是不是left
   const align = column?.align || 'left';
 
   const cls = classnames({
@@ -238,13 +237,11 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
 
     let content: React.ReactNode;
     if (typeof column?.render === 'function') {
-      // todo bug 如果没有这个字段怎么办
       content = column.render(
         column?.dataIndex ? rowData[column.dataIndex as keyof T] : rowData,
         rowData,
         rowIndex,
       );
-      // content = render(rowData[dataIndex as keyof T] as string, rowData, rowIndex);
     } else {
       content = rowData[column?.dataIndex as keyof T] as React.ReactNode;
     }

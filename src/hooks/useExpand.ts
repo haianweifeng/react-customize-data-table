@@ -17,9 +17,9 @@ function useExpand<T extends { key?: React.Key; children?: T[] }>(
 
   const handleExpand = useCallback(
     (expanded: boolean, record: T, recordKey: number | string) => {
-      if (expandable && !('expandedRowKeys' in expandable)) {
+      if (expandable && !expandable?.expandedRowKeys) {
         setExpandedRowKeys((prevKeys) => {
-          if (prevKeys.indexOf(recordKey) >= 0) {
+          if (!expanded) {
             return prevKeys.filter((key) => key !== recordKey);
           }
           return [...prevKeys, recordKey];
@@ -33,7 +33,7 @@ function useExpand<T extends { key?: React.Key; children?: T[] }>(
   );
 
   useEffect(() => {
-    if (expandable && 'expandedRowKeys' in expandable) {
+    if (expandable && 'expandedRowKeys' in expandable && expandable.expandedRowKeys) {
       setExpandedRowKeys(expandable?.expandedRowKeys || []);
     }
   }, [expandable?.expandedRowKeys]);
