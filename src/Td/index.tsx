@@ -52,22 +52,6 @@ interface TdProps<T> {
 }
 
 function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<T>) {
-  // const {
-  //   colSpan,
-  //   rowSpan,
-  //   align,
-  //   className = '',
-  //   fixed,
-  //   _lastLeftFixed,
-  //   _firstRightFixed,
-  //   content,
-  //   type,
-  //   scrollLeft,
-  //   offsetRight,
-  //   ignoreRightBorder,
-  //   ellipsis,
-  // } = props;
-
   const {
     isTree,
     rowData,
@@ -358,17 +342,5 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
   };
 
   return renderCell();
-
-  // return (
-  //   <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles} ref={cellRef}>
-  //     {showTooltip && isOverflow ? (
-  //       renderTooltip()
-  //     ) : !!ellipsis ? (
-  //       <span className="cell-tooltip-content">{cellContent}</span>
-  //     ) : (
-  //       cellContent
-  //     )}
-  //   </td>
-  // );
 }
 export default Td;

@@ -1,30 +1,13 @@
 import React, { useRef, useEffect, useMemo, useState } from 'react';
 import classnames from 'classnames';
-// import type { CellProps } from '../interface';
 import type {
-  CellProps,
-  ColumnGroupType,
   ColumnType,
   Expandable,
   PrivateColumnsType,
   RowSelection,
   TreeExpandable,
 } from '../interface1';
-import type { TableProps } from '../Table';
 import Td from '../Td';
-import { getParent } from '../utils/util';
-
-// interface TrProps<T> extends TableProps<T> {
-//   isTree: boolean;
-//   rowData: T;
-//   rowIndex: number;
-//   recordKey: React.Key;
-//   expanded: boolean;
-//   columns: PrivateColumnsType<T>;
-//   checked: 'indeterminate' | boolean;
-//   selectionType: 'radio' | 'checkbox' | undefined;
-//   onUpdateRowHeight: (height: number, rowIndex: number) => void;
-// }
 
 interface TrProps<T> {
   rowData: T;
@@ -67,31 +50,19 @@ interface TrProps<T> {
 
 function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<T>) {
   const {
-    isTree,
+    striped,
+    checked,
     rowData,
     rowIndex,
-    checked,
+    columns,
     expanded,
     expandable,
-    recordKey,
-    striped,
     bordered,
-    rowClassName,
     rowStyle,
-    onUpdateRowHeight,
-    columns,
-    rowSelection,
-    treeProps,
-    handleSelect,
-    handleExpand,
-    treeExpanded,
-    treeLevel,
-    treeIndent,
-    handleTreeExpand,
-    cellClassName,
-    cellStyle,
+    rowClassName,
     onRowEvents,
-    onCellEvents,
+    onUpdateRowHeight,
+    ...restProps
   } = props;
 
   const trRef = useRef<HTMLTableRowElement>(null);
@@ -116,37 +87,7 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
       setRowHeight(newHeight);
       onUpdateRowHeight(newHeight, rowIndex);
     }
-  }, [rowIndex, columns, expanded, rowHeight, onUpdateRowHeight]);
-
-  // const renderTds = () => {
-  //   const tds = [];
-  //   for (let i = 0; i < cols.length; i++) {
-  //     const column = cols[i];
-  //     if (!column.colSpan || !column.rowSpan) continue;
-  //     const ignoreRightBorder = !!(
-  //       bordered &&
-  //       (i === cols.length - 1 || column.colSpan === cols.length)
-  //     );
-  //     tds.push(
-  //       <Td
-  //         key={i}
-  //         {...column}
-  //         isTree={isTree}
-  //         checked={checked}
-  //         expanded={expanded}
-  //         rowIndex={rowIndex}
-  //         rowSelection={rowSelection}
-  //         expandable={expandable}
-  //         selectionType={selectionType}
-  //         scrollLeft={scrollLeft}
-  //         offsetRight={offsetRight}
-  //         ignoreRightBorder={ignoreRightBorder}
-  //       />,
-  //     );
-  //   }
-  //
-  //   return tds;
-  // };
+  }, [rowIndex, columns, expanded, rowHeight, onRowEvents, onUpdateRowHeight]);
 
   // todo 待验证如果是固定列滚动这一行的展示效果
   const renderExpandRow = () => {
@@ -186,14 +127,6 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
     return {};
   }, [rowData, rowIndex, onRowEvents]);
 
-  const handleRowClick = (event: any) => {
-    const parent = getParent(event.target, '.selection-expand-column');
-    if (parent) return;
-    if (typeof (rowEvents as any)?.onClick === 'function') {
-      (rowEvents as any)?.onClick(event);
-    }
-  };
-
   const renderCells = () => {
     const cells = [];
     let isExist = false;
@@ -222,7 +155,6 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
       cells.push(
         <Td
           key={i}
-          isTree={isTree}
           checked={checked}
           expanded={expanded}
           colIndex={i}
@@ -231,21 +163,10 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
           rowSpan={rowSpan}
           colSpan={colSpan}
           rowData={rowData}
-          treeProps={treeProps}
-          recordKey={recordKey}
-          treeLevel={treeLevel}
-          treeIndent={treeIndent}
-          treeExpanded={treeExpanded}
           expandable={expandable}
-          rowSelection={rowSelection}
-          handleSelect={handleSelect}
-          handleExpand={handleExpand}
-          handleTreeExpand={handleTreeExpand}
           ignoreRightBorder={ignoreRightBorder}
           isFirstDefaultColumn={isFirstDefaultColumn}
-          cellClassName={cellClassName}
-          cellStyle={cellStyle}
-          onCellEvents={onCellEvents}
+          {...restProps}
         />,
       );
       isFirstDefaultColumn = false;
@@ -269,15 +190,7 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
 
   return (
     <>
-      <tr
-        ref={trRef}
-        key={rowIndex}
-        style={style}
-        className={classnames(classes)}
-        {...rowEvents}
-        // onClick={handleRowClick}
-      >
-        {/*{renderTds()}*/}
+      <tr ref={trRef} key={rowIndex} style={style} className={classnames(classes)} {...rowEvents}>
         {renderCells()}
       </tr>
       {renderExpandRow()}
