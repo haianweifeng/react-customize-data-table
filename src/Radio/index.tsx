@@ -38,7 +38,14 @@ const Radio = (props: RadioProps) => {
   };
 
   return (
-    <label className={cls} style={style} htmlFor={idRef.current}>
+    <label
+      className={cls}
+      style={style}
+      htmlFor={idRef.current}
+      onClick={(event: React.MouseEvent) => {
+        event.stopPropagation();
+      }}
+    >
       <input
         id={idRef.current}
         disabled={disabled}

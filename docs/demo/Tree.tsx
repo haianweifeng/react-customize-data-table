@@ -181,6 +181,40 @@ const App = () => {
       bordered
       rowKey="key"
       // rowKey={(record) => record}
+      onRowEvents={(record: DataType, rowIndex: number) => {
+        return {
+          onClick: () => {
+            console.log('click row');
+            // console.log(record);
+            // console.log(`rowIndex: ${rowIndex}`);
+          },
+          onDoubleClick: () => {
+            console.log('double click');
+          },
+          // onMouseEnter: () => {
+          //   console.log('mouse enter');
+          // },
+          // onMouseLeave: () => {
+          //   console.log('mouse leave');
+          // }
+        };
+      }}
+      onCellEvents={(record: DataType, rowIndex: number) => {
+        return {
+          onClick: () => {
+            console.log('cell click');
+          },
+          onDoubleClick: () => {
+            console.log('cell double click');
+          },
+          // onMouseEnter: () => {
+          //   console.log('mouse enter');
+          // },
+          // onMouseLeave: () => {
+          //   console.log('mouse leave');
+          // }
+        };
+      }}
     />
   );
 };

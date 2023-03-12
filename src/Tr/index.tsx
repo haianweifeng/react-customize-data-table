@@ -53,7 +53,6 @@ interface TrProps<T> {
     event: Event,
   ) => void;
   onUpdateRowHeight: (height: number, rowIndex: number) => void;
-  onRow?: (record: T, index: number) => any;
   rowClassName?: (record: T, index: number) => string;
   rowStyle?: (record: T, index: number) => React.CSSProperties | React.CSSProperties;
   cellClassName?: (column: ColumnType<T>, rowIndex: number, colIndex: number) => string | string;
@@ -62,6 +61,8 @@ interface TrProps<T> {
     rowIndex: number,
     colIndex: number,
   ) => React.CSSProperties | React.CSSProperties;
+  onRowEvents?: (record: T, rowIndex: number) => object;
+  onCellEvents?: (record: T, rowIndex: number) => object;
 }
 
 function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<T>) {
@@ -77,7 +78,6 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
     bordered,
     rowClassName,
     rowStyle,
-    onRow,
     onUpdateRowHeight,
     columns,
     rowSelection,
@@ -90,6 +90,8 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
     handleTreeExpand,
     cellClassName,
     cellStyle,
+    onRowEvents,
+    onCellEvents,
   } = props;
 
   const trRef = useRef<HTMLTableRowElement>(null);
@@ -177,18 +179,18 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
     );
   };
 
-  const rowProps = useMemo(() => {
-    if (typeof onRow === 'function') {
-      return onRow(rowData, rowIndex);
+  const rowEvents = useMemo(() => {
+    if (typeof onRowEvents === 'function') {
+      return onRowEvents(rowData, rowIndex);
     }
     return {};
-  }, [rowData, rowIndex, onRow]);
+  }, [rowData, rowIndex, onRowEvents]);
 
   const handleRowClick = (event: any) => {
     const parent = getParent(event.target, '.selection-expand-column');
     if (parent) return;
-    if (typeof rowProps?.onClick === 'function') {
-      rowProps?.onClick(event);
+    if (typeof (rowEvents as any)?.onClick === 'function') {
+      (rowEvents as any)?.onClick(event);
     }
   };
 
@@ -243,6 +245,7 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
           isFirstDefaultColumn={isFirstDefaultColumn}
           cellClassName={cellClassName}
           cellStyle={cellStyle}
+          onCellEvents={onCellEvents}
         />,
       );
       isFirstDefaultColumn = false;
@@ -271,8 +274,8 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
         key={rowIndex}
         style={style}
         className={classnames(classes)}
-        {...rowProps}
-        onClick={handleRowClick}
+        {...rowEvents}
+        // onClick={handleRowClick}
       >
         {/*{renderTds()}*/}
         {renderCells()}

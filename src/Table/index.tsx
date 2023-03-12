@@ -119,13 +119,15 @@ export interface TableProps<T> {
   headerRowClassName?: (rowIndex: number) => string | string;
   /** 表头行的style */
   headerRowStyle?: (rowIndex: number) => React.CSSProperties | React.CSSProperties;
-  /** 设置头部行事件 */
+  /** 设置表头行事件 */
   onHeaderRowEvents?: (rowIndex: number) => object;
-  /** 设置头部单元格事件 */
+  /** 设置表头行单元格事件 */
   onHeaderCellEvents?: (column: ColumnType<T> | ColumnGroupType<T>, rowIndex: number) => object;
   // onHeaderRow?: (columns: ColumnsType<T>[], index: number) => any;
-  /** 设置行属性 todo 改成onRowEvents 表头增加 onHeaderRowEvents */
-  onRow?: (record: T, index: number) => any;
+  /** 设置表体行事件 */
+  onRowEvents?: (record: T, rowIndex: number) => object;
+  /** 设置表体单元格事件 */
+  onCellEvents?: (record: T, rowIndex: number) => object;
   /** 分页 */
   pagination?: PaginationProps;
   // /** disabled 为 true，禁用全部选项 todo 好像不需要 */
@@ -213,11 +215,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     onHeaderRowEvents,
     onHeaderCellEvents,
     striped,
-    onRow,
     rowClassName,
     rowStyle,
     cellClassName,
     cellStyle,
+    onRowEvents,
+    onCellEvents,
   } = props;
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 44;
@@ -1425,11 +1428,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
                 expandable={expandable}
                 rowSelection={rowSelection}
                 treeProps={treeProps}
-                onRow={onRow}
                 rowClassName={rowClassName}
                 rowStyle={rowStyle}
                 cellClassName={cellClassName}
                 cellStyle={cellStyle}
+                onRowEvents={onRowEvents}
+                onCellEvents={onCellEvents}
               />
             </table>
           </div>
@@ -1548,11 +1552,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
               expandable={expandable}
               rowSelection={rowSelection}
               treeProps={treeProps}
-              onRow={onRow}
               rowClassName={rowClassName}
               rowStyle={rowStyle}
               cellClassName={cellClassName}
               cellStyle={cellStyle}
+              onRowEvents={onRowEvents}
+              onCellEvents={onCellEvents}
             />
           </table>
         </div>

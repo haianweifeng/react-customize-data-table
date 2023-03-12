@@ -54,7 +54,6 @@ interface TbodyProps<T> {
   expandable?: Expandable<T>;
   rowSelection?: RowSelection<T>;
   treeProps?: TreeExpandable<T>;
-  onRow?: (record: T, index: number) => any;
   rowClassName?: (record: T, index: number) => string;
   rowStyle?: (record: T, index: number) => React.CSSProperties | React.CSSProperties;
   cellClassName?: (column: ColumnType<T>, rowIndex: number, colIndex: number) => string | string;
@@ -63,6 +62,8 @@ interface TbodyProps<T> {
     rowIndex: number,
     colIndex: number,
   ) => React.CSSProperties | React.CSSProperties;
+  onRowEvents?: (record: T, rowIndex: number) => object;
+  onCellEvents?: (record: T, rowIndex: number) => object;
 }
 
 function Tbody<T extends { key?: number | string; children?: T[] }>(props: TbodyProps<T>) {
@@ -91,11 +92,12 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
     handleTreeExpand,
     handleSelect,
     onUpdateRowHeight,
-    onRow,
     rowClassName,
     rowStyle,
     cellClassName,
     cellStyle,
+    onRowEvents,
+    onCellEvents,
   } = props;
 
   const tbodyRef = useRef<any>(null);
@@ -501,11 +503,12 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
         handleTreeExpand={handleTreeExpand}
         handleSelect={handleSelect}
         onUpdateRowHeight={onUpdateRowHeight}
-        onRow={onRow}
         rowClassName={rowClassName}
         rowStyle={rowStyle}
         cellStyle={cellStyle}
         cellClassName={cellClassName}
+        onRowEvents={onRowEvents}
+        onCellEvents={onCellEvents}
       />
     );
   };

@@ -48,6 +48,7 @@ interface TdProps<T> {
     rowIndex: number,
     colIndex: number,
   ) => React.CSSProperties | React.CSSProperties;
+  onCellEvents?: (record: T, rowIndex: number) => object;
 }
 
 function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<T>) {
@@ -91,6 +92,7 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
     isFirstDefaultColumn,
     cellClassName,
     cellStyle,
+    onCellEvents,
   } = props;
 
   const cellRef = useRef<HTMLTableCellElement>(null);
@@ -164,6 +166,10 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
       ? cellStyle(omitColumnProps(column), rowIndex, colIndex)
       : cellStyle || {};
 
+  const cellEvents = useMemo(() => {
+    return typeof onCellEvents === 'function' ? onCellEvents(rowData, rowIndex) : {};
+  }, []);
+
   const ellipsis = column.ellipsis;
 
   const showTooltip = typeof ellipsis === 'object' && ellipsis?.tooltip;
@@ -219,7 +225,7 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
     );
 
     return (
-      <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles}>
+      <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles} {...cellEvents}>
         {rowSelection?.renderCell
           ? rowSelection?.renderCell(!!checked, rowData, rowIndex, defaultContent)
           : defaultContent}
@@ -229,7 +235,9 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
 
   const renderExpandCell = () => {
     if (expandable?.rowExpandable && !expandable?.rowExpandable(rowData)) {
-      return <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles} />;
+      return (
+        <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles} {...cellEvents} />
+      );
     }
     const expandIcon = (
       <span
@@ -245,7 +253,7 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
     );
 
     return (
-      <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles}>
+      <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles} {...cellEvents}>
         {expandable?.expandIcon
           ? expandable.expandIcon(rowData, expanded, expandable?.onExpand)
           : expandIcon}
@@ -278,8 +286,9 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
     if (hasChildren && isTreeColumn) {
       const defaultTreeIcon = (
         <span
-          onClick={() => {
+          onClick={(event: React.MouseEvent) => {
             handleTreeExpand(!treeExpanded, rowData, recordKey);
+            event.stopPropagation();
           }}
           className={classnames({
             'expand-icon': true,
@@ -293,7 +302,14 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
           ? treeProps.expandIcon(rowData, treeExpanded, treeProps?.onExpand)
           : defaultTreeIcon;
       return (
-        <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles} ref={cellRef}>
+        <td
+          colSpan={colSpan}
+          rowSpan={rowSpan}
+          className={cls}
+          style={styles}
+          ref={cellRef}
+          {...cellEvents}
+        >
           <div style={{ marginLeft: treeLevel * treeIndent }} className="cell-tree-container">
             {treeIcon}
             <span ref={contentRef} className="cell-content-ellipsis">
@@ -306,7 +322,14 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
 
     if (isTreeColumn) {
       return (
-        <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles} ref={cellRef}>
+        <td
+          colSpan={colSpan}
+          rowSpan={rowSpan}
+          className={cls}
+          style={styles}
+          ref={cellRef}
+          {...cellEvents}
+        >
           <div
             style={{
               marginLeft: treeLevel * treeIndent,
@@ -321,7 +344,14 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
       );
     }
     return (
-      <td colSpan={colSpan} rowSpan={rowSpan} className={cls} style={styles} ref={cellRef}>
+      <td
+        colSpan={colSpan}
+        rowSpan={rowSpan}
+        className={cls}
+        style={styles}
+        ref={cellRef}
+        {...cellEvents}
+      >
         {renderContent(content)}
       </td>
     );

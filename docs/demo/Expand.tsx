@@ -60,6 +60,7 @@ const App = () => {
 
   const rowSelection = {
     selections: true,
+    // type: 'radio',
     onChange: (selectedRowKeys: (string | number)[], selectedRows: DataType[]) => {
       console.log('selectedRowKeys:', selectedRowKeys, 'selectedRows: ', selectedRows);
     },
@@ -95,7 +96,7 @@ const App = () => {
       columns={columns}
       bordered
       // rowKey="key"
-      cellClassName="custom-cell-class"
+      // cellClassName="custom-cell-class"
       // cellClassName={(column, rowIndex: number, colIndex: number) => {
       //   return 'custom-cell-func';
       // }}
@@ -107,10 +108,10 @@ const App = () => {
       // cellStyle={(column, rowIndex: number, colIndex: number) => {
       //   return { backgroundColor: 'pink', color: 'blue' };
       // }}
-      cellStyle={{ color: 'red', backgroundColor: 'orange' }}
-      rowStyle={() => {
-        return { backgroundColor: 'purple' };
-      }}
+      // cellStyle={{ color: 'red', backgroundColor: 'orange' }}
+      // rowStyle={() => {
+      //   return { backgroundColor: 'purple' };
+      // }}
       expandable={{
         expandedRowKeys,
         // expandedRowKeys: undefined,
@@ -146,22 +147,32 @@ const App = () => {
           });
         },
       }}
-      onRow={(record: DataType, rowIndex: number) => {
+      onRowEvents={(record: DataType, rowIndex: number) => {
         return {
           onClick: () => {
             console.log('click row');
             // console.log(record);
             // console.log(`rowIndex: ${rowIndex}`);
           },
-          onDoubleClick: () => {
-            console.log('double click');
-          },
+          // onDoubleClick: () => {
+          //   console.log('double click');
+          // },
           // onMouseEnter: () => {
           //   console.log('mouse enter');
           // },
           // onMouseLeave: () => {
           //   console.log('mouse leave');
           // }
+        };
+      }}
+      onCellEvents={(record: DataType, rowIndex: number) => {
+        return {
+          onClick: () => {
+            console.log('cell click');
+          },
+          onDoubleClick: () => {
+            console.log('double click');
+          },
         };
       }}
     />
