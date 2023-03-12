@@ -3,8 +3,14 @@ import classnames from 'classnames';
 import Radio from '../Radio';
 import Tooltip from '../Tooltip';
 import Checkbox from '../Checkbox';
-import { getPropertyValueSum } from '../utils/util';
-import type { Expandable, PrivateColumnType, RowSelection, TreeExpandable } from '../interface1';
+import { getPropertyValueSum, omitColumnProps } from '../utils/util';
+import type {
+  ColumnType,
+  Expandable,
+  PrivateColumnType,
+  RowSelection,
+  TreeExpandable,
+} from '../interface1';
 import '../style/index.less';
 
 interface TdProps<T> {
@@ -12,6 +18,7 @@ interface TdProps<T> {
   isTree: boolean;
   colSpan: number;
   rowSpan: number;
+  colIndex: number;
   rowIndex: number;
   expanded: boolean;
   treeLevel: number;
@@ -35,6 +42,12 @@ interface TdProps<T> {
   ) => void;
   handleExpand: (expanded: boolean, record: T, recordKey: number | string) => void;
   handleTreeExpand: (treeExpanded: boolean, record: T, recordKey: number | string) => void;
+  cellClassName?: (column: ColumnType<T>, rowIndex: number, colIndex: number) => string | string;
+  cellStyle?: (
+    column: ColumnType<T>,
+    rowIndex: number,
+    colIndex: number,
+  ) => React.CSSProperties | React.CSSProperties;
 }
 
 function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<T>) {
@@ -59,6 +72,7 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
     rowData,
     rowSpan,
     colSpan,
+    colIndex,
     rowIndex,
     column,
     checked,
@@ -75,8 +89,9 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
     handleTreeExpand,
     ignoreRightBorder,
     isFirstDefaultColumn,
+    cellClassName,
+    cellStyle,
   } = props;
-  // todo className style 还没有修改
 
   const cellRef = useRef<HTMLTableCellElement>(null);
 
@@ -122,18 +137,32 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
 
   const align = column?.align || 'left';
 
-  const cls = classnames({
+  const classes: Record<string, boolean> = {
     'cell-ellipsis': !!column?.ellipsis && !isSelectionExpand && !isTreeColumn,
     'cell-fixed-left': column?.fixed === 'left',
     'cell-fixed-right': column?.fixed === 'right',
     'cell-is-last-fixedLeft': !!column?._lastLeftFixed,
     'cell-is-first-fixedRight': !!column?._firstRightFixed,
     [`cell-align-${align}`]: !!align,
-    'selection-expand-column': isSelectionExpand,
+    'selection-expand-column': !!isSelectionExpand,
     'cell-ignore-right-border': ignoreRightBorder,
     [column?.className ?? '']: !!column?.className,
-  });
-  const styles: any = {};
+  };
+
+  if (cellClassName) {
+    const cls =
+      typeof cellClassName === 'function'
+        ? cellClassName(omitColumnProps(column), rowIndex, colIndex)
+        : cellClassName;
+    classes[cls] = !!cls;
+  }
+
+  const cls = classnames(classes);
+
+  const styles: React.CSSProperties =
+    typeof cellStyle === 'function'
+      ? cellStyle(omitColumnProps(column), rowIndex, colIndex)
+      : cellStyle || {};
 
   const ellipsis = column.ellipsis;
 

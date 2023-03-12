@@ -95,10 +95,21 @@ const App = () => {
       columns={columns}
       bordered
       // rowKey="key"
+      cellClassName="custom-cell-class"
+      // cellClassName={(column, rowIndex: number, colIndex: number) => {
+      //   return 'custom-cell-func';
+      // }}
       rowClassName={(record: DataType) => {
         if (record.name === 'John Brown') {
           return 'custom-row';
         }
+      }}
+      // cellStyle={(column, rowIndex: number, colIndex: number) => {
+      //   return { backgroundColor: 'pink', color: 'blue' };
+      // }}
+      cellStyle={{ color: 'red', backgroundColor: 'orange' }}
+      rowStyle={() => {
+        return { backgroundColor: 'purple' };
       }}
       expandable={{
         expandedRowKeys,

@@ -3,6 +3,8 @@ import classnames from 'classnames';
 // import type { CellProps } from '../interface';
 import type {
   CellProps,
+  ColumnGroupType,
+  ColumnType,
   Expandable,
   PrivateColumnsType,
   RowSelection,
@@ -53,6 +55,13 @@ interface TrProps<T> {
   onUpdateRowHeight: (height: number, rowIndex: number) => void;
   onRow?: (record: T, index: number) => any;
   rowClassName?: (record: T, index: number) => string;
+  rowStyle?: (record: T, index: number) => React.CSSProperties | React.CSSProperties;
+  cellClassName?: (column: ColumnType<T>, rowIndex: number, colIndex: number) => string | string;
+  cellStyle?: (
+    column: ColumnType<T>,
+    rowIndex: number,
+    colIndex: number,
+  ) => React.CSSProperties | React.CSSProperties;
 }
 
 function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<T>) {
@@ -67,6 +76,7 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
     striped,
     bordered,
     rowClassName,
+    rowStyle,
     onRow,
     onUpdateRowHeight,
     columns,
@@ -78,6 +88,8 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
     treeLevel,
     treeIndent,
     handleTreeExpand,
+    cellClassName,
+    cellStyle,
   } = props;
 
   const trRef = useRef<HTMLTableRowElement>(null);
@@ -165,18 +177,6 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
     );
   };
 
-  const clsInfo: any = {
-    'row-even': striped && rowIndex % 2 !== 0,
-    'row-odd': striped && rowIndex % 2 === 0,
-    'row-selected': checked,
-  };
-
-  if (rowClassName && rowClassName(rowData, rowIndex)) {
-    clsInfo[rowClassName(rowData, rowIndex)] = !!rowClassName(rowData, rowIndex);
-  }
-
-  const cls = classnames(clsInfo);
-
   const rowProps = useMemo(() => {
     if (typeof onRow === 'function') {
       return onRow(rowData, rowIndex);
@@ -223,6 +223,7 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
           isTree={isTree}
           checked={checked}
           expanded={expanded}
+          colIndex={i}
           rowIndex={rowIndex}
           column={column}
           rowSpan={rowSpan}
@@ -240,6 +241,8 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
           handleTreeExpand={handleTreeExpand}
           ignoreRightBorder={ignoreRightBorder}
           isFirstDefaultColumn={isFirstDefaultColumn}
+          cellClassName={cellClassName}
+          cellStyle={cellStyle}
         />,
       );
       isFirstDefaultColumn = false;
@@ -248,9 +251,29 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
     return cells;
   };
 
+  const classes: Record<string, boolean> = {
+    'row-even': striped && rowIndex % 2 !== 0,
+    'row-odd': striped && rowIndex % 2 === 0,
+    'row-selected': !!checked,
+  };
+
+  if (rowClassName && rowClassName(rowData, rowIndex)) {
+    classes[rowClassName(rowData, rowIndex)] = !!rowClassName(rowData, rowIndex);
+  }
+
+  const style: React.CSSProperties =
+    typeof rowStyle === 'function' ? rowStyle(rowData, rowIndex) : rowStyle || {};
+
   return (
     <>
-      <tr key={rowIndex} className={cls} ref={trRef} {...rowProps} onClick={handleRowClick}>
+      <tr
+        ref={trRef}
+        key={rowIndex}
+        style={style}
+        className={classnames(classes)}
+        {...rowProps}
+        onClick={handleRowClick}
+      >
         {/*{renderTds()}*/}
         {renderCells()}
       </tr>

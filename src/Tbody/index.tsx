@@ -12,6 +12,8 @@ import type {
   Expandable,
   RowSelection,
   TreeExpandable,
+  ColumnType,
+  ColumnGroupType,
 } from '../interface1';
 
 interface TbodyProps<T> {
@@ -54,6 +56,13 @@ interface TbodyProps<T> {
   treeProps?: TreeExpandable<T>;
   onRow?: (record: T, index: number) => any;
   rowClassName?: (record: T, index: number) => string;
+  rowStyle?: (record: T, index: number) => React.CSSProperties | React.CSSProperties;
+  cellClassName?: (column: ColumnType<T>, rowIndex: number, colIndex: number) => string | string;
+  cellStyle?: (
+    column: ColumnType<T>,
+    rowIndex: number,
+    colIndex: number,
+  ) => React.CSSProperties | React.CSSProperties;
 }
 
 function Tbody<T extends { key?: number | string; children?: T[] }>(props: TbodyProps<T>) {
@@ -84,6 +93,9 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
     onUpdateRowHeight,
     onRow,
     rowClassName,
+    rowStyle,
+    cellClassName,
+    cellStyle,
   } = props;
 
   const tbodyRef = useRef<any>(null);
@@ -491,6 +503,9 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
         onUpdateRowHeight={onUpdateRowHeight}
         onRow={onRow}
         rowClassName={rowClassName}
+        rowStyle={rowStyle}
+        cellStyle={cellStyle}
+        cellClassName={cellClassName}
       />
     );
   };

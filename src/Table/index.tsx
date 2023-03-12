@@ -93,6 +93,16 @@ export interface TableProps<T> {
   size?: 'default' | 'small' | 'large';
   /** 表格行的类名 */
   rowClassName?: (record: T, index: number) => string;
+  /** 表格行的style */
+  rowStyle?: (record: T, index: number) => React.CSSProperties | React.CSSProperties;
+  /** 表体单元格的类名 */
+  cellClassName?: (column: ColumnType<T>, rowIndex: number, colIndex: number) => string | string;
+  /** 表体单元格的style */
+  cellStyle?: (
+    column: ColumnType<T>,
+    rowIndex: number,
+    colIndex: number,
+  ) => React.CSSProperties | React.CSSProperties;
   /** 表头单元格的类名 */
   headerCellClassName?: (
     column: ColumnType<T> | ColumnGroupType<T>,
@@ -205,6 +215,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     striped,
     onRow,
     rowClassName,
+    rowStyle,
+    cellClassName,
+    cellStyle,
   } = props;
 
   const SELECTION_EXPAND_COLUMN_WIDTH = 44;
@@ -1414,6 +1427,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
                 treeProps={treeProps}
                 onRow={onRow}
                 rowClassName={rowClassName}
+                rowStyle={rowStyle}
+                cellClassName={cellClassName}
+                cellStyle={cellStyle}
               />
             </table>
           </div>
@@ -1534,6 +1550,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
               treeProps={treeProps}
               onRow={onRow}
               rowClassName={rowClassName}
+              rowStyle={rowStyle}
+              cellClassName={cellClassName}
+              cellStyle={cellStyle}
             />
           </table>
         </div>
