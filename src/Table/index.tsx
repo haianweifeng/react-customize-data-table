@@ -1,6 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback, useContext } from 'react';
 import classnames from 'classnames';
-import omit from 'omit.js';
 import useColumns from '../hooks/useColumns';
 import useSorter from '../hooks/useSorter';
 import useFilter from '../hooks/useFilter';
@@ -8,7 +7,6 @@ import useExpand from '../hooks/useExpand';
 import useSelection from '../hooks/useSelection';
 import usePagination from '../hooks/usePagination';
 import useTreeExpand from '../hooks/useTreeExpand';
-// import useFlattenData from '../hooks/useFlattenData';
 import Thead from '../Thead';
 import Tbody from '../Tbody';
 import VirtualBody from '../VirtualBody';
@@ -16,24 +14,10 @@ import Colgroup from '../Colgroup';
 import Pagination from '../Pagination';
 import Spin from '../Spin';
 import type {
-  // RowSelectionType,
-  // ColumnsType,
-  ColumnsGroupType,
-  // ExpandableType,
-  TreeExpandableType,
-  ColumnsWithType,
-  ColumnsGroupWithType,
-  SelectedRowWithKey,
   TreeLevelType,
   LevelRecordType,
   RowKeyType,
-  SorterStateType,
-  SorterType,
-  SortInfoType,
-  FilterStateType,
-  FilterInfoType,
   CachePositionType,
-  ResizeInfoType,
   LocalType,
 } from '../interface';
 import type {
@@ -51,14 +35,7 @@ import type {
 import VirtualList from '../VirtualList';
 import type { PaginationProps } from '../index';
 import '../style/index.less';
-import {
-  getRowKey,
-  toPoint,
-  findParentByKey,
-  parseValue,
-  getParent,
-  getColumnKey,
-} from '../utils/util';
+import { getRowKey, getParent } from '../utils/util';
 import { BAR_WIDTH } from '../utils/constant';
 import { omitColumnProps } from '../utils/util';
 import LocaleContext from '../LocalProvider/context';
@@ -123,7 +100,6 @@ export interface TableProps<T> {
   onHeaderRowEvents?: (rowIndex: number) => object;
   /** 设置表头行单元格事件 */
   onHeaderCellEvents?: (column: ColumnType<T> | ColumnGroupType<T>, rowIndex: number) => object;
-  // onHeaderRow?: (columns: ColumnsType<T>[], index: number) => any;
   /** 设置表体行事件 */
   onRowEvents?: (record: T, rowIndex: number) => object;
   /** 设置表体单元格事件 */
@@ -179,29 +155,31 @@ export interface TableProps<T> {
 // todo 还未测试列宽设为百分比的情况
 // todo bug columnWidth: '160' 不起作用
 // todo bug 如果dataIndex 在data 中找不到对应字段数据 是不是要加个key 给用户自己设置
+// todo 2.单元格word-break 样式更改
 // 设置colgroup 列的宽度  然后获取每个单元格最后渲染的宽度 重新设置 colgroup 的宽度
 function Table<T extends { key?: number | string; children?: T[] }>(props: TableProps<T>) {
   const localeContext = useContext(LocaleContext);
 
   const {
-    className = '',
-    style = {},
     width,
     height,
+    striped,
+    bordered,
+    style = {},
+    className = '',
     size = 'default',
     showHeader = true,
-    bordered,
     rowKey = 'key',
-    dataSource,
+    loading,
     columns,
+    dataSource,
+    pagination,
     // columns: originColumns,
+    treeProps,
     expandable,
     rowSelection,
-    treeProps,
     onSort,
     onFilter,
-    pagination,
-    loading,
     renderMaxRows = 20,
     rowHeight = 46,
     virtualized,
@@ -214,16 +192,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     headerRowClassName,
     onHeaderRowEvents,
     onHeaderCellEvents,
-    striped,
-    rowClassName,
     rowStyle,
-    cellClassName,
+    rowClassName,
     cellStyle,
+    cellClassName,
     onRowEvents,
     onCellEvents,
   } = props;
-
-  const SELECTION_EXPAND_COLUMN_WIDTH = 44;
 
   const getRecordKey = useCallback(
     (record: T) => {
@@ -306,10 +281,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return rowSelection ? rowSelection?.type || 'checkbox' : undefined;
   }, [columns, rowSelection?.type]);
 
-  // const initSelectedKeys = useMemo(() => {
-  //   return rowSelection?.selectedRowKeys || rowSelection?.defaultSelectedRowKeys || [];
-  // }, [rowSelection?.selectedRowKeys, rowSelection?.defaultSelectedRowKeys]);
-
   const flattenDataSource = useMemo(() => {
     return flatRecords(dataSource);
   }, [dataSource]);
@@ -387,9 +358,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const tableContainer = useRef<HTMLDivElement>(null);
   const theadRef = useRef<any>(null);
   const tbodyRef = useRef<any>(null);
-  // const maxTreeLevel = useRef<number>(0);
-  const treeLevel = useRef<TreeLevelType>({} as TreeLevelType);
-  const levelRecord = useRef<LevelRecordType<T>>({} as LevelRecordType<T>);
 
   const lastStartRowIndex = useRef<number>(0);
 
@@ -412,81 +380,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     });
   });
 
-  // const [columns, setColumns] = useState<(ColumnsType<T> | ColumnsGroupType<T>)[]>(originColumns);
-
   const [virtualContainerWidth, setVirtualContainerWidth] = useState<number>(0);
 
   const [containerWidth, setContainerWidth] = useState<number>(0);
-
-  const flatData = useCallback(
-    (data: T[], level: number = 0) => {
-      const records: T[] = [];
-      const keys: (string | number)[] = [];
-
-      // maxTreeLevel.current = level;
-
-      data.forEach((d) => {
-        const key = getRowKey(rowKey, d);
-        if (key !== undefined) {
-          keys.push(key);
-          treeLevel.current[key] = level;
-        }
-        records.push(d);
-        if (!Array.isArray(levelRecord.current[level])) {
-          levelRecord.current[level] = [];
-        }
-        levelRecord.current[level].push(d);
-        if (d?.children && d.children.length) {
-          const infos = flatData(d.children, level + 1);
-          records.push(...infos.records);
-          keys.push(...infos.keys);
-        }
-      });
-
-      return { records, keys };
-    },
-    [rowKey],
-  );
-
-  // const totalData = useMemo(() => {
-  //   let records: T[] = [...dataSource];
-  //   filterStates.forEach((filterState) => {
-  //     records = records.filter((r) => {
-  //       let result = !filterState.filteredValue.length;
-  //       for (let i = 0; i < filterState.filteredValue.length; i++) {
-  //         if (typeof filterState?.filterMethod === 'function') {
-  //           result = filterState.filterMethod(filterState.filteredValue[i], r);
-  //           if (result) break;
-  //         }
-  //       }
-  //       return result;
-  //     });
-  //   });
-  //
-  //   sorterStates
-  //     .sort((a, b) => {
-  //       const a1 = (a.weight || 0).toString();
-  //       const b1 = (b.weight || 0).toString();
-  //       return a1.localeCompare(b1);
-  //     })
-  //     .forEach((sorterState) => {
-  //       records.sort((a, b) => {
-  //         const compareResult = sorterState.sorter(a, b);
-  //         if (compareResult !== 0) {
-  //           return sorterState.order === 'asc' ? compareResult : -compareResult;
-  //         }
-  //         return compareResult;
-  //       });
-  //     });
-  //
-  //   return records;
-  // }, [dataSource, filterStates, sorterStates]);
-
-  // const { records: currPageRecords, keys: currPageKeys } = useMemo(() => {
-  //   return flatData(currentPageData);
-  // }, [flatData, currentPageData]);
-
-  // const [colWidths, setColWidths] = useState<number[]>([]);
 
   const [virtualContainerHeight, setVirtualContainerHeight] = useState<number>(0);
 
@@ -500,55 +396,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const [startOffset, setStartOffset] = useState<number>(0);
 
-  // 1.测试列表-分页情况下 展开的也是只展开当前页的
-  // todo bug 如果分页后也是全选的话 是不是没有treeExpandKeys 这里应该针对所有数据进行操作
-  // const [treeExpandKeys, setTreeExpandKeys] = useState<(string | number)[]>(() => {
-  //   if (
-  //     treeProps?.defaultExpandAllRows &&
-  //     !(treeProps?.defaultExpandedRowKeys || treeProps?.expandedRowKeys)
-  //   ) {
-  //     return currPageKeys;
-  //   }
-  //   return treeProps?.expandedRowKeys || treeProps?.defaultExpandedRowKeys || [];
-  // });
-
-  const getTreeChildrenData = useCallback(
-    (parent: T) => {
-      const records: T[] = [];
-      const data = parent?.children;
-      const parentKey = getRowKey(rowKey, parent);
-      if (
-        parentKey !== undefined &&
-        data &&
-        data.length &&
-        treeExpandKeys &&
-        treeExpandKeys.indexOf(parentKey) >= 0
-      ) {
-        data.forEach((item) => {
-          records.push(item);
-          const childrenRecords = getTreeChildrenData(item);
-          records.push(...childrenRecords);
-        });
-      }
-      return records;
-    },
-    [rowKey, treeExpandKeys],
-  );
-
   // todo 应该是基于list 进行获取所有records keys
   // todo list 如果在这里添加了treeChilren 数据遇到虚拟列表会被切分 应该放到tbody 中处理 已处理 待测试
-  const list = useMemo(() => {
-    const records: T[] = [];
-
-    currentPageData.forEach((d) => {
-      records.push(d);
-      // const childrenRecords = getTreeChildrenData(d);
-      // records.push(...childrenRecords);
-    });
-
-    return records;
-  }, [currentPageData, getTreeChildrenData]);
-
   const getSumHeight = useCallback(
     (start: number, end: number) => {
       let sumHeight = 0;
@@ -578,88 +427,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
     return false;
   }, [scrollHeight, height, virtualContainerHeight]);
-
-  // 1.如果所有列设置了宽度 表格总宽度计算
-  // todo 2.单元格word-break 样式更改
-  // todo 考虑如果后面要是把滚动条改动后 tbodyWidth 这个计算要优化 现在没有扣除BAR_WIDTH
-  // const columnsWithWidth = useMemo(() => {
-  //   const allColumnHasWidth = flatColumns.every((c) => typeof parseValue(c.width) === 'number');
-  //   if (allColumnHasWidth) return flatColumns;
-  //   if (tbodyRef.current) {
-  //     let widthSum = 0;
-  //     let count = 0;
-  //     const noMaxColumns: ColumnsWithType<T>[] = [];
-  //     // const tbodyWidth = Number(parseValue(width)) || (virtualContainerWidth - (showScrollbarY ? BAR_WIDTH : 0));
-  //     // const tbodyWidth = Number(parseValue(width)) || virtualContainerWidth;
-  //     // console.log(tbodyRef.current.clientWidth);
-  //     // todo 待验证是offsetWidth 还是scrollWidth
-  //     // todo 考虑如果所有列设置的宽度都设置了最小值导致 remainWidth小于0 是不是意味着后面那几列宽度都为0 还是自动扩充tbodyWidth 的宽度
-  //     const tbodyWidth = Number(parseValue(width)) || containerWidth;
-  //
-  //     flatColumns.map((c) => {
-  //       if (c.width) {
-  //         let parseWidth = parseValue(c.width);
-  //         if (typeof parseWidth === 'string') {
-  //           parseWidth = toPoint(parseWidth);
-  //           parseWidth = parseWidth! * tbodyWidth;
-  //         }
-  //         widthSum += Number(parseWidth);
-  //       } else {
-  //         count++;
-  //         if (!c.maxWidth) {
-  //           noMaxColumns.push(c);
-  //         }
-  //       }
-  //     });
-  //
-  //     let remainWidth = tbodyWidth - widthSum;
-  //     let averageWidth = 0;
-  //     if (count > 0) {
-  //       averageWidth = parseInt(`${remainWidth / count}`, 10);
-  //     }
-  //
-  //     let widthColumns = flatColumns.map((c) => {
-  //       if (c.width) {
-  //         let parseWidth = parseValue(c.width);
-  //         if (typeof parseWidth === 'string') {
-  //           parseWidth = toPoint(parseWidth);
-  //           parseWidth = parseWidth! * tbodyWidth;
-  //         }
-  //         return Object.assign({}, c, { width: parseWidth });
-  //       }
-  //       let colWidth = averageWidth;
-  //       if (c.minWidth) {
-  //         colWidth = Math.max(averageWidth, Number(parseValue(c.minWidth)));
-  //       }
-  //       if (c.maxWidth) {
-  //         colWidth = Math.min(averageWidth, Number(parseValue(c.maxWidth)));
-  //       }
-  //       remainWidth -= colWidth;
-  //       count--;
-  //       const diff = averageWidth - colWidth;
-  //       if (diff) {
-  //         if (count > 0) {
-  //           averageWidth = parseInt(`${remainWidth / count}`, 10);
-  //         }
-  //       }
-  //       return Object.assign({}, c, { width: colWidth });
-  //     });
-  //
-  //     if (remainWidth > 0) {
-  //       averageWidth = parseInt(`${remainWidth / noMaxColumns.length}`, 10);
-  //       widthColumns = widthColumns.map((c) => {
-  //         const item = noMaxColumns.find((col) => col.dataIndex === c.dataIndex);
-  //         if (item) {
-  //           let colWidth = Number(parseValue(c.width)) + averageWidth;
-  //           return Object.assign({}, c, { width: colWidth });
-  //         }
-  //         return c;
-  //       });
-  //     }
-  //     return widthColumns;
-  //   }
-  //   return flatColumns;
-  // }, [flatColumns, virtualContainerWidth, width, containerWidth]);
 
   const handleResize = useCallback(
     (targetColumns: PrivateColumnsType<T>) => {
@@ -748,57 +515,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     setIsMount(true);
   }, []);
 
-  // const converToPixel = useCallback((val: string | number | undefined) => {
-  //   if (typeof val === 'number' || val === undefined) return val;
-  //   const res = toPoint(val);
-  //   const { width } = tbodyRef.current.getBoundingClientRect();
-  //   return width * res;
-  // }, []);
-
-  // 不考虑用handleBodyRender 可以删除相关代码
-  // const handleBodyRender = useCallback(
-  //   (tds: HTMLElement[]) => {
-  //     const widths = [];
-  //
-  //     for (let i = 0; i < tds.length; i++) {
-  //       const td = tds[i];
-  //       const { width } = td.getBoundingClientRect();
-  //
-  //       const colSpan = Number(td.getAttribute('colspan'));
-  //
-  //       if (colSpan === 1) {
-  //         widths.push(width);
-  //       } else {
-  //         let sum = 0;
-  //         let count = 0;
-  //         const colWidth: (number | undefined)[] = [];
-  //         for (let j = 0; j < colSpan; j++) {
-  //           const w = converToPixel(flatColumns[i + j].width);
-  //           // console.log(w);
-  //           // todo 待测试列宽设为0
-  //           // 如果表头是文字 td 是数字就可能产生不对齐 width: 0
-  //           // 等到做完滚动后再来考虑 是否需要设置表格的宽度
-  //           // ellipsis 如果设置了表格宽度后是否能生效
-  //           // ellipsis 是否需要设置ellipsis.maxWidth 来促使表头超出可以截断
-  //           if (w) {
-  //             count++;
-  //             sum += w;
-  //           }
-  //           colWidth.push(w);
-  //         }
-  //         const remain = width - sum;
-  //         const averageWidth = remain / (colSpan - count);
-  //         const formatColWidth = colWidth.map((c: number | undefined) => {
-  //           return c || averageWidth;
-  //         });
-  //         widths.push(...formatColWidth);
-  //       }
-  //     }
-  //     // setColWidths(widths);
-  //   },
-  //   [converToPixel, flatColumns],
-  // );
-
   const handleUpdateRowHeight = useCallback(
     (rowHeight: number, rowIndex: number) => {
       // console.log(`rowHeight: ${rowHeight}`);
@@ -822,80 +538,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     },
     [cachePosition],
   );
-
-  // const handleSelect = (
-  //   keys: React.Key[],
-  //   halfKeys: React.Key[],
-  //   record: T,
-  //   selected: boolean,
-  //   event: Event,
-  // ) => {
-  //   let selectedRecords: T[];
-  //   let finalSelectedKeys: React.Key[];
-  //   if (selected) {
-  //     if (selectionType === 'checkbox') {
-  //       const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(keys);
-  //       finalSelectedKeys = checkedKeys;
-  //       selectedRecords = [...checkedKeyRecordMap.values()];
-  //       updateHalfSelectedKeys(halfCheckedKeys);
-  //     } else {
-  //       finalSelectedKeys = [...keys];
-  //       selectedRecords = [record];
-  //       updateHalfSelectedKeys([]);
-  //     }
-  //   } else {
-  //     if (selectionType === 'checkbox') {
-  //       const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = removeUselessKeys(
-  //         keys,
-  //         halfKeys,
-  //       );
-  //       finalSelectedKeys = checkedKeys;
-  //       selectedRecords = [...checkedKeyRecordMap.values()];
-  //       updateHalfSelectedKeys(halfCheckedKeys);
-  //     } else {
-  //       finalSelectedKeys = [];
-  //       selectedRecords = [];
-  //       updateHalfSelectedKeys([]);
-  //     }
-  //   }
-  //
-  //   if (!('selectedRowKeys' in rowSelection!)) {
-  //     updateSelectedKeys(finalSelectedKeys);
-  //   }
-  //
-  //   if (typeof rowSelection?.onSelect === 'function') {
-  //     rowSelection.onSelect(record, selected, selectedRecords, event);
-  //   }
-  //
-  //   if (typeof rowSelection?.onChange === 'function') {
-  //     rowSelection?.onChange(finalSelectedKeys, selectedRecords);
-  //   }
-  //
-  //   // let selectedRows: T[];
-  //   // let selectKeys: (number | string)[];
-  //   // if (selected) {
-  //   //   const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(keys);
-  //   //   selectKeys = isRadio ? keys : checkedKeys;
-  //   //   selectedRows = isRadio ? [record] : Object.values(checkedRowWithKey);
-  //   //   setHalfSelectedKeys(halfCheckedKeys);
-  //   // } else {
-  //   //   const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = removeUselessKeys(keys, halfKeys);
-  //   //   selectKeys = isRadio ? [] : checkedKeys;
-  //   //   selectedRows = isRadio ? [] : Object.values(checkedRowWithKey);
-  //   //   setHalfSelectedKeys(halfCheckedKeys);
-  //   // }
-  //   // if (!('selectedRowKeys' in rowSelection!) || rowSelection?.selectedRowKeys === undefined) {
-  //   //   setSelectedKeys(selectKeys);
-  //   // }
-  //   //
-  //   // if (typeof rowSelection?.onSelect === 'function') {
-  //   //   rowSelection.onSelect(record, selected, selectedRows, event);
-  //   // }
-  //   //
-  //   // if (typeof rowSelection?.onChange === 'function') {
-  //   //   rowSelection?.onChange(selectKeys, selectedRows);
-  //   // }
-  // };
 
   const handleSelectAll = (selected: boolean) => {
     let selectedRecords: T[];
@@ -1082,64 +724,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   //   }
   // }, [pagination]);
 
-  // todo rowSelection 待测试
-  // useEffect(() => {
-  //   if (rowSelection && 'selectedRowKeys' in rowSelection) {
-  //     if (selectionType === 'checkbox') {
-  //       const { checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(
-  //         rowSelection.selectedRowKeys || [],
-  //       );
-  //       updateHalfSelectedKeys(halfCheckedKeys);
-  //       updateSelectedKeys(checkedKeys);
-  //     } else {
-  //       updateHalfSelectedKeys([]);
-  //       updateSelectedKeys(rowSelection.selectedRowKeys || []);
-  //     }
-  //   }
-  // }, [selectionType, rowSelection?.selectedRowKeys, fillMissSelectedKeys]);
-
-  // useEffect(() => {
-  //   if (treeProps?.expandedRowKeys) {
-  //     setTreeExpandKeys(treeProps.expandedRowKeys);
-  //   }
-  // }, [treeProps]);
-
-  // todo columns 主要是过滤排序吧
-  // useEffect(() => {
-  //   setColumns(originColumns);
-  // }, [originColumns]);
-
-  // column todo
-  // useEffect(() => {
-  //   let exist = false;
-  //   const filter: FilterStateType<T>[] = [];
-  //   flattenColumns.forEach((col) => {
-  //     if ('filteredValue' in col) {
-  //       exist = true;
-  //       filter.push({
-  //         filteredValue: col?.filteredValue || [],
-  //         dataIndex: col?.dataIndex || col?.key,
-  //         filterMethod: col?.filterMethod,
-  //       });
-  //     }
-  //   });
-  //   exist && setFilterState(filter);
-  // }, [flattenColumns]);
-
   // 4. 待测试-分页情况下表头的全选只针对当前页面数据
-  // const checked = useMemo(() => {
-  //   if (!selectedKeys.length) {
-  //     return false;
-  //   }
-  //   const isSame = currPageKeys.every((key) => {
-  //     return selectedKeys.indexOf(key) >= 0;
-  //   });
-  //   const isExist = currPageKeys.some((key) => {
-  //     return selectedKeys.indexOf(key) >= 0;
-  //   });
-  //   return isSame ? true : isExist ? 'indeterminate' : false;
-  // }, [selectedKeys, currPageKeys]);
-
   const checked = useMemo(() => {
     if (!selectedKeys.length) {
       return false;
@@ -1152,17 +737,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     });
     return isAllChecked ? true : isHalfChecked ? 'indeterminate' : false;
   }, [selectedKeys, currentPageAllKeys]);
-
-  // const isTree = useMemo(() => {
-  //   const data = list.filter((d) => d?.children && d.children.length);
-  //   return data.length > 0;
-  // }, [list]);
-  // todo 是不是需要放到Tbody 中判断 如果是虚拟列表发生了截取呢
-  const isTree = useMemo(() => {
-    const data = currentPageData.filter((d) => d?.children && d.children.length);
-    return data.length > 0;
-  }, [currentPageData]);
-  // console.log(`isTree: ${isTree}`);
 
   // todo columns
   // const scrollWidth = useMemo(() => {
@@ -1397,43 +971,35 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             <table style={{ width: scrollWidth }}>
               <Colgroup columns={flattenColumns} />
               <Tbody
-                // isTree={isTree}
                 empty={empty}
+                striped={!!striped}
+                bordered={!!bordered}
                 selectionType={selectionType}
                 startRowIndex={startRowIndex}
-                // startRowIndex={0}
-                // dataSource={list}
                 dataSource={currentPageData.slice(
                   startRowIndex,
                   startRowIndex + getRenderMaxRows(),
                 )}
-                // columns={flatColumns}
                 columns={flattenColumns}
-                // columns={columnsWithWidth}
                 keyLevelMap={keyLevelMap}
+                getRecordKey={getRecordKey}
                 selectedKeys={selectedKeys}
                 halfSelectedKeys={halfSelectedKeys}
                 expandedRowKeys={expandedRowKeys}
-                handleExpand={handleExpand}
-                treeExpandKeys={treeExpandKeys}
-                handleTreeExpand={handleTreeExpand}
-                // onSelect={handleSelect}
-                // onTreeExpand={handleTreeExpand}
-                // onBodyRender={() => {}}
-                onUpdateRowHeight={handleUpdateRowHeight}
-                getRecordKey={getRecordKey}
-                handleSelect={handleSelect}
-                striped={!!striped}
-                bordered={!!bordered}
                 expandable={expandable}
-                rowSelection={rowSelection}
                 treeProps={treeProps}
+                rowSelection={rowSelection}
                 rowClassName={rowClassName}
                 rowStyle={rowStyle}
                 cellClassName={cellClassName}
                 cellStyle={cellStyle}
                 onRowEvents={onRowEvents}
                 onCellEvents={onCellEvents}
+                handleSelect={handleSelect}
+                handleExpand={handleExpand}
+                treeExpandKeys={treeExpandKeys}
+                handleTreeExpand={handleTreeExpand}
+                onUpdateRowHeight={handleUpdateRowHeight}
               />
             </table>
           </div>
@@ -1524,40 +1090,32 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           <table style={{ width: scrollWidth }}>
             <Colgroup columns={flattenColumns} />
             <Tbody
-              // isTree={isTree}
               empty={empty}
+              striped={!!striped}
+              bordered={!!bordered}
               selectionType={selectionType}
               startRowIndex={startRowIndex}
-              // startRowIndex={0}
               dataSource={currentPageData}
-              // dataSource={list.slice(startRowIndex, startRowIndex + getRenderMaxRows())}
-              // columns={flatColumns}
               columns={flattenColumns}
-              // columns={columnsWithWidth}
               keyLevelMap={keyLevelMap}
+              getRecordKey={getRecordKey}
               selectedKeys={selectedKeys}
               halfSelectedKeys={halfSelectedKeys}
               expandedRowKeys={expandedRowKeys}
-              handleExpand={handleExpand}
-              treeExpandKeys={treeExpandKeys}
-              handleTreeExpand={handleTreeExpand}
-              // onSelect={handleSelect}
-              // onTreeExpand={handleTreeExpand}
-              // onBodyRender={() => {}}
-              onUpdateRowHeight={handleUpdateRowHeight}
-              getRecordKey={getRecordKey}
-              handleSelect={handleSelect}
-              striped={!!striped}
-              bordered={!!bordered}
+              treeProps={treeProps}
               expandable={expandable}
               rowSelection={rowSelection}
-              treeProps={treeProps}
               rowClassName={rowClassName}
               rowStyle={rowStyle}
               cellClassName={cellClassName}
               cellStyle={cellStyle}
               onRowEvents={onRowEvents}
               onCellEvents={onCellEvents}
+              handleSelect={handleSelect}
+              handleExpand={handleExpand}
+              treeExpandKeys={treeExpandKeys}
+              handleTreeExpand={handleTreeExpand}
+              onUpdateRowHeight={handleUpdateRowHeight}
             />
           </table>
         </div>
