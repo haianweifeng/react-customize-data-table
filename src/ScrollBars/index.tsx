@@ -115,80 +115,81 @@ const ScrollBars = (props: ScrollBarsProps) => {
       lastScrollLeft.current = offset;
     }
   };
-  // 由于表头表体是通过div 包裹 会导致滚动时候表体先有了scrollLeft 然后表头才有导致更新不同步 表头总是慢于标题 所以采用自定义wheel 事件触发滚动
-  useEffect(() => {
-    let ticking = false;
-    let lastScrollTop = wrapRef.current?.scrollTop || 0;
-    let lastScrollLeft = wrapRef.current?.scrollLeft || 0;
 
-    const scrollEndDetector = (target: HTMLElement) => {
-      window.clearTimeout(scrollEndTimer.current);
-      scrollEndTimer.current = window.setTimeout(() => {
-        target.classList.remove('scrollbar-track-scrolling');
-        if (isLeave.current) {
-          target.classList.remove('scrollbar-track-active');
-        }
-      }, 600);
-    };
-
-    const handleScroll = (e: any) => {
-      const { scrollTop, scrollLeft } = e.target;
-
-      const deltaY = scrollTop - lastScrollTop;
-      const deltaX = scrollLeft - lastScrollLeft;
-
-      if (wrapRef.current) {
-        const wrapEl = wrapRef.current;
-
-        const clientW = wrapEl.clientWidth;
-        const scrollW = wrapEl.scrollWidth;
-
-        const clientH = wrapEl.clientHeight;
-        const scrollH = wrapEl.scrollHeight;
-
-        if (deltaY || deltaX) {
-          const thumbEl = deltaY ? barYRef.current : barXRef.current;
-          if (thumbEl) {
-            const thumbSize = deltaY ? thumbEl.offsetHeight : thumbEl.offsetWidth;
-            const scale = deltaY
-              ? (scrollH - clientH) / (clientH - thumbSize)
-              : (scrollW - clientW) / (clientW - thumbSize);
-            thumbEl.style.transform = `translate${deltaY ? 'Y' : 'X'}(${
-              (deltaY ? scrollTop : scrollLeft) / scale
-            }px)`;
-            const barEl = thumbEl.parentNode as HTMLElement;
-            if (barEl) {
-              barEl.classList.add('scrollbar-track-scrolling');
-            }
-            scrollEndDetector(barEl);
-          }
-        }
-      }
-      lastScrollTop = scrollTop;
-      lastScrollLeft = scrollLeft;
-
-      onVerticalScroll && onVerticalScroll(scrollTop);
-      onHorizontalScroll && onHorizontalScroll(scrollLeft);
-    };
-
-    const scrollListener = (event: any) => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          handleScroll(event);
-          ticking = false;
-        });
-        ticking = true;
-      }
-      event.preventDefault();
-    };
-
-    wrapRef.current?.addEventListener('scroll', scrollListener);
-    return () => {
-      wrapRef.current?.removeEventListener('scroll', scrollListener);
-    };
-  }, []);
+  // useEffect(() => {
+  //   let ticking = false;
+  //   let lastScrollTop = wrapRef.current?.scrollTop || 0;
+  //   let lastScrollLeft = wrapRef.current?.scrollLeft || 0;
+  //
+  //   const scrollEndDetector = (target: HTMLElement) => {
+  //     window.clearTimeout(scrollEndTimer.current);
+  //     scrollEndTimer.current = window.setTimeout(() => {
+  //       target.classList.remove('scrollbar-track-scrolling');
+  //       if (isLeave.current) {
+  //         target.classList.remove('scrollbar-track-active');
+  //       }
+  //     }, 600);
+  //   };
+  //
+  //   const handleScroll = (e: any) => {
+  //     const { scrollTop, scrollLeft } = e.target;
+  //
+  //     const deltaY = scrollTop - lastScrollTop;
+  //     const deltaX = scrollLeft - lastScrollLeft;
+  //
+  //     if (wrapRef.current) {
+  //       const wrapEl = wrapRef.current;
+  //
+  //       const clientW = wrapEl.clientWidth;
+  //       const scrollW = wrapEl.scrollWidth;
+  //
+  //       const clientH = wrapEl.clientHeight;
+  //       const scrollH = wrapEl.scrollHeight;
+  //
+  //       if (deltaY || deltaX) {
+  //         const thumbEl = deltaY ? barYRef.current : barXRef.current;
+  //         if (thumbEl) {
+  //           const thumbSize = deltaY ? thumbEl.offsetHeight : thumbEl.offsetWidth;
+  //           const scale = deltaY
+  //             ? (scrollH - clientH) / (clientH - thumbSize)
+  //             : (scrollW - clientW) / (clientW - thumbSize);
+  //           thumbEl.style.transform = `translate${deltaY ? 'Y' : 'X'}(${
+  //             (deltaY ? scrollTop : scrollLeft) / scale
+  //           }px)`;
+  //           const barEl = thumbEl.parentNode as HTMLElement;
+  //           if (barEl) {
+  //             barEl.classList.add('scrollbar-track-scrolling');
+  //           }
+  //           scrollEndDetector(barEl);
+  //         }
+  //       }
+  //     }
+  //     lastScrollTop = scrollTop;
+  //     lastScrollLeft = scrollLeft;
+  //
+  //     onVerticalScroll && onVerticalScroll(scrollTop);
+  //     onHorizontalScroll && onHorizontalScroll(scrollLeft);
+  //   };
+  //
+  //   const scrollListener = (event: any) => {
+  //     if (!ticking) {
+  //       requestAnimationFrame(() => {
+  //         handleScroll(event);
+  //         ticking = false;
+  //       });
+  //       ticking = true;
+  //     }
+  //     event.preventDefault();
+  //   };
+  //
+  //   wrapRef.current?.addEventListener('scroll', scrollListener);
+  //   return () => {
+  //     wrapRef.current?.removeEventListener('scroll', scrollListener);
+  //   };
+  // }, []);
 
   // todo 需要考虑存在滚动条时候才wheel 事件
+  // 由于表头表体是通过div 包裹 会导致滚动时候表体先有了scrollLeft 然后表头才有导致更新不同步 表头总是慢于标题 所以采用自定义wheel 事件触发滚动
   useEffect(() => {
     let moveY = 0;
     let moveX = 0;
@@ -227,6 +228,8 @@ const ScrollBars = (props: ScrollBarsProps) => {
 
       const thumbEl = isVertical ? barYRef.current : barXRef.current;
 
+      if (!thumbEl) return;
+
       if (wrapRef.current) {
         const wrapEl = wrapRef.current;
 
@@ -243,9 +246,9 @@ const ScrollBars = (props: ScrollBarsProps) => {
           moveY = Math.min(moveY, scrollH - clientH);
 
           if (moveY !== lastScrollTop.current) {
-            const thumbSize = thumbEl!.offsetHeight;
+            const thumbSize = thumbEl.offsetHeight;
             const scale = (scrollH - clientH) / (clientH - thumbSize);
-            thumbEl!.style.transform = `translateY(${moveY / scale}px)`;
+            thumbEl.style.transform = `translateY(${moveY / scale}px)`;
             viewRef.current!.style.transform = `translate(-${lastScrollLeft.current}px, -${moveY}px)`;
             onVerticalScroll && onVerticalScroll(moveY);
             lastScrollTop.current = moveY;
@@ -257,12 +260,13 @@ const ScrollBars = (props: ScrollBarsProps) => {
           moveX = lastScrollLeft.current;
           moveX += pixelX;
           moveX = Math.max(0, moveX);
+          // todo 由于横向存在固定列的原因 待测试lastScrollWidth.current
           moveX = Math.min(moveX, lastScrollWidth.current - clientW);
 
           if (moveX !== lastScrollLeft.current) {
-            const thumbSize = thumbEl!.offsetWidth;
+            const thumbSize = thumbEl.offsetWidth;
             const scale = (lastScrollWidth.current - clientW) / (clientW - thumbSize);
-            thumbEl!.style.transform = `translateX(${moveX / scale}px)`;
+            thumbEl.style.transform = `translateX(${moveX / scale}px)`;
             viewRef.current!.style.transform = `translate(-${moveX}px, -${lastScrollTop.current}px)`;
             onHorizontalScroll && onHorizontalScroll(moveX);
             lastScrollLeft.current = moveX;
@@ -277,25 +281,26 @@ const ScrollBars = (props: ScrollBarsProps) => {
         barEl.classList.add('scrollbar-track-scrolling');
       }
       wheelEndDetector(barEl, isVertical);
-
-      ticking = false;
     };
 
     const wheelListener = (event: any) => {
       if (!ticking) {
         requestAnimationFrame(() => {
           handleWheel(event);
+          ticking = false;
         });
         ticking = true;
       }
       event.preventDefault();
     };
 
+    if (!showScrollbarY && !showScrollbarX) return;
+
     wrapRef.current?.addEventListener('wheel', wheelListener, { passive: false });
     return () => {
       wrapRef.current?.removeEventListener('wheel', wheelListener);
     };
-  }, [onVerticalScroll, onHorizontalScroll]);
+  }, [showScrollbarY, showScrollbarX, onVerticalScroll, onHorizontalScroll]);
 
   useEffect(() => {
     const handleMouseEnter = (event: any) => {
@@ -336,6 +341,7 @@ const ScrollBars = (props: ScrollBarsProps) => {
 
   // const scrollbarWidth = getScrollbarWidth();
 
+  // todo 固定列后这里的scrollWidth是不是会变化
   return (
     <div className="scrollbar">
       <div
@@ -351,9 +357,7 @@ const ScrollBars = (props: ScrollBarsProps) => {
           wrapClass: !!wrapClass,
         })}
       >
-        <div className="scrollbar-view" ref={viewRef}>
-          {children}
-        </div>
+        <div ref={viewRef}>{children}</div>
         {showScrollbarY && (
           <VirtualScrollBar
             className="scrollbar-show-x"

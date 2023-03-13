@@ -132,7 +132,7 @@ const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((prop
     };
   }, [size, contentSize, ratio]);
 
-  const thumbStyle: any = {};
+  const thumbStyle: Record<string, string> = {};
   if (orientation === 'vertical') {
     thumbStyle.height = `${(size / contentSize) * 100}%`;
     thumbStyle.minHeight = `${BAR_THUMB_SIZE}px`;

@@ -986,8 +986,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
                 selectedKeys={selectedKeys}
                 halfSelectedKeys={halfSelectedKeys}
                 expandedRowKeys={expandedRowKeys}
-                expandable={expandable}
                 treeProps={treeProps}
+                expandable={expandable}
                 rowSelection={rowSelection}
                 rowClassName={rowClassName}
                 rowStyle={rowStyle}
@@ -1074,9 +1074,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // 1. 考虑没有设置height 时候展示数据范围 没有设置height 就不展示滚动条 设置了height 需要和容器的高度做对比
   // 2. 考虑分页时候设置pageSize 大于renderMaxRows
   const renderBody = () => {
-    return virtualized ? (
-      renderVirtualBody()
-    ) : (
+    return (
       <ScrollBars onHorizontalScroll={handleHorizontalScroll}>
         <div
           className="table-tbody"
@@ -1095,7 +1093,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
               bordered={!!bordered}
               selectionType={selectionType}
               startRowIndex={startRowIndex}
-              dataSource={currentPageData}
+              // dataSource={currentPageData}
+              dataSource={
+                virtualized
+                  ? currentPageData.slice(startRowIndex, startRowIndex + getRenderMaxRows())
+                  : currentPageData
+              }
               columns={flattenColumns}
               keyLevelMap={keyLevelMap}
               getRecordKey={getRecordKey}
