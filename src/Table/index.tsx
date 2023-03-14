@@ -1030,22 +1030,17 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     // console.log(`horizontal: ${offset}`);
     let offsetRight = 0;
     if (tbodyRef.current) {
-      // tbodyRef.current.scrollLeft = offset;
       const bodyTable = tbodyRef.current.querySelector('table');
       const clientWidth = tbodyRef.current.clientWidth;
       const maxScrollWidth = bodyTable.scrollWidth - clientWidth;
-      // const maxScrollWidth = scrollWidth - clientWidth;
       offsetRight = maxScrollWidth - offset;
     }
+    console.log('hahah');
     if (theadRef.current) {
       theadRef.current.querySelector('table').style.transform = `translateX(-${offset}px)`;
-      // theadRef.current.scrollLeft = offset;
     }
-    // console.log(`offsetRight: ${offsetRight}`);
     [theadRef.current, tbodyRef.current].forEach((el) => {
       if (!el) return;
-      // el.style.transform = `translateX(-${offset}px)`;
-      // el.scrollLeft = offset;
       el.querySelectorAll('.cell-fixed-left, .cell-fixed-right').forEach(
         (cell: HTMLTableDataCellElement) => {
           if (cell.classList.contains('cell-fixed-left')) {
@@ -1070,6 +1065,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       );
     });
   };
+  // console.log(flattenColumns);
 
   // 1. 考虑没有设置height 时候展示数据范围 没有设置height 就不展示滚动条 设置了height 需要和容器的高度做对比
   // 2. 考虑分页时候设置pageSize 大于renderMaxRows

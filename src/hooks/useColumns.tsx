@@ -16,6 +16,7 @@ function useColumns<T>(
   expandable?: Expandable<T>,
 ) {
   // todo 待测试如果是其中一层children 设置了fixed
+  // todo 待测试如果是children 中有一列设置了fixed 这一列不一定是最后一列
   const existFixedInColumn = useCallback(
     (columns: PrivateColumnsType<T>, fixed: 'left' | 'right'): boolean => {
       let exist: boolean;
@@ -45,6 +46,40 @@ function useColumns<T>(
           };
         }
         return { ...c, fixed };
+      });
+    },
+    [],
+  );
+
+  const addLastLeftFixedPropForColumn = useCallback(
+    (columns: PrivateColumnsType<T>): PrivateColumnsType<T> => {
+      return columns.map((column, index) => {
+        const isLastColumn = columns.length - 1 === index;
+        if (isLastColumn && 'children' in column && column?.children.length) {
+          return {
+            ...column,
+            _lastLeftFixed: true,
+            children: addLastLeftFixedPropForColumn(column.children),
+          };
+        }
+        return { ...column, _lastLeftFixed: isLastColumn };
+      });
+    },
+    [],
+  );
+
+  const addFirstRightFixedPropsForColumn = useCallback(
+    (columns: PrivateColumnsType<T>): PrivateColumnsType<T> => {
+      return columns.map((column, index) => {
+        const isFirstColumn = index === 0;
+        if (isFirstColumn && 'children' in column && column?.children.length) {
+          return {
+            ...column,
+            _firstRightFixed: true,
+            children: addFirstRightFixedPropsForColumn(column.children),
+          };
+        }
+        return { ...column, _firstRightFixed: isFirstColumn };
       });
     },
     [],
@@ -193,9 +228,19 @@ function useColumns<T>(
       .map((column, index) => {
         const col: PrivateColumnType<T> | PrivateColumnGroupType<T> = { ...column };
         if (index <= leftIndex) col.fixed = 'left';
-        if (index === leftIndex) col._lastLeftFixed = true;
+        if (index === leftIndex) {
+          if ('children' in col && col?.children.length) {
+            col.children = addLastLeftFixedPropForColumn(col.children);
+          }
+          col._lastLeftFixed = true;
+        }
         if (index >= rightIndex && rightIndex > 0) col.fixed = 'right';
-        if (index === rightIndex) col._firstRightFixed = true;
+        if (index === rightIndex) {
+          if ('children' in col && col?.children.length) {
+            col.children = addFirstRightFixedPropsForColumn(col.children);
+          }
+          col._firstRightFixed = true;
+        }
         return col;
       });
   }, [mergeColumns, existFixedInColumn, addFixedToColumn]);

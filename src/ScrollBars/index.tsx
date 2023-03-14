@@ -33,8 +33,11 @@ const ScrollBars = (props: ScrollBarsProps) => {
 
   const wheelXEndTimer = useRef<number>(0);
   const wheelYEndTimer = useRef<number>(0);
-  const scrollEndTimer = useRef<number>(0);
-  const isLeave = useRef<boolean>(true);
+  // const scrollEndTimer = useRef<number>(0);
+  // const isLeave = useRef<boolean>(true);
+  const mouseLeave = useRef<boolean>(true);
+
+  const resizeObserverIns = useRef<any>(null);
 
   const lastScrollTop = useRef<number>(0);
   const lastScrollLeft = useRef<number>(0);
@@ -53,11 +56,13 @@ const ScrollBars = (props: ScrollBarsProps) => {
   // console.log(`scrollHeight: ${scrollHeight}`);
   // console.log(`scrollWidth: ${scrollWidth}`);
   // todo 是否执行update 时候也需要执行滑块位置的更新
+  // todo 执行销毁
   useEffect(() => {
     const update = () => {
+      // console.log('update');
       if (wrapRef.current) {
         const wrapNode = wrapRef.current;
-        const widthChange = wrapNode.scrollWidth !== lastScrollWidth.current;
+        // const widthChange = wrapNode.scrollWidth !== lastScrollWidth.current;
         lastScrollWidth.current = wrapNode.scrollWidth;
         setClientWidth(wrapNode.clientWidth);
         setScrollWidth(wrapNode.scrollWidth);
@@ -65,29 +70,35 @@ const ScrollBars = (props: ScrollBarsProps) => {
         setScrollHeight(wrapNode.scrollHeight);
         setShowScrollbarY(wrapNode.scrollHeight > wrapNode.clientHeight);
         setShowScrollbarX(wrapNode.scrollWidth > wrapNode.clientWidth);
-        if (widthChange) {
-          onHorizontalScroll && onHorizontalScroll(lastScrollLeft.current);
-        }
+        // if (widthChange) {
+        //   onHorizontalScroll && onHorizontalScroll(lastScrollLeft.current);
+        // }
+        onHorizontalScroll && onHorizontalScroll(lastScrollLeft.current);
       }
     };
 
     const resizeObserver = () => {
-      const resizeObserver = new ResizeObserver((entries) => {
+      resizeObserverIns.current = new ResizeObserver((entries) => {
         // console.log(entries);
         let contentRect = entries[0].contentRect;
         if (!(contentRect.width || contentRect.height)) return;
         // console.log('hhaha');
         update();
       });
-      wrapRef.current && resizeObserver.observe(wrapRef.current);
-      viewRef.current && resizeObserver.observe(viewRef.current);
+      // wrapRef.current && resizeObserverIns.current.observe(wrapRef.current);
+      viewRef.current && resizeObserverIns.current.observe(viewRef.current);
     };
 
     if (!noresize) {
+      // console.log('resize');
       resizeObserver();
     } else {
       update();
     }
+    return () => {
+      // console.log('destory');
+      resizeObserverIns.current?.disconnect();
+    };
   }, [noresize, onHorizontalScroll]);
 
   const handleVerticalScroll = (offset: number) => {
@@ -188,7 +199,6 @@ const ScrollBars = (props: ScrollBarsProps) => {
   //   };
   // }, []);
 
-  // todo 需要考虑存在滚动条时候才wheel 事件
   // 由于表头表体是通过div 包裹 会导致滚动时候表体先有了scrollLeft 然后表头才有导致更新不同步 表头总是慢于标题 所以采用自定义wheel 事件触发滚动
   useEffect(() => {
     let moveY = 0;
@@ -202,7 +212,7 @@ const ScrollBars = (props: ScrollBarsProps) => {
       window.clearTimeout(isVertical ? wheelYEndTimer.current : wheelXEndTimer.current);
       const wheelEndTimer = window.setTimeout(() => {
         target.classList.remove('scrollbar-track-scrolling');
-        if (isLeave.current) {
+        if (mouseLeave.current) {
           target.classList.remove('scrollbar-track-active');
         }
       }, 600);
@@ -304,21 +314,26 @@ const ScrollBars = (props: ScrollBarsProps) => {
 
   useEffect(() => {
     const handleMouseEnter = (event: any) => {
-      isLeave.current = false;
-      const targetNode = getParent(event.target, '.scrollbar-track');
-      if (targetNode && targetNode.classList.contains('scrollbar-track-scrolling')) {
-        targetNode.classList.remove('scrollbar-track-scrolling');
-        targetNode.classList.add('scrollbar-track-active');
+      // isLeave.current = false;
+      mouseLeave.current = false;
+      const scrollBarTrackNode = getParent(event.target, '.scrollbar-track');
+      if (
+        scrollBarTrackNode &&
+        scrollBarTrackNode.classList.contains('scrollbar-track-scrolling')
+      ) {
+        scrollBarTrackNode.classList.remove('scrollbar-track-scrolling');
+        scrollBarTrackNode.classList.add('scrollbar-track-active');
       }
     };
 
     const handleMouseLeave = (event: any) => {
-      isLeave.current = true;
-      const targetNode = getParent(event.target, '.scrollbar-track');
-      if (targetNode) {
+      // isLeave.current = true;
+      mouseLeave.current = true;
+      const scrollBarTrackNode = getParent(event.target, '.scrollbar-track');
+      if (scrollBarTrackNode) {
         setTimeout(() => {
-          if (!targetNode.classList.contains('scrollbar-track-scrolling')) {
-            targetNode.classList.remove('scrollbar-track-active');
+          if (!scrollBarTrackNode.classList.contains('scrollbar-track-scrolling')) {
+            scrollBarTrackNode.classList.remove('scrollbar-track-active');
           }
         }, 600);
       }

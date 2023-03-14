@@ -33,18 +33,18 @@ const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((prop
   }, [contentSize, size, thumbSize]);
 
   useEffect(() => {
-    let y = 0;
-    let lastedClientY = 0;
+    // let y = 0;
+    // let lastedClientY = 0;
 
-    let thumbRef: HTMLDivElement | null;
+    let thumbNode: HTMLDivElement | null;
 
     const handleMouseMoveThumb = (event: MouseEvent) => {
       let delta = (isVertical ? event.clientY : event.clientX) - lastClient.current;
       lastPosition.current += delta;
       lastPosition.current = Math.max(0, lastPosition.current);
       lastPosition.current = Math.min(lastPosition.current, size - thumbSize);
-      if (thumbRef) {
-        thumbRef.style.transform = `translate${isVertical ? 'Y' : 'X'}(${lastPosition.current}px)`;
+      if (thumbNode) {
+        thumbNode.style.transform = `translate${isVertical ? 'Y' : 'X'}(${lastPosition.current}px)`;
       }
       onScroll && onScroll(lastPosition.current * ratio);
       lastClient.current = isVertical ? event.clientY : event.clientX;
@@ -69,7 +69,7 @@ const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((prop
         return;
       }
       event.stopImmediatePropagation();
-      lastPosition.current = extractPixel(thumbRef?.style.transform);
+      lastPosition.current = extractPixel(thumbNode?.style.transform);
       lastClient.current = isVertical ? event.clientY : event.clientX;
       // y = getValue(thumbRef?.style.transform);
       // lastedClientY = event.clientY;
@@ -81,22 +81,22 @@ const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((prop
     };
 
     if (ref !== null && typeof ref !== 'function') {
-      thumbRef = ref.current;
-      thumbRef?.addEventListener('mousedown', handleMouseDownThumb);
+      thumbNode = ref.current;
+      thumbNode?.addEventListener('mousedown', handleMouseDownThumb);
     }
 
     return () => {
-      thumbRef?.removeEventListener('mousedown', handleMouseDownThumb);
+      thumbNode?.removeEventListener('mousedown', handleMouseDownThumb);
     };
-  }, [thumbSize, size, ratio, orientation]);
+  }, [ref, thumbSize, size, ratio, orientation, isVertical]);
 
   useEffect(() => {
     const handleMouseDownTrack = (event: any) => {
-      let thumbRef: HTMLDivElement | null = null;
+      let thumbNode: HTMLDivElement | null = null;
       if (ref !== null && typeof ref !== 'function') {
-        thumbRef = ref.current;
+        thumbNode = ref.current;
       }
-      if (thumbRef) {
+      if (thumbNode) {
         // if (event.target === thumbRef) return;
         // let y = extractPixel(thumbRef?.style.transform);
         // const rect = thumbRef.getBoundingClientRect();
@@ -120,7 +120,7 @@ const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((prop
         // let newOffset = delta * ratio - thumbSize / 2;
         newOffset = Math.max(0, newOffset);
         newOffset = Math.min(newOffset, contentSize - size);
-        thumbRef.style.transform = `translate${isVertical ? 'Y' : 'X'}(${newOffset / ratio}px)`;
+        thumbNode.style.transform = `translate${isVertical ? 'Y' : 'X'}(${newOffset / ratio}px)`;
         onScroll && onScroll(newOffset);
       }
     };
@@ -130,7 +130,7 @@ const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((prop
     return () => {
       scrollTrackRef.current?.removeEventListener('mousedown', handleMouseDownTrack);
     };
-  }, [size, contentSize, ratio]);
+  }, [ref, size, contentSize, thumbSize, ratio, isVertical, onScroll]);
 
   const thumbStyle: Record<string, string> = {};
   if (orientation === 'vertical') {

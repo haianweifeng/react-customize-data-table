@@ -36,7 +36,7 @@ const columns: ColumnsType<DataType>[] = [
   },
   {
     title: 'Other',
-    // fixed: 'left',
+    fixed: 'left',
     filters: [
       {
         label: 'A',
@@ -94,7 +94,7 @@ const columns: ColumnsType<DataType>[] = [
                 dataIndex: 'number',
                 key: 'number',
                 width: 100,
-                fixed: 'left',
+                // fixed: 'left',
                 resizable: true,
                 // headerColSpan: 0,
               },
@@ -120,6 +120,7 @@ const columns: ColumnsType<DataType>[] = [
         key: 'companyName',
         width: 200,
         resizable: true,
+        // fixed: 'right',
       },
     ],
   },

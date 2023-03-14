@@ -28,36 +28,43 @@ const columns: ColumnsType<DataType> = [
   },
   {
     title: 'Column 1',
+    key: 'address1',
     dataIndex: 'address',
     width: 180,
   },
   {
     title: 'Column 2',
+    key: 'address2',
     dataIndex: 'address',
     width: 180,
   },
   {
     title: 'Column 3',
+    key: 'address3',
     dataIndex: 'address',
     width: 180,
   },
   {
     title: 'Column 4',
+    key: 'address4',
     dataIndex: 'address',
     width: 180,
   },
   {
     title: 'Column 5',
+    key: 'address5',
     dataIndex: 'address',
     width: 180,
   },
   {
     title: 'Column 6',
+    key: 'address6',
     dataIndex: 'address',
     width: 180,
   },
   {
     title: 'Column 7',
+    key: 'address7',
     dataIndex: 'address',
     width: 180,
     // fixed: 'right',
@@ -65,7 +72,7 @@ const columns: ColumnsType<DataType> = [
     //   return record.address
     // }
   },
-  { title: 'Column 8', dataIndex: 'address' },
+  { title: 'Column 8', key: 'address8', dataIndex: 'address' },
   {
     title: 'Action',
     dataIndex: 'action',
