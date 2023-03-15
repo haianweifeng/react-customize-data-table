@@ -36,7 +36,7 @@ const columns: ColumnsType<DataType>[] = [
   },
   {
     title: 'Other',
-    fixed: 'left',
+    // fixed: 'left',
     filters: [
       {
         label: 'A',
@@ -65,10 +65,12 @@ const columns: ColumnsType<DataType>[] = [
         key: 'age',
         width: 150,
         resizable: true,
+        // fixed: 'left',
         // sorter: (a: DataType, b: DataType) => a.age - b.age,
       },
       {
         title: 'Address',
+        // fixed: 'left',
         children: [
           {
             title: 'Street',
@@ -79,6 +81,7 @@ const columns: ColumnsType<DataType>[] = [
           },
           {
             title: 'Block',
+            fixed: 'left',
             children: [
               {
                 title: 'Building',
@@ -87,6 +90,7 @@ const columns: ColumnsType<DataType>[] = [
                 key: 'building',
                 width: 100,
                 resizable: true,
+                // fixed: 'left',
                 // headerColSpan: 2,
               },
               {
@@ -106,6 +110,7 @@ const columns: ColumnsType<DataType>[] = [
   },
   {
     title: 'Company',
+    // fixed: 'right',
     children: [
       {
         title: 'Company Address',
@@ -113,6 +118,7 @@ const columns: ColumnsType<DataType>[] = [
         key: 'companyAddress',
         width: 200,
         resizable: true,
+        // fixed: 'right',
       },
       {
         title: 'Company Name',
@@ -120,7 +126,6 @@ const columns: ColumnsType<DataType>[] = [
         key: 'companyName',
         width: 200,
         resizable: true,
-        // fixed: 'right',
       },
     ],
   },

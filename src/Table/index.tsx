@@ -1026,21 +1026,24 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     );
   };
 
+  // todo 发生过滤或者排序后 导致表体数据先渲染 后触发了handleHorizontalScroll 所以没有offsetRight 值导致的 闪烁
   const handleHorizontalScroll = (offset: number) => {
     // console.log(`horizontal: ${offset}`);
     let offsetRight = 0;
     if (tbodyRef.current) {
       const bodyTable = tbodyRef.current.querySelector('table');
       const clientWidth = tbodyRef.current.clientWidth;
+      // console.log(`clientWidth: ${clientWidth}`);
+      // console.log(`scrollWidth: ${bodyTable.scrollWidth}`);
       const maxScrollWidth = bodyTable.scrollWidth - clientWidth;
       offsetRight = maxScrollWidth - offset;
     }
-    console.log('hahah');
     if (theadRef.current) {
       theadRef.current.querySelector('table').style.transform = `translateX(-${offset}px)`;
     }
     [theadRef.current, tbodyRef.current].forEach((el) => {
       if (!el) return;
+      console.log('hahah');
       el.querySelectorAll('.cell-fixed-left, .cell-fixed-right').forEach(
         (cell: HTMLTableDataCellElement) => {
           if (cell.classList.contains('cell-fixed-left')) {

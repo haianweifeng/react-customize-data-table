@@ -15,20 +15,18 @@ function useColumns<T>(
   rowSelection?: RowSelection<T>,
   expandable?: Expandable<T>,
 ) {
-  // todo 待测试如果是其中一层children 设置了fixed
-  // todo 待测试如果是children 中有一列设置了fixed 这一列不一定是最后一列
   const existFixedInColumn = useCallback(
     (columns: PrivateColumnsType<T>, fixed: 'left' | 'right'): boolean => {
       let exist: boolean;
-      const lastColumn = columns[columns.length - 1];
-      if ('children' in lastColumn && lastColumn?.children.length) {
-        if (lastColumn.fixed === fixed) {
+      const targetColumn = fixed === 'left' ? columns[columns.length - 1] : columns[0];
+      if ('children' in targetColumn && targetColumn?.children.length) {
+        if (targetColumn.fixed === fixed) {
           return true;
         } else {
-          exist = existFixedInColumn(lastColumn.children, fixed);
+          exist = existFixedInColumn(targetColumn.children, fixed);
         }
       } else {
-        exist = lastColumn.fixed === fixed;
+        exist = targetColumn.fixed === fixed;
       }
       return exist;
     },
@@ -243,7 +241,13 @@ function useColumns<T>(
         }
         return col;
       });
-  }, [mergeColumns, existFixedInColumn, addFixedToColumn]);
+  }, [
+    mergeColumns,
+    existFixedInColumn,
+    addFixedToColumn,
+    addLastLeftFixedPropForColumn,
+    addFirstRightFixedPropsForColumn,
+  ]);
 
   const flattenColumns = useMemo(() => {
     return flatColumns(fixedColumns);
