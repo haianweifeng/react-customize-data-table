@@ -359,6 +359,10 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const theadRef = useRef<any>(null);
   const tbodyRef = useRef<any>(null);
 
+  const lastScrollLeft = useRef<number>(0);
+
+  const lastRestOffsetRight = useRef<number>(0);
+
   const lastStartRowIndex = useRef<number>(0);
 
   const virtualContainerRef = useRef<HTMLDivElement>(null);
@@ -1026,64 +1030,72 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     );
   };
 
-  // todo 发生过滤或者排序后 导致表体数据先渲染 后触发了handleHorizontalScroll 所以没有offsetRight 值导致的 闪烁
-  const handleHorizontalScroll = (offset: number) => {
-    // console.log(`horizontal: ${offset}`);
+  // todo 发生过滤后纵向滚动条重置为0 横向滚动条保持原来位置不变
+  const handleHorizontalScroll = useCallback((offset: number) => {
+    console.log(`horizontal: ${offset}`);
     let offsetRight = 0;
     if (tbodyRef.current) {
+      // tbodyRef.current.parentNode.style.transform = `translateX(-${offset}px)`;
       const bodyTable = tbodyRef.current.querySelector('table');
       const clientWidth = tbodyRef.current.clientWidth;
       // console.log(`clientWidth: ${clientWidth}`);
       // console.log(`scrollWidth: ${bodyTable.scrollWidth}`);
       const maxScrollWidth = bodyTable.scrollWidth - clientWidth;
       offsetRight = maxScrollWidth - offset;
+      // console.log(`offsetRight: ${offsetRight}`);
     }
     if (theadRef.current) {
       theadRef.current.querySelector('table').style.transform = `translateX(-${offset}px)`;
     }
     [theadRef.current, tbodyRef.current].forEach((el) => {
       if (!el) return;
-      console.log('hahah');
-      el.querySelectorAll('.cell-fixed-left, .cell-fixed-right').forEach(
-        (cell: HTMLTableDataCellElement) => {
-          if (cell.classList.contains('cell-fixed-left')) {
-            cell.style.transform = `translateX(${offset}px)`;
-          } else if (cell.classList.contains('cell-fixed-right')) {
-            cell.style.transform = `translateX(-${offsetRight}px)`;
+      el.querySelectorAll('th, td').forEach((cell: HTMLTableDataCellElement) => {
+        if (cell.classList.contains('cell-fixed-left')) {
+          cell.style.transform = `translateX(${offset}px)`;
+        } else if (cell.classList.contains('cell-fixed-right')) {
+          cell.style.transform = `translateX(-${offsetRight}px)`;
+        }
+        if (cell.classList.contains('cell-is-last-fixedLeft')) {
+          if (offset > 0) {
+            cell.classList.add('cell-fixed-last-left');
+          } else {
+            cell.classList.remove('cell-fixed-last-left');
           }
-          if (cell.classList.contains('cell-is-last-fixedLeft')) {
-            if (offset > 0) {
-              cell.classList.add('cell-fixed-last-left');
-            } else {
-              cell.classList.remove('cell-fixed-last-left');
-            }
-          } else if (cell.classList.contains('cell-is-first-fixedRight')) {
-            if (offsetRight > 0) {
-              cell.classList.add('cell-fixed-first-right');
-            } else {
-              cell.classList.remove('cell-fixed-first-right');
-            }
+        } else if (cell.classList.contains('cell-is-first-fixedRight')) {
+          if (offsetRight > 0) {
+            cell.classList.add('cell-fixed-first-right');
+          } else {
+            cell.classList.remove('cell-fixed-first-right');
           }
-        },
-      );
+        }
+      });
     });
-  };
-  // console.log(flattenColumns);
+    lastScrollLeft.current = offset;
+    lastRestOffsetRight.current = offsetRight;
+  }, []);
+
+  const currDataSource = useMemo(() => {
+    return virtualized
+      ? currentPageData.slice(startRowIndex, startRowIndex + getRenderMaxRows())
+      : currentPageData;
+  }, [virtualized, currentPageData, startRowIndex, getRenderMaxRows]);
+  // todo 待实现了纵向滚动后 测试如果是虚拟的话 滚动时候没有监听currDataSource 新添加的数据会不会固定
+  useEffect(() => {
+    // if (isMount) {
+    //   // setTimeout(() => {
+    //   //   handleHorizontalScroll(lastScrollLeft.current);
+    //   // }, 0);
+    //   handleHorizontalScroll(lastScrollLeft.current);
+    // }
+    handleHorizontalScroll(lastScrollLeft.current);
+  }, [mergeColumns, currDataSource, handleHorizontalScroll]);
 
   // 1. 考虑没有设置height 时候展示数据范围 没有设置height 就不展示滚动条 设置了height 需要和容器的高度做对比
   // 2. 考虑分页时候设置pageSize 大于renderMaxRows
   const renderBody = () => {
     return (
       <ScrollBars onHorizontalScroll={handleHorizontalScroll}>
-        <div
-          className="table-tbody"
-          ref={tbodyRef}
-          // style={{
-          //   width: scrollWidth,
-          //   marginTop: `${startOffset}px`,
-          //   transform: `translate(-${scrollLeft}px, -${scrollTop}px)`,
-          // }}
-        >
+        <div ref={tbodyRef} className="table-tbody">
           <table style={{ width: scrollWidth }}>
             <Colgroup columns={flattenColumns} />
             <Tbody
@@ -1092,12 +1104,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
               bordered={!!bordered}
               selectionType={selectionType}
               startRowIndex={startRowIndex}
-              // dataSource={currentPageData}
-              dataSource={
-                virtualized
-                  ? currentPageData.slice(startRowIndex, startRowIndex + getRenderMaxRows())
-                  : currentPageData
-              }
+              dataSource={currDataSource}
+              // dataSource={
+              //   virtualized
+              //     ? currentPageData.slice(startRowIndex, startRowIndex + getRenderMaxRows())
+              //     : currentPageData
+              // }
               columns={flattenColumns}
               keyLevelMap={keyLevelMap}
               getRecordKey={getRecordKey}

@@ -73,7 +73,7 @@ const ScrollBars = (props: ScrollBarsProps) => {
         // if (widthChange) {
         //   onHorizontalScroll && onHorizontalScroll(lastScrollLeft.current);
         // }
-        onHorizontalScroll && onHorizontalScroll(lastScrollLeft.current);
+        // onHorizontalScroll && onHorizontalScroll(lastScrollLeft.current);
       }
     };
 

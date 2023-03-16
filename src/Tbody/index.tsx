@@ -66,6 +66,7 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
     startRowIndex,
     ...restProps
   } = props;
+  // console.log('tbody render');
   // todo 是不是需要放到Tbody 中判断 如果是虚拟列表发生了截取呢
   const isTree = useMemo(() => {
     const data = dataSource.filter((d) => d?.children && d.children.length);
@@ -111,7 +112,7 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
 
     return (
       <Tr
-        key={recordKey}
+        key={rowIndex}
         rowData={rowData}
         isTree={isTree}
         rowIndex={rowIndex}
