@@ -152,7 +152,7 @@ export interface TableProps<T> {
   /** 配置树形数据属性 */
   treeProps?: TreeExpandable<T>;
 }
-// todo bug 多级表头中选中B D 两个过滤 最后一列fixed:right 出现问题
+
 // todo 还未测试列宽设为百分比的情况
 // todo bug columnWidth: '160' 不起作用
 // todo bug 如果dataIndex 在data 中找不到对应字段数据 是不是要加个key 给用户自己设置
@@ -360,17 +360,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const theadRef = useRef<any>(null);
   const tbodyRef = useRef<any>(null);
 
-  // const lastScrollLeft = useRef<number>(0);
-
-  const lastRestOffsetRight = useRef<number>(0);
-
   const lastStartRowIndex = useRef<number>(0);
 
   const virtualContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollBarRef = useRef<HTMLDivElement>(null);
-
-  // const lastScrollTop = useRef<number>(0);
 
   const [isMount, setIsMount] = useState<boolean>(false);
 
@@ -519,30 +513,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   useEffect(() => {
     setIsMount(true);
   }, []);
-
-  const handleUpdateRowHeight = useCallback(
-    (rowHeight: number, rowIndex: number) => {
-      // console.log(`rowHeight: ${rowHeight}`);
-      const copyCachePosition = [...cachePosition];
-      const index = copyCachePosition.findIndex((c) => c.index === rowIndex);
-      if (index >= 0) {
-        const item = { ...copyCachePosition[index] };
-        const diff = item.height - rowHeight;
-        if (diff) {
-          // todo 如果存在差距的话得更新下scrollTop  startOffset
-          item.height = rowHeight;
-          item.bottom = item.bottom - diff;
-          for (let j = index + 1; j < copyCachePosition.length; j++) {
-            copyCachePosition[j].top = copyCachePosition[j - 1].bottom;
-            copyCachePosition[j].bottom = copyCachePosition[j].bottom - diff;
-          }
-          copyCachePosition.splice(index, 1, item);
-          setCachePosition(copyCachePosition);
-        }
-      }
-    },
-    [cachePosition],
-  );
 
   const handleSelectAll = (selected: boolean) => {
     let selectedRecords: T[];
@@ -1053,6 +1023,35 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const [showScrollbarY, setShowScrollbarY] = useState<boolean>(false);
   const [showScrollbarX, setShowScrollbarX] = useState<boolean>(false);
+
+  // todo 为什么输出mergeColumns 或者cachePosition 都是好几遍 是不是那些废弃代码里的setState 导致的
+  const handleUpdateRowHeight = useCallback(
+    (rowHeight: number, rowIndex: number) => {
+      // console.log(`rowHeight: ${rowHeight}`);
+      // console.log(`rowIndex: ${rowIndex}`);
+      setCachePosition((prevPosition) => {
+        const index = prevPosition.findIndex((c) => c.index === rowIndex);
+        if (index >= 0) {
+          const item = { ...prevPosition[index] };
+          const diff = item.height - rowHeight;
+          if (diff) {
+            // console.log('存在差距');
+            // todo 如果存在差距的话得更新下scrollTop  startOffset
+            item.height = rowHeight;
+            item.bottom = item.bottom - diff;
+            for (let j = index + 1; j < prevPosition.length; j++) {
+              prevPosition[j].top = prevPosition[j - 1].bottom;
+              prevPosition[j].bottom = prevPosition[j].bottom - diff;
+            }
+            prevPosition.splice(index, 1, item);
+          }
+        }
+        return prevPosition;
+      });
+    },
+    [cachePosition],
+  );
+  // console.log(cachePosition);
 
   // todo 滚动加载改变滚动条位置
   useEffect(() => {

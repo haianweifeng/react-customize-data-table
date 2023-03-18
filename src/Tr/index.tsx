@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo, useState } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import classnames from 'classnames';
 import type {
   ColumnType,
@@ -8,6 +8,7 @@ import type {
   TreeExpandable,
 } from '../interface1';
 import Td from '../Td';
+import ResizeObserver from 'resize-observer-polyfill';
 
 interface TrProps<T> {
   rowData: T;
@@ -65,29 +66,38 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
     ...restProps
   } = props;
 
+  const resizeObserverIns = useRef<any>(null);
   const trRef = useRef<HTMLTableRowElement>(null);
   const expandTrRef = useRef<HTMLTableRowElement>(null);
-  const [rowHeight, setRowHeight] = useState<number>(0);
 
-  // todo
-  // 1.待验证如果是动态改变数据长度 是否能触发 现在是监听了rowIndex 如果数据长度改变相当于rowIndex 改变了
-  // 2. 待验证如果列改变是否能触发
   useEffect(() => {
-    if (!trRef.current) return;
-    let { height } = trRef.current.getBoundingClientRect();
-    if (Number.isNaN(height)) height = 0;
-    let expandHeight = 0;
-    if (expandTrRef.current) {
-      expandHeight = expandTrRef.current.clientHeight;
-    }
-    const newHeight = height + expandHeight;
-    if (newHeight !== rowHeight) {
-      // console.log(`lastRowHeight: ${rowHeight}`);
-      // console.log(`rowIndex: ${rowIndex}`);
-      setRowHeight(newHeight);
+    const update = () => {
+      if (!trRef.current) return;
+      let { height } = trRef.current.getBoundingClientRect();
+      if (Number.isNaN(height)) height = 0;
+      let expandHeight = 0;
+      if (expandTrRef.current) {
+        expandHeight = expandTrRef.current.clientHeight;
+      }
+      const newHeight = height + expandHeight;
       onUpdateRowHeight(newHeight, rowIndex);
-    }
-  }, [rowIndex, columns, expanded, rowHeight, onRowEvents, onUpdateRowHeight]);
+    };
+
+    const resizeObserver = () => {
+      resizeObserverIns.current = new ResizeObserver((entries) => {
+        let contentRect = entries[0].contentRect;
+        if (!(contentRect.width || contentRect.height)) return;
+        update();
+      });
+      trRef.current && resizeObserverIns.current.observe(trRef.current);
+    };
+
+    resizeObserver();
+    return () => {
+      resizeObserverIns.current?.disconnect();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rowIndex, expanded]);
 
   // todo 待验证如果是固定列滚动这一行的展示效果
   const renderExpandRow = () => {
