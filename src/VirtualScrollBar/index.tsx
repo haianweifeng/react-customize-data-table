@@ -2,6 +2,7 @@ import React, { forwardRef, useMemo, useRef, useEffect } from 'react';
 import classnames from 'classnames';
 import './index.less';
 import { extractPixel } from '../utils/util';
+import { BAR_THUMB_SIZE } from '../utils/constant';
 
 interface VirtualScrollBarProps {
   className?: string;
@@ -12,7 +13,6 @@ interface VirtualScrollBarProps {
 }
 
 const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((props, ref) => {
-  const BAR_THUMB_SIZE = 16;
   const { orientation, size, contentSize, className = '', onScroll } = props;
 
   const scrollTrackRef = useRef<HTMLDivElement>(null);
