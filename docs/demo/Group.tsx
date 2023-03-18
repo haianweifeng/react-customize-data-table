@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import type { ColumnsType } from 'react-data-table';
 import { Table } from 'react-data-table';
 
@@ -81,7 +81,7 @@ const columns: ColumnsType<DataType>[] = [
           },
           {
             title: 'Block',
-            fixed: 'left',
+            // fixed: 'left',
             children: [
               {
                 title: 'Building',
@@ -141,7 +141,7 @@ const columns: ColumnsType<DataType>[] = [
 const buildings = ['A', 'B', 'C', 'D'];
 
 const data: DataType[] = [];
-for (let i = 0; i < 100; i++) {
+for (let i = 0; i < 30; i++) {
   data.push({
     key: i,
     name: 'John Brown',
@@ -157,6 +157,32 @@ for (let i = 0; i < 100; i++) {
 }
 
 const App = () => {
+  const [list, setList] = useState(data);
+
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     console.log('触发');
+  //     const data: DataType[] = [];
+  //     for (let i = 30; i < 100; i++) {
+  //       data.push({
+  //         key: i,
+  //         name: 'John Brown',
+  //         age: i + 1,
+  //         street: 'Lake Park',
+  //         building: buildings[i % 4],
+  //         number: 2035,
+  //         companyAddress: 'Lake Street 42',
+  //         companyName: 'SoftLake Co',
+  //         gender: 'M',
+  //         // expandContent: 'expand row content',
+  //       });
+  //     }
+  //     setList((prev) => {
+  //       return [...prev, ...data];
+  //     });
+  //   }, 3000);
+  // }, []);
+
   const handleColumnResize = (
     newWidth: number,
     oldWidth: number,
@@ -172,13 +198,14 @@ const App = () => {
   return (
     <Table
       columns={columns}
-      dataSource={data}
+      dataSource={list}
       bordered
       rowKey="key"
-      pagination={{
-        defaultCurrent: 1,
-        pageSize: 10,
-      }}
+      height={400}
+      // pagination={{
+      //   defaultCurrent: 1,
+      //   pageSize: 10,
+      // }}
       onColumnResize={handleColumnResize}
       headerRowClassName={(rowIndex: number) => {
         if (rowIndex % 2 === 0) {

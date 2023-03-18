@@ -5,6 +5,7 @@ import VirtualScrollBar from '../VirtualScrollBar';
 import { extractPixel, getParent, getScrollbarWidth } from '../utils/util';
 import './index.less';
 import normalizeWheel from 'normalize-wheel';
+import { BAR_THUMB_SIZE } from '../utils/constant';
 
 interface ScrollBarsProps {
   style?: React.CSSProperties;
@@ -41,7 +42,7 @@ const ScrollBars = (props: ScrollBarsProps) => {
 
   const lastScrollTop = useRef<number>(0);
   const lastScrollLeft = useRef<number>(0);
-  // 如果有列冻结的话会导致在滚动时候获取到的scrollWidth 偏小
+  // 如果有列冻结的话会导致在wheel事件中获取到的wrapRef.current.scrollWidth 偏小
   const lastScrollWidth = useRef<number>(0);
 
   const [clientWidth, setClientWidth] = useState<number>(0);
@@ -55,21 +56,43 @@ const ScrollBars = (props: ScrollBarsProps) => {
   // console.log(`clientHeight: ${clientHeight}`);
   // console.log(`scrollHeight: ${scrollHeight}`);
   // console.log(`scrollWidth: ${scrollWidth}`);
-  // todo 是否执行update 时候也需要执行滑块位置的更新
+  // todo 是否执行update 时候也需要执行滑块位置的更新 滚动加载纵向数据增加导致高度增加
   // todo 执行销毁
+  // todo bug 横向滚动到头后暂停一会 就滚动不了
   useEffect(() => {
     const update = () => {
-      // console.log('update');
+      console.log('update');
       if (wrapRef.current) {
         const wrapNode = wrapRef.current;
         // const widthChange = wrapNode.scrollWidth !== lastScrollWidth.current;
-        lastScrollWidth.current = wrapNode.scrollWidth;
-        setClientWidth(wrapNode.clientWidth);
-        setScrollWidth(wrapNode.scrollWidth);
-        setClientHeight(wrapNode.clientHeight);
-        setScrollHeight(wrapNode.scrollHeight);
-        setShowScrollbarY(wrapNode.scrollHeight > wrapNode.clientHeight);
-        setShowScrollbarX(wrapNode.scrollWidth > wrapNode.clientWidth);
+        const clientWidth = wrapNode.clientWidth;
+        const scrollWidth = wrapNode.scrollWidth;
+        const clientHeight = wrapNode.clientHeight;
+        const scrollHeight = wrapNode.scrollHeight;
+        lastScrollWidth.current = scrollWidth;
+        console.log(`clientWidth: ${clientWidth}`);
+        console.log(`scrollWidth: ${scrollWidth}`);
+        console.log(`clientHeight: ${clientHeight}`);
+        console.log(`scrollHeight: ${scrollHeight}`);
+        const hasXScrollbar = scrollWidth > clientWidth;
+        const hasYScrollbar = scrollHeight > clientHeight;
+        // todo 如果是改变列宽 横向滚动条需要改变
+        if (hasXScrollbar && barXRef.current) {
+          const thumbSize = Math.max((clientWidth / scrollWidth) * clientWidth, BAR_THUMB_SIZE);
+          const scale = (scrollWidth - clientWidth) / (clientWidth - thumbSize);
+          barXRef.current.style.transform = `translateX(${lastScrollLeft.current / scale}px)`;
+        }
+        if (hasYScrollbar && barYRef.current) {
+          const thumbSize = Math.max((clientHeight / scrollHeight) * clientHeight, BAR_THUMB_SIZE);
+          const scale = (scrollHeight - clientHeight) / (clientHeight - thumbSize);
+          barYRef.current.style.transform = `translateY(${lastScrollTop.current / scale}px)`;
+        }
+        setClientWidth(clientWidth);
+        setScrollWidth(scrollWidth);
+        setClientHeight(clientHeight);
+        setScrollHeight(scrollHeight);
+        setShowScrollbarY(hasYScrollbar);
+        setShowScrollbarX(hasXScrollbar);
         // if (widthChange) {
         //   onHorizontalScroll && onHorizontalScroll(lastScrollLeft.current);
         // }
@@ -95,11 +118,12 @@ const ScrollBars = (props: ScrollBarsProps) => {
     } else {
       update();
     }
+
     return () => {
       // console.log('destory');
       resizeObserverIns.current?.disconnect();
     };
-  }, [noresize, onHorizontalScroll]);
+  }, [noresize]);
 
   const handleVerticalScroll = (offset: number) => {
     // if (wrapRef.current) {
@@ -115,11 +139,6 @@ const ScrollBars = (props: ScrollBarsProps) => {
   };
 
   const handleHorizontalScroll = (offset: number) => {
-    // if (wrapRef.current) {
-    //   const wrapEl = wrapRef.current;
-    //   wrapEl.scrollLeft = offset;
-    // }
-    // onHorizontalScroll && onHorizontalScroll(offset);
     if (offset !== lastScrollLeft.current) {
       viewRef.current!.style.transform = `translate(-${offset}px, -${lastScrollTop.current}px)`;
       onHorizontalScroll && onHorizontalScroll(offset);
@@ -199,7 +218,7 @@ const ScrollBars = (props: ScrollBarsProps) => {
   //   };
   // }, []);
 
-  // 由于表头表体是通过div 包裹 会导致滚动时候表体先有了scrollLeft 然后表头才有导致更新不同步 表头总是慢于标题 所以采用自定义wheel 事件触发滚动
+  // 由于表头表体是通过div 包裹 会导致滚动时候表体先有了scrollLeft 然后表头才有导致更新不同步 表头总是慢于表体 所以采用自定义wheel 事件触发滚动
   useEffect(() => {
     let moveY = 0;
     let moveX = 0;
@@ -224,6 +243,7 @@ const ScrollBars = (props: ScrollBarsProps) => {
     };
 
     const handleWheel = (event: any) => {
+      // console.log('wheel event');
       const normalized = normalizeWheel(event);
       pixelX = normalized.pixelX;
       pixelY = normalized.pixelY;
@@ -270,7 +290,6 @@ const ScrollBars = (props: ScrollBarsProps) => {
           moveX = lastScrollLeft.current;
           moveX += pixelX;
           moveX = Math.max(0, moveX);
-          // todo 由于横向存在固定列的原因 待测试lastScrollWidth.current
           moveX = Math.min(moveX, lastScrollWidth.current - clientW);
 
           if (moveX !== lastScrollLeft.current) {
@@ -356,7 +375,6 @@ const ScrollBars = (props: ScrollBarsProps) => {
 
   // const scrollbarWidth = getScrollbarWidth();
 
-  // todo 固定列后这里的scrollWidth是不是会变化
   return (
     <div className="scrollbar">
       <div
