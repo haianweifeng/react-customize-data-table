@@ -995,8 +995,10 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const wheelXEndTimer = useRef<number>(0);
   const wheelYEndTimer = useRef<number>(0);
 
+  // 表体实际偏移量
   const tbodyScrollTop = useRef<number>(0);
 
+  // 纵向滚动偏移量
   const lastScrollTop = useRef<number>(0);
   const lastScrollLeft = useRef<number>(0);
 
@@ -1048,21 +1050,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   );
   // console.log(cachePosition);
 
-  // todo 滚动加载改变滚动条位置
   useEffect(() => {
     const update = () => {
-      // console.log('update');
       if (tbodyRef.current) {
         const tbodyNode = tbodyRef.current;
         const clientWidth = tbodyNode.clientWidth;
         const scrollWidth = tbodyNode.scrollWidth;
         const clientHeight = tbodyNode.clientHeight;
-        // const scrollHeight = tbodyNode.scrollHeight;
-        // lastScrollWidth.current = scrollWidth;
-        // console.log(`clientWidth: ${clientWidth}`);
-        // console.log(`scrollWidth: ${scrollWidth}`);
-        // console.log(`clientHeight: ${clientHeight}`);
-        // console.log(`scrollHeight: ${scrollHeight}`);
         const hasXScrollbar = scrollWidth > clientWidth;
         const hasYScrollbar = tbodyScrollHeight > clientHeight;
         if (hasXScrollbar && barXRef.current) {
@@ -1070,15 +1064,17 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           const scale = (scrollWidth - clientWidth) / (clientWidth - thumbSize);
           barXRef.current.style.transform = `translateX(${lastScrollLeft.current / scale}px)`;
         }
-        // if (hasYScrollbar && barYRef.current) {
-        //   const thumbSize = Math.max(clientHeight / scrollHeight * clientHeight, BAR_THUMB_SIZE);
-        //   const scale = (scrollHeight - clientHeight) / (clientHeight - thumbSize);
-        //   barYRef.current.style.transform = `translateY(${lastScrollTop.current / scale}px)`;
-        // }
+        if (hasYScrollbar && barYRef.current) {
+          const thumbSize = Math.max(
+            (clientHeight / tbodyScrollHeight) * clientHeight,
+            BAR_THUMB_SIZE,
+          );
+          const scale = (tbodyScrollHeight - clientHeight) / (clientHeight - thumbSize);
+          barYRef.current.style.transform = `translateY(${lastScrollTop.current / scale}px)`;
+        }
         setTbodyClientWidth(clientWidth);
         setTbodyScrollWidth(scrollWidth);
         setTbodyClientHeight(clientHeight);
-        // setTbodyScrollHeight(scrollHeight);
         setShowScrollbarY(hasYScrollbar);
         setShowScrollbarX(hasXScrollbar);
       }
@@ -1090,13 +1086,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         if (!(contentRect.width || contentRect.height)) return;
         update();
       });
-      // tbodyRef.current && resizeObserverIns.current.observe(tbodyRef.current);
       realTbodyRef.current && resizeObserverIns.current.observe(realTbodyRef.current);
     };
 
     resizeObserver();
     return () => {
-      // console.log('destory');
       resizeObserverIns.current?.disconnect();
     };
   }, [tbodyScrollHeight]);
@@ -1148,7 +1142,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const handleVerticalScroll = useCallback(
     (offsetTop: number) => {
-      console.log(`offsetTop: ${offsetTop}`);
+      // console.log(`offsetTop: ${offsetTop}`);
       if (virtualized) {
         const item = cachePosition.find((p) => p.bottom > offsetTop);
         if (item) {
@@ -1159,7 +1153,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           if (realTbodyRef.current) {
             const finalOffsetTop = offsetTop - item.top;
             tbodyScrollTop.current = finalOffsetTop;
-            console.log(`final: ${finalOffsetTop}`);
             realTbodyRef.current.style.transform = `translate(-${lastScrollLeft.current}px, -${finalOffsetTop}px)`;
           }
         }

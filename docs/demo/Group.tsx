@@ -159,29 +159,29 @@ for (let i = 0; i < 30; i++) {
 const App = () => {
   const [list, setList] = useState(data);
 
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     console.log('触发');
-  //     const data: DataType[] = [];
-  //     for (let i = 30; i < 100; i++) {
-  //       data.push({
-  //         key: i,
-  //         name: 'John Brown',
-  //         age: i + 1,
-  //         street: 'Lake Park',
-  //         building: buildings[i % 4],
-  //         number: 2035,
-  //         companyAddress: 'Lake Street 42',
-  //         companyName: 'SoftLake Co',
-  //         gender: 'M',
-  //         // expandContent: 'expand row content',
-  //       });
-  //     }
-  //     setList((prev) => {
-  //       return [...prev, ...data];
-  //     });
-  //   }, 3000);
-  // }, []);
+  useEffect(() => {
+    setTimeout(() => {
+      console.log('触发');
+      const data: DataType[] = [];
+      for (let i = 30; i < 100; i++) {
+        data.push({
+          key: i,
+          name: 'John Brown',
+          age: i + 1,
+          street: 'Lake Park',
+          building: buildings[i % 4],
+          number: 2035,
+          companyAddress: 'Lake Street 42',
+          companyName: 'SoftLake Co',
+          gender: 'M',
+          // expandContent: 'expand row content',
+        });
+      }
+      setList((prev) => {
+        return [...prev, ...data];
+      });
+    }, 3000);
+  }, []);
 
   const handleColumnResize = (
     newWidth: number,
