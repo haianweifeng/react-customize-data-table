@@ -128,6 +128,7 @@ const App = () => {
   // }, []);
   return (
     <Table
+      // virtualized
       columns={columns}
       dataSource={list}
       // width={1500}

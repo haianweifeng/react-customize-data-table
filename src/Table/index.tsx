@@ -412,9 +412,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // todo 滚动到底部了但是改变了列宽引起的高度变化 scrollTop 的更新计算 width: 150 -> 180
   // todo 考虑点击树形的第一行和最后一行折叠icon 虚拟滚动会不会出现空白 等到handleUpdateRowHeight 修复了
   // todo 待测试如果是可变行高会不会触发重新计算
-  // const scrollHeight = useMemo(() => {
-  //   return getSumHeight(0, list.length);
-  // }, [getSumHeight, list]);
   const scrollHeight = useMemo(() => {
     return getSumHeight(0, currentPageData.length);
   }, [getSumHeight, currentPageData]);
@@ -783,14 +780,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   //   pageSize,
   // ]);
 
-  const getRenderMaxRows = useCallback(() => {
-    const item = cachePosition.find((c) => c.top >= virtualContainerHeight);
-    if (item) {
-      return renderMaxRows >= item.index ? renderMaxRows : item.index;
-    }
-    return renderMaxRows;
-  }, [virtualContainerHeight, renderMaxRows, cachePosition]);
-
   // 已修复bug 分页滚动到底部 切换到最后一页发现是空白的 在于 startRowIndex 大于数据开始行数
   // 考虑分页后最后一列的数据的高度小于容器的高度 滚动条是否会出现
   // useEffect(() => {
@@ -819,86 +808,86 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   }, []);
 
-  useEffect(() => {
-    let ticking = false;
-
-    let y = 0;
-    let pixelX = 0;
-    let pixelY = 0;
-
-    const updateScrollbarPosition = (offset: number) => {
-      if (scrollBarRef.current) {
-        const thumbSize = scrollBarRef.current.clientHeight;
-        const ratio =
-          (scrollHeight - virtualContainerHeight) / (virtualContainerHeight - thumbSize);
-        scrollBarRef.current.style.transform = `translateY(${offset / ratio}px)`;
-      }
-    };
-
-    const handleWheel = (event: any) => {
-      const target = getParent(event.target, virtualContainerRef.current);
-      if (target !== virtualContainerRef.current) return;
-      const normalized = normalizeWheel(event);
-      pixelX = normalized.pixelX;
-      pixelY = normalized.pixelY;
-
-      if (Math.abs(pixelX) > Math.abs(pixelY)) {
-        pixelY = 0;
-      } else {
-        pixelX = 0;
-      }
-
-      // vertical wheel
-      if (pixelX === 0) {
-        y += pixelY;
-        y = Math.max(0, y);
-        y = Math.min(y, scrollHeight - virtualContainerHeight);
-
-        if (y !== lastScrollTop.current) {
-          const item = cachePosition.find((p) => p.bottom > y);
-          if (item) {
-            if (lastStartRowIndex.current !== item.index) {
-              setStartRowIndex(item.index);
-              lastStartRowIndex.current = item.index;
-            }
-            const offset = y - item.top;
-            updateScrollbarPosition(y);
-            tbodyRef.current.style.transform = `translateY(-${offset}px)`;
-          }
-          lastScrollTop.current = y;
-        }
-
-        pixelY = 0;
-      }
-
-      // horizontal wheel
-      // if (pixelY.current === 0) {
-      //   let offset = scrollLeft + pixelX.current;
-      //   offset = Math.max(0, offset);
-      //   offset = Math.min(offset, scrollWidth - virtualContainerAvailableWidth);
-      //   if (offset === scrollLeft) return;
-      //   handleHorizontalScroll(offset);
-      //   pixelX.current = 0;
-      // }
-      ticking = false;
-    };
-
-    const wheelListener = (event: any) => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          handleWheel(event);
-        });
-        ticking = true;
-      }
-      event.preventDefault();
-    };
-
-    virtualContainerRef.current?.addEventListener('wheel', wheelListener, { passive: false });
-
-    return () => {
-      virtualContainerRef.current?.removeEventListener('wheel', wheelListener);
-    };
-  }, [scrollHeight, virtualContainerHeight, cachePosition]);
+  // useEffect(() => {
+  //   let ticking = false;
+  //
+  //   let y = 0;
+  //   let pixelX = 0;
+  //   let pixelY = 0;
+  //
+  //   const updateScrollbarPosition = (offset: number) => {
+  //     if (scrollBarRef.current) {
+  //       const thumbSize = scrollBarRef.current.clientHeight;
+  //       const ratio =
+  //         (scrollHeight - virtualContainerHeight) / (virtualContainerHeight - thumbSize);
+  //       scrollBarRef.current.style.transform = `translateY(${offset / ratio}px)`;
+  //     }
+  //   };
+  //
+  //   const handleWheel = (event: any) => {
+  //     const target = getParent(event.target, virtualContainerRef.current);
+  //     if (target !== virtualContainerRef.current) return;
+  //     const normalized = normalizeWheel(event);
+  //     pixelX = normalized.pixelX;
+  //     pixelY = normalized.pixelY;
+  //
+  //     if (Math.abs(pixelX) > Math.abs(pixelY)) {
+  //       pixelY = 0;
+  //     } else {
+  //       pixelX = 0;
+  //     }
+  //
+  //     // vertical wheel
+  //     if (pixelX === 0) {
+  //       y += pixelY;
+  //       y = Math.max(0, y);
+  //       y = Math.min(y, scrollHeight - virtualContainerHeight);
+  //
+  //       if (y !== lastScrollTop.current) {
+  //         const item = cachePosition.find((p) => p.bottom > y);
+  //         if (item) {
+  //           if (lastStartRowIndex.current !== item.index) {
+  //             setStartRowIndex(item.index);
+  //             lastStartRowIndex.current = item.index;
+  //           }
+  //           const offset = y - item.top;
+  //           updateScrollbarPosition(y);
+  //           tbodyRef.current.style.transform = `translateY(-${offset}px)`;
+  //         }
+  //         lastScrollTop.current = y;
+  //       }
+  //
+  //       pixelY = 0;
+  //     }
+  //
+  //     // horizontal wheel
+  //     // if (pixelY.current === 0) {
+  //     //   let offset = scrollLeft + pixelX.current;
+  //     //   offset = Math.max(0, offset);
+  //     //   offset = Math.min(offset, scrollWidth - virtualContainerAvailableWidth);
+  //     //   if (offset === scrollLeft) return;
+  //     //   handleHorizontalScroll(offset);
+  //     //   pixelX.current = 0;
+  //     // }
+  //     ticking = false;
+  //   };
+  //
+  //   const wheelListener = (event: any) => {
+  //     if (!ticking) {
+  //       requestAnimationFrame(() => {
+  //         handleWheel(event);
+  //       });
+  //       ticking = true;
+  //     }
+  //     event.preventDefault();
+  //   };
+  //
+  //   virtualContainerRef.current?.addEventListener('wheel', wheelListener, { passive: false });
+  //
+  //   return () => {
+  //     virtualContainerRef.current?.removeEventListener('wheel', wheelListener);
+  //   };
+  // }, [scrollHeight, virtualContainerHeight, cachePosition]);
 
   // todo 这个获取有问题 如果在不同demo 之间切换获取到的值偏大
   useEffect(() => {
@@ -907,23 +896,23 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   }, []);
 
-  const handleBarScroll = (offset: number) => {
-    offset = Math.max(0, offset);
-    offset = Math.min(offset, scrollHeight - virtualContainerHeight);
-    if (offset !== lastScrollTop.current) {
-      const item = cachePosition.find((p) => p.bottom > offset);
-      if (item) {
-        if (lastStartRowIndex.current !== item.index) {
-          setStartRowIndex(item.index);
-          lastStartRowIndex.current = item.index;
-        }
-        if (tbodyRef.current) {
-          tbodyRef.current.style.transform = `translateY(-${offset - item.top}px)`;
-        }
-      }
-      lastScrollTop.current = offset;
-    }
-  };
+  // const handleBarScroll = (offset: number) => {
+  //   offset = Math.max(0, offset);
+  //   offset = Math.min(offset, scrollHeight - virtualContainerHeight);
+  //   if (offset !== lastScrollTop.current) {
+  //     const item = cachePosition.find((p) => p.bottom > offset);
+  //     if (item) {
+  //       if (lastStartRowIndex.current !== item.index) {
+  //         setStartRowIndex(item.index);
+  //         lastStartRowIndex.current = item.index;
+  //       }
+  //       if (tbodyRef.current) {
+  //         tbodyRef.current.style.transform = `translateY(-${offset - item.top}px)`;
+  //       }
+  //     }
+  //     lastScrollTop.current = offset;
+  //   }
+  // };
 
   // const renderVirtualBody = () => {
   //   return (
@@ -1006,6 +995,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const wheelXEndTimer = useRef<number>(0);
   const wheelYEndTimer = useRef<number>(0);
 
+  const tbodyScrollTop = useRef<number>(0);
+
   const lastScrollTop = useRef<number>(0);
   const lastScrollLeft = useRef<number>(0);
 
@@ -1019,10 +1010,14 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const [tbodyScrollWidth, setTbodyScrollWidth] = useState<number>(0);
 
   const [tbodyClientHeight, setTbodyClientHeight] = useState<number>(0);
-  const [tbodyScrollHeight, setTbodyScrollHeight] = useState<number>(0);
+  // const [tbodyScrollHeight, setTbodyScrollHeight] = useState<number>(0);
 
   const [showScrollbarY, setShowScrollbarY] = useState<boolean>(false);
   const [showScrollbarX, setShowScrollbarX] = useState<boolean>(false);
+
+  const tbodyScrollHeight = useMemo(() => {
+    return getSumHeight(0, currentPageData.length);
+  }, [getSumHeight, currentPageData]);
 
   // todo 为什么输出mergeColumns 或者cachePosition 都是好几遍 是不是那些废弃代码里的setState 导致的
   const handleUpdateRowHeight = useCallback(
@@ -1062,14 +1057,14 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         const clientWidth = tbodyNode.clientWidth;
         const scrollWidth = tbodyNode.scrollWidth;
         const clientHeight = tbodyNode.clientHeight;
-        const scrollHeight = tbodyNode.scrollHeight;
+        // const scrollHeight = tbodyNode.scrollHeight;
         // lastScrollWidth.current = scrollWidth;
         // console.log(`clientWidth: ${clientWidth}`);
         // console.log(`scrollWidth: ${scrollWidth}`);
         // console.log(`clientHeight: ${clientHeight}`);
         // console.log(`scrollHeight: ${scrollHeight}`);
         const hasXScrollbar = scrollWidth > clientWidth;
-        const hasYScrollbar = scrollHeight > clientHeight;
+        const hasYScrollbar = tbodyScrollHeight > clientHeight;
         if (hasXScrollbar && barXRef.current) {
           const thumbSize = Math.max((clientWidth / scrollWidth) * clientWidth, BAR_THUMB_SIZE);
           const scale = (scrollWidth - clientWidth) / (clientWidth - thumbSize);
@@ -1083,7 +1078,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         setTbodyClientWidth(clientWidth);
         setTbodyScrollWidth(scrollWidth);
         setTbodyClientHeight(clientHeight);
-        setTbodyScrollHeight(scrollHeight);
+        // setTbodyScrollHeight(scrollHeight);
         setShowScrollbarY(hasYScrollbar);
         setShowScrollbarX(hasXScrollbar);
       }
@@ -1104,7 +1099,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       // console.log('destory');
       resizeObserverIns.current?.disconnect();
     };
-  }, []);
+  }, [tbodyScrollHeight]);
+  // console.log(`tbodyScrollHeight: ${tbodyScrollHeight}`);
 
   // todo 发生过滤后纵向滚动条重置为0 横向滚动条保持原来位置不变
   const handleHorizontalScroll = useCallback((offsetLeft: number) => {
@@ -1121,11 +1117,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     // if (theadRef.current) {
     //   theadRef.current.querySelector('table').style.transform = `translateX(-${offsetLeft}px)`;
     // }
-    [theadRef.current, tbodyRef.current].forEach((el) => {
+    [theadRef.current, tbodyRef.current].forEach((el, index) => {
       if (!el) return;
-      el.querySelector(
-        'table',
-      ).style.transform = `translate(-${offsetLeft}px, -${lastScrollTop.current}px)`;
+      el.querySelector('table').style.transform = `translate(-${offsetLeft}px, -${
+        index === 0 ? 0 : tbodyScrollTop.current
+      }px)`;
       el.querySelectorAll('th, td').forEach((cell: HTMLTableDataCellElement) => {
         if (cell.classList.contains('cell-fixed-left')) {
           cell.style.transform = `translateX(${offsetLeft}px)`;
@@ -1149,6 +1145,35 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     });
     lastScrollLeft.current = offsetLeft;
   }, []);
+
+  const handleVerticalScroll = useCallback(
+    (offsetTop: number) => {
+      console.log(`offsetTop: ${offsetTop}`);
+      if (virtualized) {
+        const item = cachePosition.find((p) => p.bottom > offsetTop);
+        if (item) {
+          if (lastStartRowIndex.current !== item.index) {
+            setStartRowIndex(item.index);
+            lastStartRowIndex.current = item.index;
+          }
+          if (realTbodyRef.current) {
+            const finalOffsetTop = offsetTop - item.top;
+            tbodyScrollTop.current = finalOffsetTop;
+            console.log(`final: ${finalOffsetTop}`);
+            realTbodyRef.current.style.transform = `translate(-${lastScrollLeft.current}px, -${finalOffsetTop}px)`;
+          }
+        }
+      } else {
+        if (realTbodyRef.current) {
+          realTbodyRef.current.style.transform = `translate(-${lastScrollLeft.current}px, -${offsetTop}px)`;
+        }
+        tbodyScrollTop.current = offsetTop;
+      }
+      lastScrollTop.current = offsetTop;
+    },
+    [cachePosition, virtualized],
+  );
+  // console.log(`startRowIndex: ${startRowIndex}`);
 
   // 由于表头表体是通过div 包裹 会导致滚动时候表体先有了scrollLeft 然后表头才有导致更新不同步 表头总是慢于表体 所以采用自定义wheel 事件触发滚动
   useEffect(() => {
@@ -1175,7 +1200,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     };
 
     const handleWheel = (event: any) => {
-      // console.log('wheel event');
       const normalized = normalizeWheel(event);
       pixelX = normalized.pixelX;
       pixelY = normalized.pixelY;
@@ -1199,7 +1223,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         const scrollW = tbodyEl.scrollWidth;
 
         const clientH = tbodyEl.clientHeight;
-        const scrollH = tbodyEl.scrollHeight;
+        const scrollH = tbodyScrollHeight;
+        // const scrollH = tbodyEl.scrollHeight;
 
         // vertical wheel
         if (isVertical) {
@@ -1212,10 +1237,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             const thumbSize = thumbEl.offsetHeight;
             const scale = (scrollH - clientH) / (clientH - thumbSize);
             thumbEl.style.transform = `translateY(${moveY / scale}px)`;
-            // viewRef.current!.style.transform = `translate(-${lastScrollLeft.current}px, -${moveY}px)`;
-            // tbodyContainerRef.current!.style.transform = `translate(-${lastScrollLeft.current}px, -${moveY}px)`;
-            // onVerticalScroll && onVerticalScroll(moveY);
-            lastScrollTop.current = moveY;
+            handleVerticalScroll(moveY);
+            // lastScrollTop.current = moveY;
           }
 
           pixelY = 0;
@@ -1262,7 +1285,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return () => {
       tbodyRef.current?.removeEventListener('wheel', wheelListener);
     };
-  }, [showScrollbarY, showScrollbarX, handleHorizontalScroll]);
+  }, [
+    showScrollbarY,
+    showScrollbarX,
+    tbodyScrollHeight,
+    handleHorizontalScroll,
+    handleVerticalScroll,
+  ]);
 
   useEffect(() => {
     const handleMouseEnter = (event: any) => {
@@ -1304,11 +1333,20 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     };
   }, [showScrollbarY, showScrollbarX]);
 
+  // 考虑renderMaxRows 小于容器高度时候会出现底部空白 这时候取的renderMaxRows刚好为能撑开容器高度那一行的行号
+  const getRenderMaxRows = useCallback(() => {
+    const item = cachePosition.find((c) => c.top >= tbodyClientHeight);
+    return item && tbodyClientHeight ? Math.max(renderMaxRows, item.index) : renderMaxRows;
+    // return renderMaxRows;
+  }, [tbodyClientHeight, renderMaxRows, cachePosition]);
+  // console.log(`getRenderMaxRows: ${getRenderMaxRows()}`);
+
   const currDataSource = useMemo(() => {
     return virtualized
       ? currentPageData.slice(startRowIndex, startRowIndex + getRenderMaxRows())
       : currentPageData;
   }, [virtualized, currentPageData, startRowIndex, getRenderMaxRows]);
+  // console.log(currDataSource);
   // todo 待实现了纵向滚动后 测试如果是虚拟的话 滚动时候没有监听currDataSource 新添加的数据会不会固定
   useEffect(() => {
     handleHorizontalScroll(lastScrollLeft.current);
@@ -1361,7 +1399,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             size={tbodyClientHeight}
             contentSize={tbodyScrollHeight}
             ref={barYRef}
-            // onScroll={handleVerticalScroll}
+            onScroll={handleVerticalScroll}
           />
         )}
         {showScrollbarX && (
