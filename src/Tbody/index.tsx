@@ -24,6 +24,7 @@ interface TbodyProps<T> {
   expandable?: Expandable<T>;
   rowSelection?: RowSelection<T>;
   treeProps?: TreeExpandable<T>;
+  tbodyClientWidth: number;
   getRecordKey: (record: T) => any;
   selectionType: 'radio' | 'checkbox' | undefined;
   handleExpand: (expanded: boolean, record: T, recordKey: number | string) => void;
@@ -64,6 +65,7 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
     treeProps,
     keyLevelMap,
     startRowIndex,
+    tbodyClientWidth,
     ...restProps
   } = props;
   // console.log('tbody render');
@@ -136,9 +138,11 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
         <tr key="empty-placeholder" className="row-placeholder">
           <td
             colSpan={columns.length}
-            className={classnames({ 'cell-ignore-right-border': bordered })}
+            className={classnames({ 'cell-empty': true, 'cell-ignore-right-border': bordered })}
           >
-            {empty}
+            <div className="empty-placeholder-content" style={{ width: tbodyClientWidth }}>
+              {empty}
+            </div>
           </td>
         </tr>
       ) : null}

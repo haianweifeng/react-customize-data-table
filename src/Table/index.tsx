@@ -996,7 +996,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             BAR_THUMB_SIZE,
           );
           const scale = (tbodyScrollHeight - clientHeight) / (clientHeight - thumbSize);
-          barYRef.current.style.transform = `translateY(${lastScrollTop.current / scale}px)`;
+          barYRef.current.style.transform = `translateY(${tbodyScrollTop.current / scale}px)`;
         }
         setTbodyClientWidth(clientWidth);
         setTbodyScrollWidth(scrollWidth);
@@ -1022,15 +1022,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   }, [tbodyScrollHeight]);
   // console.log(`tbodyScrollHeight: ${tbodyScrollHeight}`);
 
-  // todo 发生过滤排序后纵向滚动条重置为0 横向滚动条保持原来位置不变
   const handleHorizontalScroll = useCallback((offsetLeft: number) => {
     // console.log(`horizontal: ${offsetLeft}`);
     let offsetRight = 0;
     if (tbodyRef.current) {
       const clientWidth = tbodyRef.current.clientWidth;
       const scrollWidth = tbodyRef.current.scrollWidth;
-      // console.log(`clientWidth: ${clientWidth}`);
-      // console.log(`scrollWidth: ${bodyTable.scrollWidth}`);
       const maxScrollWidth = scrollWidth - clientWidth;
       offsetRight = maxScrollWidth - offsetLeft;
     }
@@ -1043,6 +1040,14 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         index === 0 ? 0 : tbodyScrollTop.current
       }px)`;
       el.querySelectorAll('th, td').forEach((cell: HTMLTableDataCellElement) => {
+        if (
+          cell.classList.contains('cell-empty') &&
+          cell.querySelector('.empty-placeholder-content')
+        ) {
+          (cell.querySelector(
+            '.empty-placeholder-content',
+          ) as any)!.style.transform = `translateX(${offsetLeft}px)`;
+        }
         if (cell.classList.contains('cell-fixed-left')) {
           cell.style.transform = `translateX(${offsetLeft}px)`;
         } else if (cell.classList.contains('cell-fixed-right')) {
@@ -1284,6 +1289,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // console.log(currDataSource);
 
   useEffect(() => {
+    lastScrollTop.current = 0;
+    tbodyScrollTop.current = 0;
+  }, [sorterStates, filterStates]);
+
+  useEffect(() => {
     handleHorizontalScroll(lastScrollLeft.current);
   }, [mergeColumns, currDataSource, handleHorizontalScroll]);
 
@@ -1309,6 +1319,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
               treeProps={treeProps}
               expandable={expandable}
               rowSelection={rowSelection}
+              tbodyClientWidth={tbodyClientWidth}
               rowClassName={rowClassName}
               rowStyle={rowStyle}
               cellClassName={cellClassName}

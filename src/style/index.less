@@ -171,6 +171,11 @@
   }
 }
 
+.table-container tbody tr .empty-placeholder-content {
+  margin-right: -@table-cell-padding-horizontal;
+  margin-left: -@table-cell-padding-horizontal;
+}
+
 .table-container tbody td {
   position: relative;
   padding: @table-cell-padding-vertical @table-cell-padding-horizontal;
@@ -342,6 +347,7 @@
 
 .table-container table {
   min-width: 100%;
+  min-height: 100%;
   text-align: left;
   table-layout: fixed;
   border-collapse: separate;
