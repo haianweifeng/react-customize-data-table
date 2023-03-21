@@ -1295,7 +1295,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   useEffect(() => {
     handleHorizontalScroll(lastScrollLeft.current);
-  }, [mergeColumns, currDataSource, handleHorizontalScroll]);
+  }, [mergeColumns, currDataSource, expandedRowKeys, handleHorizontalScroll]);
 
   const renderBody = () => {
     return (

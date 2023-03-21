@@ -255,12 +255,15 @@ const App = () => {
         };
       }}
       // rowSelection={{}}
-      // expandable={{
-      // insertBeforeColumnName: 'Gender',
-      // expandedRowRender: (record) => {
-      // return record.expandContent;
-      // },
-      // }}
+      expandable={{
+        expandedRowRender: (record: DataType) => {
+          return 'expand content';
+          // return record.expandContent;
+        },
+        rowExpandable: (record: DataType) => {
+          return record.key % 2 === 0;
+        },
+      }}
     />
   );
 };

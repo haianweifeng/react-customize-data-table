@@ -99,7 +99,6 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rowIndex, expanded]);
 
-  // todo 待验证如果是固定列滚动这一行的展示效果
   const renderExpandRow = () => {
     const expandColumn = columns.find((column) => {
       if ('type' in column && column.type && column.type === 'expand') {
@@ -115,13 +114,15 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
 
     const cls =
       expandable?.expandedRowClassName && expandable.expandedRowClassName(rowData, rowIndex);
-    // const existFixed = cols.some((c) => c.fixed === 'left' || c.fixed === 'right');
-    // const styles = existFixed ? { transform: `translate(${scrollLeft}px, 0)` } : {};
     return (
-      <tr key={`${rowIndex}_expand`} className={cls} ref={expandTrRef}>
+      <tr
+        key={`${rowIndex}_expand`}
+        className={classnames({ cls, 'row-expand': true })}
+        ref={expandTrRef}
+      >
         <td
           colSpan={columns.length}
-          className={classnames({ 'cell-ignore-right-border': bordered })}
+          className={classnames({ 'cell-ignore-right-border': bordered, 'cell-fixed-left': true })}
         >
           {expandable?.expandedRowRender &&
             expandable?.expandedRowRender(rowData, rowIndex, expanded)}
