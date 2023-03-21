@@ -37,7 +37,7 @@ function useFilter<T extends { key?: React.Key; children?: T[] }>(
       let records: T[] = [...data];
       filterStates.forEach((filterState) => {
         records = records.filter((r) => {
-          let result = !filterState.filteredValue.length;
+          let result = !filterState.filteredValue.length || !filterState?.filterMethod;
           for (let i = 0; i < filterState.filteredValue.length; i++) {
             if (typeof filterState?.filterMethod === 'function') {
               result = filterState.filterMethod(filterState.filteredValue[i], r);
