@@ -416,14 +416,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return getSumHeight(0, currentPageData.length);
   }, [getSumHeight, currentPageData]);
 
-  // const showScrollbarY = useMemo(() => {
-  //   if (height) {
-  //     if (!virtualContainerHeight) return false;
-  //     return virtualContainerHeight < scrollHeight;
-  //   }
-  //   return false;
-  // }, [scrollHeight, height, virtualContainerHeight]);
-
   const handleResize = useCallback(
     (targetColumns: PrivateColumnsType<T>) => {
       if (tbodyRef.current) {
@@ -710,75 +702,10 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return isAllChecked ? true : isHalfChecked ? 'indeterminate' : false;
   }, [selectedKeys, currentPageAllKeys]);
 
-  // todo columns
-  // const scrollWidth = useMemo(() => {
-  //   if (width) return width;
-  //   return columnsWithWidth.reduce((total, col) => {
-  //     return total + (Number(parseValue(col.width)) || 0);
-  //   }, 0);
-  // }, [width, columnsWithWidth]);
-
-  // const scrollWidth = useMemo(() => {
-  //   return flattenColumns.reduce((total, column) => {
-  //     return total + column.width;
-  //   }, 0);
-  // }, [flattenColumns]);
-
-  // const getScrollWidth = useCallback(() => {
-  //   if (width) return width;
-  //   if (tbodyRef.current) return tbodyRef.current.offsetWidth;
-  //   return 0;
-  // }, [width]);
-
-  // const showScrollbarX = useMemo(() => {
-  //   // const scrollWidth = getScrollWidth();
-  //   return scrollWidth > virtualContainerWidth;
-  // }, [scrollWidth, virtualContainerWidth]);
-
   const handleMount = (vWidth: number, vHeight: number) => {
     setVirtualContainerWidth(vWidth);
     setVirtualContainerHeight(vHeight);
   };
-
-  // todo offsetRight 需要优化成有需要fixed='right'时候才更新
-  const offsetRight = useMemo(() => {
-    // const scrollWidth = getScrollWidth();
-    const availableWidth =
-      virtualContainerWidth === 0 ? 0 : virtualContainerWidth - (showScrollbarY ? BAR_WIDTH : 0);
-    const maxScrollWidth = scrollWidth - availableWidth;
-    return maxScrollWidth - scrollLeft;
-  }, [scrollWidth, virtualContainerWidth, showScrollbarY, scrollLeft]);
-
-  // 考虑renderMaxRows 小于容器高度时候会出现底部空白 这时候取的renderMaxRows刚好为能撑开容器高度那一行的行号
-  // const getRenderMaxRows = useCallback(() => {
-  //   if (renderMaxRows <= 0 || renderMaxRows > list.length || !showScrollbarY) {
-  //     return list.length;
-  //   }
-  //   if (virtualContainerHeight) {
-  //     const virtualContainerAvailableHeight =
-  //       virtualContainerHeight - (showScrollbarX ? BAR_WIDTH : 0);
-  //     const start = (currentPage - 1) * pageSize + startRowIndex;
-  //     const sumHeight = getSumHeight(start, start + renderMaxRows);
-  //     if (sumHeight > virtualContainerAvailableHeight) {
-  //       return renderMaxRows;
-  //     } else {
-  //       const item = cachePosition.find((c) => c.top >= virtualContainerAvailableHeight);
-  //       return item?.index ?? renderMaxRows;
-  //     }
-  //   }
-  //   return renderMaxRows;
-  // }, [
-  //   renderMaxRows,
-  //   list,
-  //   showScrollbarY,
-  //   virtualContainerHeight,
-  //   showScrollbarX,
-  //   cachePosition,
-  //   startRowIndex,
-  //   getSumHeight,
-  //   currentPage,
-  //   pageSize,
-  // ]);
 
   // 已修复bug 分页滚动到底部 切换到最后一页发现是空白的 在于 startRowIndex 大于数据开始行数
   // 考虑分页后最后一列的数据的高度小于容器的高度 滚动条是否会出现
@@ -1012,7 +939,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const [tbodyScrollWidth, setTbodyScrollWidth] = useState<number>(0);
 
   const [tbodyClientHeight, setTbodyClientHeight] = useState<number>(0);
-  // const [tbodyScrollHeight, setTbodyScrollHeight] = useState<number>(0);
 
   const [showScrollbarY, setShowScrollbarY] = useState<boolean>(false);
   const [showScrollbarX, setShowScrollbarX] = useState<boolean>(false);
@@ -1096,7 +1022,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   }, [tbodyScrollHeight]);
   // console.log(`tbodyScrollHeight: ${tbodyScrollHeight}`);
 
-  // todo 发生过滤后纵向滚动条重置为0 横向滚动条保持原来位置不变
+  // todo 发生过滤排序后纵向滚动条重置为0 横向滚动条保持原来位置不变
   const handleHorizontalScroll = useCallback((offsetLeft: number) => {
     // console.log(`horizontal: ${offsetLeft}`);
     let offsetRight = 0;
@@ -1193,15 +1119,15 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     };
 
     const handleWheel = (event: any) => {
-      const normalized = normalizeWheel(event);
-      pixelX = normalized.pixelX;
-      pixelY = normalized.pixelY;
-
-      if (Math.abs(pixelX) > Math.abs(pixelY)) {
-        pixelY = 0;
-      } else {
-        pixelX = 0;
-      }
+      // const normalized = normalizeWheel(event);
+      // pixelX = normalized.pixelX;
+      // pixelY = normalized.pixelY;
+      //
+      // if (Math.abs(pixelX) > Math.abs(pixelY)) {
+      //   pixelY = 0;
+      // } else {
+      //   pixelX = 0;
+      // }
 
       const isVertical = pixelX === 0;
 
@@ -1262,6 +1188,18 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     };
 
     const wheelListener = (event: any) => {
+      const normalized = normalizeWheel(event);
+      pixelX = normalized.pixelX;
+      pixelY = normalized.pixelY;
+
+      if (Math.abs(pixelX) > Math.abs(pixelY)) {
+        pixelY = 0;
+      } else {
+        pixelX = 0;
+      }
+
+      const isVertical = pixelX === 0;
+
       if (!ticking) {
         requestAnimationFrame(() => {
           handleWheel(event);
@@ -1269,7 +1207,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         });
         ticking = true;
       }
-      event.preventDefault();
+      if (showScrollbarY && isVertical) {
+        event.preventDefault();
+      }
+      if (showScrollbarX && !isVertical) {
+        event.preventDefault();
+      }
+      // event.preventDefault();
     };
 
     if (!showScrollbarY && !showScrollbarX) return;
@@ -1330,9 +1274,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const getRenderMaxRows = useCallback(() => {
     const item = cachePosition.find((c) => c.top >= tbodyClientHeight);
     return item && tbodyClientHeight ? Math.max(renderMaxRows, item.index) : renderMaxRows;
-    // return renderMaxRows;
   }, [tbodyClientHeight, renderMaxRows, cachePosition]);
-  // console.log(`getRenderMaxRows: ${getRenderMaxRows()}`);
 
   const currDataSource = useMemo(() => {
     return virtualized
@@ -1340,7 +1282,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       : currentPageData;
   }, [virtualized, currentPageData, startRowIndex, getRenderMaxRows]);
   // console.log(currDataSource);
-  // todo 待实现了纵向滚动后 测试如果是虚拟的话 滚动时候没有监听currDataSource 新添加的数据会不会固定
+
   useEffect(() => {
     handleHorizontalScroll(lastScrollLeft.current);
   }, [mergeColumns, currDataSource, handleHorizontalScroll]);
@@ -1358,11 +1300,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
               selectionType={selectionType}
               startRowIndex={startRowIndex}
               dataSource={currDataSource}
-              // dataSource={
-              //   virtualized
-              //     ? currentPageData.slice(startRowIndex, startRowIndex + getRenderMaxRows())
-              //     : currentPageData
-              // }
               columns={flattenColumns}
               keyLevelMap={keyLevelMap}
               getRecordKey={getRecordKey}
