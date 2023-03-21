@@ -100,6 +100,7 @@ const App = () => {
       dataSource={data}
       // rowSelection={rowSelection}
       height={300}
+      // height={380}
       // renderMaxRows={3}
       pagination={{
         align: 'right',

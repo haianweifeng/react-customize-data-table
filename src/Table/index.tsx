@@ -1272,26 +1272,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   };
 
-  // 已修复bug 分页滚动到底部 切换到最后一页发现是空白的 在于 startRowIndex 大于数据开始行数
-  // 考虑分页后最后一列的数据的高度小于容器的高度 滚动条是否会出现
-  // useEffect(() => {
-  //   // 如果没有垂直滚动条 startRowIndex 永远为0
-  //   if (startRowIndex >= list.length) {
-  //     setStartRowIndex(0);
-  //     setStartOffset(0);
-  //     setStartRowIndex(0);
-  //     setScrollTop(0);
-  //   }
-  // }, [list, startRowIndex]);
-  // useEffect(() => {
-  //   // 如果没有垂直滚动条 startRowIndex 永远为0
-  //   if (startRowIndex >= currentPageData.length) {
-  //     setStartRowIndex(0);
-  //     setStartOffset(0);
-  //     setScrollTop(0);
-  //   }
-  // }, [currentPageData, startRowIndex]);
-
   useEffect(() => {
     handleHorizontalScroll(lastScrollLeft.current);
   }, [mergeColumns, currDataSource, expandedRowKeys, handleHorizontalScroll]);
@@ -1300,7 +1280,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return (
       <div className="tbody-container">
         <div ref={tbodyRef} className="table-tbody">
-          <table ref={realTbodyRef} style={{ width: scrollWidth }}>
+          <table
+            ref={realTbodyRef}
+            style={{ width: scrollWidth }}
+            className={classnames({ 'empty-tbody-table': !currDataSource.length })}
+          >
             <Colgroup columns={flattenColumns} />
             <Tbody
               empty={empty}
