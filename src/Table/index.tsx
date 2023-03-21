@@ -13,13 +13,7 @@ import VirtualBody from '../VirtualBody';
 import Colgroup from '../Colgroup';
 import Pagination from '../Pagination';
 import Spin from '../Spin';
-import type {
-  TreeLevelType,
-  LevelRecordType,
-  RowKeyType,
-  CachePositionType,
-  LocalType,
-} from '../interface';
+import type { RowKeyType, CachePositionType, LocalType } from '../interface';
 import type {
   ColumnsType,
   ColumnType,
@@ -42,6 +36,7 @@ import LocaleContext from '../LocalProvider/context';
 import ScrollBar from '../ScrollBar';
 import ScrollBars from '../ScrollBars';
 import VirtualScrollBar from '../VirtualScrollBar';
+import Bar from '../Bar';
 import normalizeWheel from 'normalize-wheel';
 import ResizeObserver from 'resize-observer-polyfill';
 // import styles from './index.less';
@@ -622,6 +617,21 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
     document.addEventListener('mousemove', handleHeaderMouseMove);
     document.addEventListener('mouseup', handleHeaderMouseUp);
+  };
+
+  const handlePaginationChange = (current: number, size: number) => {
+    // todo current 条件是否成立
+    if (pagination && !('current' in pagination)) {
+      updateCurrentPage(current);
+      // setCurrentPage(current);
+    }
+    if (pagination && !('pageSize' in pagination)) {
+      updatePageSize(size);
+      // setPageSize(size);
+    }
+    if (typeof pagination?.onChange === 'function') {
+      pagination.onChange(current, size);
+    }
   };
 
   // const handleScrollVertical = (offset: number, availableSize: number) => {
@@ -1257,21 +1267,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   }, [virtualized, currentPageData, startRowIndex, getRenderMaxRows]);
   // console.log(currDataSource);
 
-  const handlePaginationChange = (current: number, size: number) => {
-    // todo current 条件是否成立
-    if (pagination && !('current' in pagination)) {
-      updateCurrentPage(current);
-      // setCurrentPage(current);
-    }
-    if (pagination && !('pageSize' in pagination)) {
-      updatePageSize(size);
-      // setPageSize(size);
-    }
-    if (typeof pagination?.onChange === 'function') {
-      pagination.onChange(current, size);
-    }
-  };
-
   useEffect(() => {
     handleHorizontalScroll(lastScrollLeft.current);
   }, [mergeColumns, currDataSource, expandedRowKeys, handleHorizontalScroll]);
@@ -1318,7 +1313,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           </table>
         </div>
         {showScrollbarY && (
-          <VirtualScrollBar
+          <Bar
             orientation="vertical"
             size={tbodyClientHeight}
             contentSize={tbodyScrollHeight}
@@ -1327,7 +1322,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           />
         )}
         {showScrollbarX && (
-          <VirtualScrollBar
+          <Bar
             orientation="horizontal"
             size={tbodyClientWidth}
             contentSize={tbodyScrollWidth}
