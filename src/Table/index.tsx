@@ -102,8 +102,6 @@ export interface TableProps<T> {
   onCellEvents?: (record: T, rowIndex: number) => object;
   /** 分页 */
   pagination?: PaginationProps;
-  // /** disabled 为 true，禁用全部选项 todo 好像不需要 */
-  // disabled?: (data: any) => boolean | boolean;
   /** 空数据文案 */
   empty?: string | React.ReactNode;
   /** 默认文案设置 */
@@ -117,11 +115,9 @@ export interface TableProps<T> {
   width?: number;
   /** 表格高度，默认为自动高度，如果表格内容大于此值，会固定表头 */
   height?: number;
-  /** 是否开启虚拟列表 todo */
+  /** 是否开启虚拟列表 */
   virtualized?: boolean;
-  // /** 表格是否可以滚动 超过最大宽高时候就可以滚动 todo */
-  // scroll?: ScrollType;
-  /** 滚动条滚动后回调函数 todo */
+  /** 监听滚动回调函数 */
   onScroll?: (x: number, y: number) => void;
   /** 列宽伸缩后的回调 */
   onColumnResize?: (
@@ -194,6 +190,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     cellClassName,
     onRowEvents,
     onCellEvents,
+    onScroll,
   } = props;
 
   const getRecordKey = useCallback(
@@ -1001,7 +998,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     };
   }, [tbodyScrollHeight, currentPage, pageSize, sorterStates]);
 
-  const handleHorizontalScroll = useCallback((offsetLeft: number) => {
+  const handleHorizontalScroll = useCallback((offsetLeft: number, isWheel: boolean = true) => {
     // console.log(`horizontal: ${offsetLeft}`);
     let offsetRight = 0;
     if (tbodyRef.current) {
@@ -1048,11 +1045,14 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       });
     });
     lastScrollLeft.current = offsetLeft;
+    if (isWheel) {
+      onScroll && onScroll(offsetLeft, lastScrollTop.current);
+    }
   }, []);
 
   const handleVerticalScroll = useCallback(
     (offsetTop: number) => {
-      // console.log(`offsetTop: ${offsetTop}`);
+      // console.log(`vertical: ${offsetTop}`);
       if (virtualized) {
         const item = cachePosition.find((p) => p.bottom > offsetTop);
         if (item) {
@@ -1073,6 +1073,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         tbodyScrollTop.current = offsetTop;
       }
       lastScrollTop.current = offsetTop;
+      onScroll && onScroll(lastScrollLeft.current, offsetTop);
     },
     [cachePosition, virtualized],
   );
@@ -1102,17 +1103,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       }
     };
 
-    const handleWheel = (event: any) => {
-      // const normalized = normalizeWheel(event);
-      // pixelX = normalized.pixelX;
-      // pixelY = normalized.pixelY;
-      //
-      // if (Math.abs(pixelX) > Math.abs(pixelY)) {
-      //   pixelY = 0;
-      // } else {
-      //   pixelX = 0;
-      // }
-
+    const handleWheel = () => {
       const isVertical = pixelX === 0;
 
       const thumbEl = isVertical ? barYRef.current : barXRef.current;
@@ -1127,7 +1118,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
         const clientH = tbodyEl.clientHeight;
         const scrollH = tbodyScrollHeight;
-        // const scrollH = tbodyEl.scrollHeight;
 
         // vertical wheel
         if (isVertical) {
@@ -1186,7 +1176,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
       if (!ticking) {
         requestAnimationFrame(() => {
-          handleWheel(event);
+          handleWheel();
           ticking = false;
         });
         ticking = true;
@@ -1197,7 +1187,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       if (showScrollbarX && !isVertical) {
         event.preventDefault();
       }
-      // event.preventDefault();
     };
 
     if (!showScrollbarY && !showScrollbarX) return;
@@ -1268,7 +1257,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // console.log(currDataSource);
 
   useEffect(() => {
-    handleHorizontalScroll(lastScrollLeft.current);
+    handleHorizontalScroll(lastScrollLeft.current, false);
   }, [mergeColumns, currDataSource, expandedRowKeys, handleHorizontalScroll]);
 
   const renderBody = () => {

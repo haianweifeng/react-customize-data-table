@@ -195,6 +195,11 @@ const App = () => {
     console.log(event);
   };
 
+  const handleScroll = (scrollLeft: number, scrollTop: number) => {
+    console.log(`scrollLeft: ${scrollLeft}`);
+    console.log(`scrollTop: ${scrollTop}`);
+  };
+
   return (
     <Table
       columns={columns}
@@ -264,6 +269,7 @@ const App = () => {
           return record.key % 2 === 0;
         },
       }}
+      onScroll={handleScroll}
     />
   );
 };
