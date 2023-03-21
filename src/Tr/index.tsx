@@ -96,8 +96,7 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
     return () => {
       resizeObserverIns.current?.disconnect();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rowIndex, expanded]);
+  }, [rowIndex, expanded, onUpdateRowHeight]);
 
   const renderExpandRow = () => {
     const expandColumn = columns.find((column) => {

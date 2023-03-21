@@ -108,13 +108,13 @@ const App = () => {
         layout: ['sizes', 'prev', 'pager', 'next', 'jumper', renderInfo],
         onChange: handleChange,
       }}
-      expandable={{
-        defaultExpandAllRows: true,
-        expandedRowRender: (record: DataType) => <p style={{ margin: 0 }}>{record.description}</p>,
-        onExpand: (expanded: boolean, record: DataType) => {
-          console.log(`expanded: ${expanded}`, 'record: ', record);
-        },
-      }}
+      // expandable={{
+      //   defaultExpandAllRows: true,
+      //   expandedRowRender: (record: DataType) => <p style={{ margin: 0 }}>{record.description}</p>,
+      //   onExpand: (expanded: boolean, record: DataType) => {
+      //     console.log(`expanded: ${expanded}`, 'record: ', record);
+      //   },
+      // }}
       // treeProps={
       //   {
       //     // expandedRowKeys,

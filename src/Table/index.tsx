@@ -364,7 +364,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const virtualContainerRef = useRef<HTMLDivElement>(null);
 
-  const scrollBarRef = useRef<HTMLDivElement>(null);
+  // const scrollBarRef = useRef<HTMLDivElement>(null);
 
   const [isMount, setIsMount] = useState<boolean>(false);
 
@@ -378,6 +378,18 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       };
     });
   });
+
+  useEffect(() => {
+    const positions = dataSource.map((d, index) => {
+      return {
+        index,
+        top: index * rowHeight,
+        bottom: (index + 1) * rowHeight,
+        height: rowHeight,
+      };
+    });
+    setCachePosition(positions);
+  }, [dataSource]);
 
   const [virtualContainerWidth, setVirtualContainerWidth] = useState<number>(0);
 
@@ -393,28 +405,19 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const [scrollLeft, setScrollLeft] = useState<number>(0);
 
-  const [startOffset, setStartOffset] = useState<number>(0);
+  // const [startOffset, setStartOffset] = useState<number>(0);
 
   // todo 应该是基于list 进行获取所有records keys
   // todo list 如果在这里添加了treeChilren 数据遇到虚拟列表会被切分 应该放到tbody 中处理 已处理 待测试
-  const getSumHeight = useCallback(
-    (start: number, end: number) => {
-      let sumHeight = 0;
-      for (let i = start; i < end; i++) {
-        sumHeight += cachePosition[i]?.height || rowHeight;
-      }
-      return sumHeight;
-    },
-    [cachePosition, rowHeight],
-  );
 
   // todo 点击扩展行后引起cachePosition 变化后 scrollTop 的更新计算 setRowHeight
   // todo 滚动到底部了但是改变了列宽引起的高度变化 scrollTop 的更新计算 width: 150 -> 180
   // todo 考虑点击树形的第一行和最后一行折叠icon 虚拟滚动会不会出现空白 等到handleUpdateRowHeight 修复了
   // todo 待测试如果是可变行高会不会触发重新计算
-  const scrollHeight = useMemo(() => {
-    return getSumHeight(0, currentPageData.length);
-  }, [getSumHeight, currentPageData]);
+  // 2. 考虑分页时候设置pageSize 大于renderMaxRows
+  // const scrollHeight = useMemo(() => {
+  //   return getSumHeight(0, currentPageData.length);
+  // }, [getSumHeight, currentPageData]);
 
   const handleResize = useCallback(
     (targetColumns: PrivateColumnsType<T>) => {
@@ -621,63 +624,36 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     document.addEventListener('mouseup', handleHeaderMouseUp);
   };
 
-  const handlePaginationChange = (current: number, size: number) => {
-    // todo current 条件是否成立
-    if (pagination && !('current' in pagination)) {
-      updateCurrentPage(current);
-      // setCurrentPage(current);
-    }
-    if (pagination && !('pageSize' in pagination)) {
-      updatePageSize(size);
-      // setPageSize(size);
-    }
-    if (typeof pagination?.onChange === 'function') {
-      pagination.onChange(current, size);
-    }
-  };
+  // const handleScrollVertical = (offset: number, availableSize: number) => {
+  //   setScrollTop((prev) => {
+  //     let newOffset = prev + offset;
+  //     newOffset = Math.max(0, newOffset);
+  //     newOffset = Math.min(newOffset, scrollHeight - availableSize);
+  //     if (prev !== newOffset) {
+  //       const item = cachePosition.find((p) => p.bottom >= newOffset);
+  //       if (item && item.index !== lastStartRowIndex.current) {
+  //         // console.log(`item.index: ${item.index}`);
+  //         lastStartRowIndex.current = item.index;
+  //         setStartOffset(item.top);
+  //         setStartRowIndex(item.index);
+  //       }
+  //     }
+  //     return newOffset;
+  //   });
+  //   // const item = cachePosition.find((p) => p.bottom >= offset);
+  //   // if (item && item.index !== startRowIndex) {
+  //   //   // console.log(`item.index: ${item.index}`);
+  //   //   setStartOffset(item.top);
+  //   //   setStartRowIndex(item.index);
+  //   // }
+  //   // if (offset !== scrollTop) {
+  //   //   setScrollTop(offset);
+  //   // }
+  // };
 
-  const handleScrollVertical = (offset: number, availableSize: number) => {
-    setScrollTop((prev) => {
-      let newOffset = prev + offset;
-      newOffset = Math.max(0, newOffset);
-      newOffset = Math.min(newOffset, scrollHeight - availableSize);
-      if (prev !== newOffset) {
-        const item = cachePosition.find((p) => p.bottom >= newOffset);
-        if (item && item.index !== lastStartRowIndex.current) {
-          // console.log(`item.index: ${item.index}`);
-          lastStartRowIndex.current = item.index;
-          setStartOffset(item.top);
-          setStartRowIndex(item.index);
-        }
-      }
-      return newOffset;
-    });
-    // const item = cachePosition.find((p) => p.bottom >= offset);
-    // if (item && item.index !== startRowIndex) {
-    //   // console.log(`item.index: ${item.index}`);
-    //   setStartOffset(item.top);
-    //   setStartRowIndex(item.index);
-    // }
-    // if (offset !== scrollTop) {
-    //   setScrollTop(offset);
-    // }
-  };
-
-  const handleScrollHorizontal = (offset: number) => {
-    setScrollLeft(offset);
-  };
-
-  useEffect(() => {
-    const positions = dataSource.map((d, index) => {
-      return {
-        index,
-        top: index * rowHeight,
-        bottom: (index + 1) * rowHeight,
-        height: rowHeight,
-      };
-    });
-    setCachePosition(positions);
-  }, [dataSource]);
+  // const handleScrollHorizontal = (offset: number) => {
+  //   setScrollLeft(offset);
+  // };
 
   // useEffect(() => {
   //   if (pagination && 'current' in pagination) {
@@ -702,38 +678,17 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return isAllChecked ? true : isHalfChecked ? 'indeterminate' : false;
   }, [selectedKeys, currentPageAllKeys]);
 
-  const handleMount = (vWidth: number, vHeight: number) => {
-    setVirtualContainerWidth(vWidth);
-    setVirtualContainerHeight(vHeight);
-  };
+  // const handleMount = (vWidth: number, vHeight: number) => {
+  //   setVirtualContainerWidth(vWidth);
+  //   setVirtualContainerHeight(vHeight);
+  // };
 
-  // 已修复bug 分页滚动到底部 切换到最后一页发现是空白的 在于 startRowIndex 大于数据开始行数
-  // 考虑分页后最后一列的数据的高度小于容器的高度 滚动条是否会出现
   // useEffect(() => {
-  //   // 如果没有垂直滚动条 startRowIndex 永远为0
-  //   if (startRowIndex >= list.length) {
-  //     setStartRowIndex(0);
-  //     setStartOffset(0);
-  //     setStartRowIndex(0);
-  //     setScrollTop(0);
+  //   if (virtualContainerRef.current) {
+  //     const { height: containerHeight } = virtualContainerRef.current.getBoundingClientRect();
+  //     setVirtualContainerHeight(containerHeight);
   //   }
-  // }, [list, startRowIndex]);
-  useEffect(() => {
-    // 如果没有垂直滚动条 startRowIndex 永远为0
-    if (startRowIndex >= currentPageData.length) {
-      setStartRowIndex(0);
-      setStartOffset(0);
-      setStartRowIndex(0);
-      setScrollTop(0);
-    }
-  }, [currentPageData, startRowIndex]);
-
-  useEffect(() => {
-    if (virtualContainerRef.current) {
-      const { height: containerHeight } = virtualContainerRef.current.getBoundingClientRect();
-      setVirtualContainerHeight(containerHeight);
-    }
-  }, []);
+  // }, []);
 
   // useEffect(() => {
   //   let ticking = false;
@@ -817,11 +772,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // }, [scrollHeight, virtualContainerHeight, cachePosition]);
 
   // todo 这个获取有问题 如果在不同demo 之间切换获取到的值偏大
-  useEffect(() => {
-    if (tableContainer.current) {
-      setContainerWidth(tableContainer.current.clientWidth);
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (tableContainer.current) {
+  //     setContainerWidth(tableContainer.current.clientWidth);
+  //   }
+  // }, []);
 
   // const handleBarScroll = (offset: number) => {
   //   offset = Math.max(0, offset);
@@ -943,41 +898,56 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const [showScrollbarY, setShowScrollbarY] = useState<boolean>(false);
   const [showScrollbarX, setShowScrollbarX] = useState<boolean>(false);
 
+  // todo 为什么输出mergeColumns 或者cachePosition 都是好几遍 是不是那些废弃代码里的setState 导致的
+  const handleUpdateRowHeight = useCallback((newRowHeight: number, rowIndex: number) => {
+    // console.log(`rowHeight: ${newRowHeight}`);
+    // console.log(`rowIndex: ${rowIndex}`);
+    setCachePosition((prevPosition) => {
+      const index = prevPosition.findIndex((c) => c.index === rowIndex);
+      if (index >= 0) {
+        const item = { ...prevPosition[index] };
+        const diff = item.height - newRowHeight;
+        if (diff) {
+          // todo 如果存在差距的话得更新下scrollTop  startOffset
+          item.height = newRowHeight;
+          item.bottom = item.bottom - diff;
+          for (let j = index + 1; j < prevPosition.length; j++) {
+            prevPosition[j].top = prevPosition[j - 1].bottom;
+            prevPosition[j].bottom = prevPosition[j].bottom - diff;
+          }
+          prevPosition.splice(index, 1, item);
+        }
+      }
+      return [...prevPosition];
+    });
+  }, []);
+  // console.log(cachePosition);
+
+  const getSumHeight = useCallback(
+    (start: number, end: number) => {
+      let sumHeight = 0;
+      for (let i = start; i < end; i++) {
+        sumHeight += cachePosition[i]?.height || rowHeight;
+      }
+      return sumHeight;
+    },
+    [cachePosition, rowHeight],
+  );
+
   const tbodyScrollHeight = useMemo(() => {
     return getSumHeight(0, currentPageData.length);
   }, [getSumHeight, currentPageData]);
+  // console.log(`tbodyScrollHeight: ${tbodyScrollHeight}`);
 
-  // todo 为什么输出mergeColumns 或者cachePosition 都是好几遍 是不是那些废弃代码里的setState 导致的
-  const handleUpdateRowHeight = useCallback(
-    (rowHeight: number, rowIndex: number) => {
-      // console.log(`rowHeight: ${rowHeight}`);
-      // console.log(`rowIndex: ${rowIndex}`);
-      setCachePosition((prevPosition) => {
-        const index = prevPosition.findIndex((c) => c.index === rowIndex);
-        if (index >= 0) {
-          const item = { ...prevPosition[index] };
-          const diff = item.height - rowHeight;
-          if (diff) {
-            // console.log('存在差距');
-            // todo 如果存在差距的话得更新下scrollTop  startOffset
-            item.height = rowHeight;
-            item.bottom = item.bottom - diff;
-            for (let j = index + 1; j < prevPosition.length; j++) {
-              prevPosition[j].top = prevPosition[j - 1].bottom;
-              prevPosition[j].bottom = prevPosition[j].bottom - diff;
-            }
-            prevPosition.splice(index, 1, item);
-          }
-        }
-        return prevPosition;
-      });
-    },
-    [cachePosition],
-  );
-  // console.log(cachePosition);
+  useEffect(() => {
+    lastScrollTop.current = 0;
+    tbodyScrollTop.current = 0;
+    setStartRowIndex(0);
+  }, [sorterStates, filterStates, currentPage, pageSize]);
 
   useEffect(() => {
     const update = () => {
+      // console.log('update');
       if (tbodyRef.current) {
         const tbodyNode = tbodyRef.current;
         const clientWidth = tbodyNode.clientWidth;
@@ -996,7 +966,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             BAR_THUMB_SIZE,
           );
           const scale = (tbodyScrollHeight - clientHeight) / (clientHeight - thumbSize);
-          barYRef.current.style.transform = `translateY(${tbodyScrollTop.current / scale}px)`;
+          barYRef.current.style.transform = `translateY(${lastScrollTop.current / scale}px)`;
         }
         setTbodyClientWidth(clientWidth);
         setTbodyScrollWidth(scrollWidth);
@@ -1019,8 +989,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return () => {
       resizeObserverIns.current?.disconnect();
     };
-  }, [tbodyScrollHeight]);
-  // console.log(`tbodyScrollHeight: ${tbodyScrollHeight}`);
+  }, [tbodyScrollHeight, currentPage, pageSize, sorterStates]);
 
   const handleHorizontalScroll = useCallback((offsetLeft: number) => {
     // console.log(`horizontal: ${offsetLeft}`);
@@ -1288,10 +1257,40 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   }, [virtualized, currentPageData, startRowIndex, getRenderMaxRows]);
   // console.log(currDataSource);
 
-  useEffect(() => {
-    lastScrollTop.current = 0;
-    tbodyScrollTop.current = 0;
-  }, [sorterStates, filterStates]);
+  const handlePaginationChange = (current: number, size: number) => {
+    // todo current 条件是否成立
+    if (pagination && !('current' in pagination)) {
+      updateCurrentPage(current);
+      // setCurrentPage(current);
+    }
+    if (pagination && !('pageSize' in pagination)) {
+      updatePageSize(size);
+      // setPageSize(size);
+    }
+    if (typeof pagination?.onChange === 'function') {
+      pagination.onChange(current, size);
+    }
+  };
+
+  // 已修复bug 分页滚动到底部 切换到最后一页发现是空白的 在于 startRowIndex 大于数据开始行数
+  // 考虑分页后最后一列的数据的高度小于容器的高度 滚动条是否会出现
+  // useEffect(() => {
+  //   // 如果没有垂直滚动条 startRowIndex 永远为0
+  //   if (startRowIndex >= list.length) {
+  //     setStartRowIndex(0);
+  //     setStartOffset(0);
+  //     setStartRowIndex(0);
+  //     setScrollTop(0);
+  //   }
+  // }, [list, startRowIndex]);
+  // useEffect(() => {
+  //   // 如果没有垂直滚动条 startRowIndex 永远为0
+  //   if (startRowIndex >= currentPageData.length) {
+  //     setStartRowIndex(0);
+  //     setStartOffset(0);
+  //     setScrollTop(0);
+  //   }
+  // }, [currentPageData, startRowIndex]);
 
   useEffect(() => {
     handleHorizontalScroll(lastScrollLeft.current);
@@ -1355,103 +1354,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       </div>
     );
   };
-
-  // 1. 考虑没有设置height 时候展示数据范围 没有设置height 就不展示滚动条 设置了height 需要和容器的高度做对比
-  // 2. 考虑分页时候设置pageSize 大于renderMaxRows
-  // const renderBody = () => {
-  //   return (
-  //     <ScrollBars onHorizontalScroll={handleHorizontalScroll}>
-  //       <div ref={tbodyRef} className="table-tbody">
-  //         <table style={{ width: scrollWidth }}>
-  //           <Colgroup columns={flattenColumns} />
-  //           <Tbody
-  //             empty={empty}
-  //             striped={!!striped}
-  //             bordered={!!bordered}
-  //             selectionType={selectionType}
-  //             startRowIndex={startRowIndex}
-  //             dataSource={currDataSource}
-  //             // dataSource={
-  //             //   virtualized
-  //             //     ? currentPageData.slice(startRowIndex, startRowIndex + getRenderMaxRows())
-  //             //     : currentPageData
-  //             // }
-  //             columns={flattenColumns}
-  //             keyLevelMap={keyLevelMap}
-  //             getRecordKey={getRecordKey}
-  //             selectedKeys={selectedKeys}
-  //             halfSelectedKeys={halfSelectedKeys}
-  //             expandedRowKeys={expandedRowKeys}
-  //             treeProps={treeProps}
-  //             expandable={expandable}
-  //             rowSelection={rowSelection}
-  //             rowClassName={rowClassName}
-  //             rowStyle={rowStyle}
-  //             cellClassName={cellClassName}
-  //             cellStyle={cellStyle}
-  //             onRowEvents={onRowEvents}
-  //             onCellEvents={onCellEvents}
-  //             handleSelect={handleSelect}
-  //             handleExpand={handleExpand}
-  //             treeExpandKeys={treeExpandKeys}
-  //             handleTreeExpand={handleTreeExpand}
-  //             onUpdateRowHeight={handleUpdateRowHeight}
-  //           />
-  //         </table>
-  //       </div>
-  //     </ScrollBars>
-  //   );
-  //   // return (
-  //   //   <VirtualList
-  //   //     scrollWidth={scrollWidth}
-  //   //     // scrollWidth={getScrollWidth()}
-  //   //     scrollHeight={scrollHeight}
-  //   //     scrollTop={scrollTop}
-  //   //     scrollLeft={scrollLeft}
-  //   //     showScrollbarX={showScrollbarX}
-  //   //     showScrollbarY={showScrollbarY}
-  //   //     onMount={handleMount}
-  //   //     onScrollVertical={handleScrollVertical}
-  //   //     onScrollHorizontal={handleScrollHorizontal}
-  //   //   >
-  //   //     <div
-  //   //       className="table-tbody"
-  //   //       ref={tbodyRef}
-  //   //       style={{
-  //   //         width: scrollWidth,
-  //   //         marginTop: `${startOffset}px`,
-  //   //         transform: `translate(-${scrollLeft}px, -${scrollTop}px)`,
-  //   //       }}
-  //   //     >
-  //   //       <table style={{ width: scrollWidth }}>
-  //   //         <Colgroup colWidths={colWidths} columns={columnsWithWidth} />
-  //   //         <Tbody
-  //   //           {...props}
-  //   //           bordered
-  //   //           empty={empty}
-  //   //           isTree={isTree}
-  //   //           scrollLeft={scrollLeft}
-  //   //           offsetRight={offsetRight}
-  //   //           startRowIndex={startRowIndex}
-  //   //           // startRowIndex={0}
-  //   //           // dataSource={list}
-  //   //           dataSource={list.slice(startRowIndex, startRowIndex + getRenderMaxRows())}
-  //   //           // columns={flatColumns}
-  //   //           columns={columnsWithWidth}
-  //   //           treeLevelMap={treeLevel.current}
-  //   //           treeExpandKeys={treeExpandKeys}
-  //   //           selectedKeys={selectedKeys}
-  //   //           halfSelectedKeys={halfSelectedKeys}
-  //   //           onSelect={handleSelect}
-  //   //           onTreeExpand={handleTreeExpand}
-  //   //           onBodyRender={handleBodyRender}
-  //   //           onUpdateRowHeight={handleUpdateRowHeight}
-  //   //         />
-  //   //       </table>
-  //   //     </div>
-  //   //   </VirtualList>
-  //   // );
-  // };
 
   const renderHeader = () => {
     return (
