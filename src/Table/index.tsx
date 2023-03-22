@@ -354,10 +354,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const lastStartRowIndex = useRef<number>(0);
 
-  const virtualContainerRef = useRef<HTMLDivElement>(null);
-
-  // const scrollBarRef = useRef<HTMLDivElement>(null);
-
   const [isMount, setIsMount] = useState<boolean>(false);
 
   const [cachePosition, setCachePosition] = useState<CachePositionType[]>(() => {
@@ -383,21 +379,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     setCachePosition(positions);
   }, [dataSource]);
 
-  const [virtualContainerWidth, setVirtualContainerWidth] = useState<number>(0);
-
-  const [containerWidth, setContainerWidth] = useState<number>(0);
-
-  const [virtualContainerHeight, setVirtualContainerHeight] = useState<number>(0);
-
   const [scrollWidth, setScrollWidth] = useState<number>(width || 0);
 
   const [startRowIndex, setStartRowIndex] = useState<number>(0);
-
-  const [scrollTop, setScrollTop] = useState<number>(0);
-
-  const [scrollLeft, setScrollLeft] = useState<number>(0);
-
-  // const [startOffset, setStartOffset] = useState<number>(0);
 
   // todo 应该是基于list 进行获取所有records keys
   // todo list 如果在这里添加了treeChilren 数据遇到虚拟列表会被切分 应该放到tbody 中处理 已处理 待测试
@@ -406,10 +390,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // todo 滚动到底部了但是改变了列宽引起的高度变化 scrollTop 的更新计算 width: 150 -> 180
   // todo 考虑点击树形的第一行和最后一行折叠icon 虚拟滚动会不会出现空白 等到handleUpdateRowHeight 修复了
   // todo 待测试如果是可变行高会不会触发重新计算
-  // 2. 考虑分页时候设置pageSize 大于renderMaxRows
-  // const scrollHeight = useMemo(() => {
-  //   return getSumHeight(0, currentPageData.length);
-  // }, [getSumHeight, currentPageData]);
 
   const handleResize = useCallback(
     (targetColumns: PrivateColumnsType<T>) => {
@@ -631,37 +611,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     }
   };
 
-  // const handleScrollVertical = (offset: number, availableSize: number) => {
-  //   setScrollTop((prev) => {
-  //     let newOffset = prev + offset;
-  //     newOffset = Math.max(0, newOffset);
-  //     newOffset = Math.min(newOffset, scrollHeight - availableSize);
-  //     if (prev !== newOffset) {
-  //       const item = cachePosition.find((p) => p.bottom >= newOffset);
-  //       if (item && item.index !== lastStartRowIndex.current) {
-  //         // console.log(`item.index: ${item.index}`);
-  //         lastStartRowIndex.current = item.index;
-  //         setStartOffset(item.top);
-  //         setStartRowIndex(item.index);
-  //       }
-  //     }
-  //     return newOffset;
-  //   });
-  //   // const item = cachePosition.find((p) => p.bottom >= offset);
-  //   // if (item && item.index !== startRowIndex) {
-  //   //   // console.log(`item.index: ${item.index}`);
-  //   //   setStartOffset(item.top);
-  //   //   setStartRowIndex(item.index);
-  //   // }
-  //   // if (offset !== scrollTop) {
-  //   //   setScrollTop(offset);
-  //   // }
-  // };
-
-  // const handleScrollHorizontal = (offset: number) => {
-  //   setScrollLeft(offset);
-  // };
-
   // useEffect(() => {
   //   if (pagination && 'current' in pagination) {
   //     setCurrentPage(pagination?.current || 1);
@@ -684,200 +633,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     });
     return isAllChecked ? true : isHalfChecked ? 'indeterminate' : false;
   }, [selectedKeys, currentPageAllKeys]);
-
-  // const handleMount = (vWidth: number, vHeight: number) => {
-  //   setVirtualContainerWidth(vWidth);
-  //   setVirtualContainerHeight(vHeight);
-  // };
-
-  // useEffect(() => {
-  //   if (virtualContainerRef.current) {
-  //     const { height: containerHeight } = virtualContainerRef.current.getBoundingClientRect();
-  //     setVirtualContainerHeight(containerHeight);
-  //   }
-  // }, []);
-
-  // useEffect(() => {
-  //   let ticking = false;
-  //
-  //   let y = 0;
-  //   let pixelX = 0;
-  //   let pixelY = 0;
-  //
-  //   const updateScrollbarPosition = (offset: number) => {
-  //     if (scrollBarRef.current) {
-  //       const thumbSize = scrollBarRef.current.clientHeight;
-  //       const ratio =
-  //         (scrollHeight - virtualContainerHeight) / (virtualContainerHeight - thumbSize);
-  //       scrollBarRef.current.style.transform = `translateY(${offset / ratio}px)`;
-  //     }
-  //   };
-  //
-  //   const handleWheel = (event: any) => {
-  //     const target = getParent(event.target, virtualContainerRef.current);
-  //     if (target !== virtualContainerRef.current) return;
-  //     const normalized = normalizeWheel(event);
-  //     pixelX = normalized.pixelX;
-  //     pixelY = normalized.pixelY;
-  //
-  //     if (Math.abs(pixelX) > Math.abs(pixelY)) {
-  //       pixelY = 0;
-  //     } else {
-  //       pixelX = 0;
-  //     }
-  //
-  //     // vertical wheel
-  //     if (pixelX === 0) {
-  //       y += pixelY;
-  //       y = Math.max(0, y);
-  //       y = Math.min(y, scrollHeight - virtualContainerHeight);
-  //
-  //       if (y !== lastScrollTop.current) {
-  //         const item = cachePosition.find((p) => p.bottom > y);
-  //         if (item) {
-  //           if (lastStartRowIndex.current !== item.index) {
-  //             setStartRowIndex(item.index);
-  //             lastStartRowIndex.current = item.index;
-  //           }
-  //           const offset = y - item.top;
-  //           updateScrollbarPosition(y);
-  //           tbodyRef.current.style.transform = `translateY(-${offset}px)`;
-  //         }
-  //         lastScrollTop.current = y;
-  //       }
-  //
-  //       pixelY = 0;
-  //     }
-  //
-  //     // horizontal wheel
-  //     // if (pixelY.current === 0) {
-  //     //   let offset = scrollLeft + pixelX.current;
-  //     //   offset = Math.max(0, offset);
-  //     //   offset = Math.min(offset, scrollWidth - virtualContainerAvailableWidth);
-  //     //   if (offset === scrollLeft) return;
-  //     //   handleHorizontalScroll(offset);
-  //     //   pixelX.current = 0;
-  //     // }
-  //     ticking = false;
-  //   };
-  //
-  //   const wheelListener = (event: any) => {
-  //     if (!ticking) {
-  //       requestAnimationFrame(() => {
-  //         handleWheel(event);
-  //       });
-  //       ticking = true;
-  //     }
-  //     event.preventDefault();
-  //   };
-  //
-  //   virtualContainerRef.current?.addEventListener('wheel', wheelListener, { passive: false });
-  //
-  //   return () => {
-  //     virtualContainerRef.current?.removeEventListener('wheel', wheelListener);
-  //   };
-  // }, [scrollHeight, virtualContainerHeight, cachePosition]);
-
-  // todo 这个获取有问题 如果在不同demo 之间切换获取到的值偏大
-  // useEffect(() => {
-  //   if (tableContainer.current) {
-  //     setContainerWidth(tableContainer.current.clientWidth);
-  //   }
-  // }, []);
-
-  // const handleBarScroll = (offset: number) => {
-  //   offset = Math.max(0, offset);
-  //   offset = Math.min(offset, scrollHeight - virtualContainerHeight);
-  //   if (offset !== lastScrollTop.current) {
-  //     const item = cachePosition.find((p) => p.bottom > offset);
-  //     if (item) {
-  //       if (lastStartRowIndex.current !== item.index) {
-  //         setStartRowIndex(item.index);
-  //         lastStartRowIndex.current = item.index;
-  //       }
-  //       if (tbodyRef.current) {
-  //         tbodyRef.current.style.transform = `translateY(-${offset - item.top}px)`;
-  //       }
-  //     }
-  //     lastScrollTop.current = offset;
-  //   }
-  // };
-
-  // const renderVirtualBody = () => {
-  //   return (
-  //     <div
-  //       className={classnames({
-  //         'virtual-container': true,
-  //       })}
-  //       ref={virtualContainerRef}
-  //     >
-  //       <div className="virtual-content">
-  //         <div
-  //           className="table-tbody"
-  //           ref={tbodyRef}
-  //           // style={{
-  //           //   width: scrollWidth,
-  //           //   marginTop: `${startOffset}px`,
-  //           //   transform: `translate(-${scrollLeft}px, -${scrollTop}px)`,
-  //           // }}
-  //         >
-  //           <table style={{ width: scrollWidth }}>
-  //             <Colgroup columns={flattenColumns} />
-  //             <Tbody
-  //               empty={empty}
-  //               striped={!!striped}
-  //               bordered={!!bordered}
-  //               selectionType={selectionType}
-  //               startRowIndex={startRowIndex}
-  //               dataSource={currentPageData.slice(
-  //                 startRowIndex,
-  //                 startRowIndex + getRenderMaxRows(),
-  //               )}
-  //               columns={flattenColumns}
-  //               keyLevelMap={keyLevelMap}
-  //               getRecordKey={getRecordKey}
-  //               selectedKeys={selectedKeys}
-  //               halfSelectedKeys={halfSelectedKeys}
-  //               expandedRowKeys={expandedRowKeys}
-  //               treeProps={treeProps}
-  //               expandable={expandable}
-  //               rowSelection={rowSelection}
-  //               rowClassName={rowClassName}
-  //               rowStyle={rowStyle}
-  //               cellClassName={cellClassName}
-  //               cellStyle={cellStyle}
-  //               onRowEvents={onRowEvents}
-  //               onCellEvents={onCellEvents}
-  //               handleSelect={handleSelect}
-  //               handleExpand={handleExpand}
-  //               treeExpandKeys={treeExpandKeys}
-  //               handleTreeExpand={handleTreeExpand}
-  //               onUpdateRowHeight={handleUpdateRowHeight}
-  //             />
-  //           </table>
-  //         </div>
-  //       </div>
-  //       {showScrollbarY ? (
-  //         <VirtualScrollBar
-  //           orientation="vertical"
-  //           size={virtualContainerHeight}
-  //           contentSize={scrollHeight}
-  //           ref={scrollBarRef}
-  //           onScroll={handleBarScroll}
-  //         />
-  //       ) : null}
-  //       {/*{showScrollbarY ? (*/}
-  //       {/*  <ScrollBar*/}
-  //       {/*    orientation="vertical"*/}
-  //       {/*    size={virtualContainerHeight}*/}
-  //       {/*    contentSize={scrollHeight}*/}
-  //       {/*    offset={scrollTop}*/}
-  //       {/*    onScroll={handleVerticalScroll}*/}
-  //       {/*  />*/}
-  //       {/*) : null}*/}
-  //     </div>
-  //   );
-  // };
 
   const mouseLeave = useRef<boolean>(true);
 
