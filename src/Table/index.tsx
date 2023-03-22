@@ -314,7 +314,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const [sorterStates, getSortData, handleSortChange] = useSorter(mergeColumns, onSort);
 
-  const [currentPage, pageSize, updateCurrentPage, updatePageSize] = usePagination(pagination);
+  const [currentPage, pageSize, updateCurrentPage, handlePaginationChange] =
+    usePagination(pagination);
 
   const [expandedRowKeys, handleExpand] = useExpand(allKeys, expandable);
 
@@ -356,6 +357,10 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const [isMount, setIsMount] = useState<boolean>(false);
 
+  const [scrollWidth, setScrollWidth] = useState<number>(width || 0);
+
+  const [startRowIndex, setStartRowIndex] = useState<number>(0);
+
   const [cachePosition, setCachePosition] = useState<CachePositionType[]>(() => {
     return dataSource.map((d, index) => {
       return {
@@ -379,10 +384,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     setCachePosition(positions);
   }, [dataSource]);
 
-  const [scrollWidth, setScrollWidth] = useState<number>(width || 0);
-
-  const [startRowIndex, setStartRowIndex] = useState<number>(0);
-
   // todo 应该是基于list 进行获取所有records keys
   // todo list 如果在这里添加了treeChilren 数据遇到虚拟列表会被切分 应该放到tbody 中处理 已处理 待测试
 
@@ -390,6 +391,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // todo 滚动到底部了但是改变了列宽引起的高度变化 scrollTop 的更新计算 width: 150 -> 180
   // todo 考虑点击树形的第一行和最后一行折叠icon 虚拟滚动会不会出现空白 等到handleUpdateRowHeight 修复了
   // todo 待测试如果是可变行高会不会触发重新计算
+  // todo 这里没有添加依赖项看eslint 在提交时候会不会报错
 
   const handleResize = useCallback(
     (targetColumns: PrivateColumnsType<T>) => {
@@ -466,7 +468,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     [width, flatColumns, addWidthForColumns],
   );
 
-  // todo 这里没有添加依赖项看eslint 在提交时候会不会报错
   useEffect(() => {
     if (isMount) {
       handleResize(initMergeColumns);
@@ -595,30 +596,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     document.addEventListener('mousemove', handleHeaderMouseMove);
     document.addEventListener('mouseup', handleHeaderMouseUp);
   };
-
-  const handlePaginationChange = (current: number, size: number) => {
-    // todo current 条件是否成立
-    if (pagination && !('current' in pagination)) {
-      updateCurrentPage(current);
-      // setCurrentPage(current);
-    }
-    if (pagination && !('pageSize' in pagination)) {
-      updatePageSize(size);
-      // setPageSize(size);
-    }
-    if (typeof pagination?.onChange === 'function') {
-      pagination.onChange(current, size);
-    }
-  };
-
-  // useEffect(() => {
-  //   if (pagination && 'current' in pagination) {
-  //     setCurrentPage(pagination?.current || 1);
-  //   }
-  //   if (pagination && 'pageSize' in pagination) {
-  //     setPageSize(pagination?.pageSize || 10);
-  //   }
-  // }, [pagination]);
 
   // 4. 待测试-分页情况下表头的全选只针对当前页面数据
   const checked = useMemo(() => {

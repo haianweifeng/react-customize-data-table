@@ -96,6 +96,7 @@ const App = () => {
   return (
     <Table
       bordered
+      virtualized={false}
       columns={columns}
       dataSource={data}
       // rowSelection={rowSelection}

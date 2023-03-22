@@ -14,22 +14,33 @@ function usePagination(pagination?: PaginationProps) {
     setCurrentPage(page);
   }, []);
 
-  const updatePageSize = useCallback((size: number) => {
-    setPageSize(size);
-  }, []);
+  const handlePaginationChange = useCallback(
+    (current: number, size: number) => {
+      if (pagination && !('current' in pagination)) {
+        setCurrentPage(current);
+      }
+      if (pagination && !('pageSize' in pagination)) {
+        setPageSize(size);
+      }
+      if (typeof pagination?.onChange === 'function') {
+        pagination.onChange(current, size);
+      }
+    },
+    [pagination],
+  );
 
   useEffect(() => {
     if (pagination && 'current' in pagination) {
       setCurrentPage(pagination?.current || 1);
     }
-  }, [pagination]);
+  }, [pagination?.current]);
 
   useEffect(() => {
     if (pagination && 'pageSize' in pagination) {
       setPageSize(pagination?.pageSize || 10);
     }
-  }, [pagination]);
+  }, [pagination?.pageSize]);
 
-  return [currentPage, pageSize, updateCurrentPage, updatePageSize] as const;
+  return [currentPage, pageSize, updateCurrentPage, handlePaginationChange] as const;
 }
 export default usePagination;
