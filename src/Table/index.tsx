@@ -322,6 +322,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const [treeExpandKeys, handleTreeExpand] = useTreeExpand(allKeys, treeProps);
 
   // todo 待测试有没有考虑树形中children data 的排序 过滤
+  // todo 应该是基于list 进行获取所有records keys
+  // todo list 如果在这里添加了treeChilren 数据遇到虚拟列表会被切分 应该放到tbody 中处理 已处理 待测试
   const totalData = useMemo(() => {
     return getFilterData(getSortData(dataSource));
   }, [dataSource, getSortData, getFilterData]);
@@ -383,9 +385,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     });
     setCachePosition(positions);
   }, [dataSource]);
-
-  // todo 应该是基于list 进行获取所有records keys
-  // todo list 如果在这里添加了treeChilren 数据遇到虚拟列表会被切分 应该放到tbody 中处理 已处理 待测试
 
   // todo 点击扩展行后引起cachePosition 变化后 scrollTop 的更新计算 setRowHeight
   // todo 滚动到底部了但是改变了列宽引起的高度变化 scrollTop 的更新计算 width: 150 -> 180
@@ -992,6 +991,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     handleHorizontalScroll(lastScrollLeft.current, false);
   }, [mergeColumns, currDataSource, expandedRowKeys, handleHorizontalScroll]);
 
+  const isTree = useMemo(() => {
+    const data = currentPageData.filter((d) => d?.children && d.children.length);
+    return data.length > 0;
+  }, [currentPageData]);
+
   const renderBody = () => {
     return (
       <div className="tbody-container">
@@ -1004,6 +1008,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             <Colgroup columns={flattenColumns} />
             <Tbody
               empty={empty}
+              isTree={isTree}
               striped={!!striped}
               bordered={!!bordered}
               selectionType={selectionType}

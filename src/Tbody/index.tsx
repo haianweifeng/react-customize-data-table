@@ -11,6 +11,7 @@ import type {
 
 interface TbodyProps<T> {
   empty: React.ReactNode;
+  isTree: boolean;
   dataSource: T[];
   striped: boolean;
   bordered: boolean;
@@ -53,6 +54,7 @@ interface TbodyProps<T> {
 function Tbody<T extends { key?: number | string; children?: T[] }>(props: TbodyProps<T>) {
   const {
     empty,
+    isTree,
     columns,
     bordered,
     dataSource,
@@ -69,12 +71,6 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
     ...restProps
   } = props;
   // console.log('tbody render');
-  // todo 是不是需要放到Tbody 中判断 如果是虚拟列表发生了截取呢
-  const isTree = useMemo(() => {
-    const data = dataSource.filter((d) => d?.children && d.children.length);
-    return data.length > 0;
-  }, [dataSource]);
-
   const flatRecords = useCallback(
     (data: T[]) => {
       const records: T[] = [];

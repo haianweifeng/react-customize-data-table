@@ -240,6 +240,7 @@ const App = () => {
 
   return (
     <Table
+      virtualized
       treeProps={
         {
           // treeColumnsName: 'Address',
