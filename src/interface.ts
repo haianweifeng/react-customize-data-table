@@ -233,6 +233,7 @@ export type TreeLevelType = Record<string | number, number>;
 
 export type RowKeyType<T> = string | ((row: T) => string | number);
 
+// export type CachePositionType = { index: number; top: number; bottom: number; height: number };
 export type CachePositionType = { index: number; top: number; bottom: number; height: number };
 
 export type ResizeInfoType = { startPosX: number; resizingRect: DOMRect };

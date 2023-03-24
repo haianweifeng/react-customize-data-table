@@ -19,6 +19,8 @@ export type FilterMenus = { label: string; value: string };
 
 export type ResizeInfo = { startPosX: number; resizingRect: DOMRect };
 
+export type CachePosition = { index: number; top: number; bottom: number; height: number };
+
 export type Sorter<T> = {
   compare: (rowA: T, rowB: T) => number;
   weight: number;

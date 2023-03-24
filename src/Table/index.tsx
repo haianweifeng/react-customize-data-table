@@ -25,6 +25,7 @@ import type {
   PrivateColumnType,
   PrivateColumnGroupType,
   ResizeInfo,
+  CachePosition,
 } from '../interface1';
 import VirtualList from '../VirtualList';
 import type { PaginationProps } from '../index';
@@ -39,6 +40,7 @@ import VirtualScrollBar from '../VirtualScrollBar';
 import Bar from '../Bar';
 import normalizeWheel from 'normalize-wheel';
 import ResizeObserver from 'resize-observer-polyfill';
+import { isEqual } from 'lodash';
 // import styles from './index.less';
 
 export interface TableProps<T> {
@@ -340,6 +342,25 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return totalData;
   }, [pagination, pageSize, currentPage, totalData]);
 
+  const getDataByTreeExpandKeys = useCallback(
+    (data: T[]) => {
+      const records: T[] = [];
+      data.map((d) => {
+        records.push(d);
+        const recordKey = getRecordKey(d);
+        if (d.children && d.children.length && treeExpandKeys.indexOf(recordKey) >= 0) {
+          records.push(...getDataByTreeExpandKeys(d.children));
+        }
+      });
+      return records;
+    },
+    [treeExpandKeys],
+  );
+
+  const displayedData = useMemo(() => {
+    return getDataByTreeExpandKeys(currentPageData);
+  }, [currentPageData, getDataByTreeExpandKeys]);
+
   const flattenCurrentPageData = useMemo(() => {
     return flatRecords(currentPageData);
   }, [flatRecords, currentPageData]);
@@ -363,28 +384,42 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const [startRowIndex, setStartRowIndex] = useState<number>(0);
 
-  const [cachePosition, setCachePosition] = useState<CachePositionType[]>(() => {
-    return dataSource.map((d, index) => {
-      return {
-        index,
-        top: index * rowHeight,
-        bottom: (index + 1) * rowHeight,
-        height: rowHeight,
-      };
-    });
-  });
+  // const [cachePosition, setCachePosition] = useState<CachePosition[]>(() => {
+  //   return dataSource.map((d, index) => {
+  //     return {
+  //       index,
+  //       top: index * rowHeight,
+  //       bottom: (index + 1) * rowHeight,
+  //       height: rowHeight,
+  //     };
+  //   });
+  // });
 
+  const lastCachePosition = useRef<CachePosition[]>([]);
+
+  const [cachePosition, setCachePosition] = useState<CachePosition[]>([]);
+  // 全打开后 点击隐藏后高度出现空白
+  // 如果是有展开行且是虚拟滚动 展开行再后面滚动时候才会渲染会导致tbodyScrollHeight处于变化中
+  // expandedRowKeys 是不是只要在mount 时候考虑 是这个useEffect 更新快还是handleUpdate 更新快 结果是不需要加入依赖项否则有bug
   useEffect(() => {
-    const positions = dataSource.map((d, index) => {
-      return {
+    const positions: CachePosition[] = [];
+    getDataByTreeExpandKeys(dataSource).map((d, index) => {
+      const recordKey = getRecordKey(d);
+      const rowExpandable = expandable?.rowExpandable && expandable?.rowExpandable(d);
+      const finalHeight =
+        expandedRowKeys.indexOf(recordKey) >= 0 && rowExpandable ? rowHeight * 2 : rowHeight;
+      const top = index === 0 ? 0 : positions[index - 1].bottom;
+      positions.push({
         index,
-        top: index * rowHeight,
-        bottom: (index + 1) * rowHeight,
-        height: rowHeight,
-      };
+        top,
+        bottom: top + finalHeight,
+        height: finalHeight,
+      });
     });
+    lastCachePosition.current = positions;
     setCachePosition(positions);
-  }, [dataSource]);
+    // eslint-disable-line react-hooks/exhaustive-deps
+  }, [dataSource, rowHeight, getDataByTreeExpandKeys]);
 
   // todo 点击扩展行后引起cachePosition 变化后 scrollTop 的更新计算 setRowHeight
   // todo 滚动到底部了但是改变了列宽引起的高度变化 scrollTop 的更新计算 width: 150 -> 180
@@ -636,30 +671,90 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const [showScrollbarY, setShowScrollbarY] = useState<boolean>(false);
   const [showScrollbarX, setShowScrollbarX] = useState<boolean>(false);
 
+  const handleUpdate = useCallback((rects: { rowIndex: number; rowHeight: number }[]) => {
+    let hasChange = false;
+    const prevPosition = [...lastCachePosition.current];
+    rects.map((rect, i) => {
+      const index = prevPosition.findIndex((c) => c.index === rect.rowIndex);
+      if (index >= 0) {
+        const item = { ...prevPosition[index] };
+        const newRowHeight = rect.rowHeight;
+        const diff = item.height - newRowHeight;
+        if (diff) {
+          hasChange = true;
+          // console.log(`index: ${index}`);
+          // todo 如果存在差距的话得更新下scrollTop  startOffset
+          const top = index === 0 ? 0 : prevPosition[index - 1].bottom;
+          prevPosition[index].height = newRowHeight;
+          prevPosition[index].top = top;
+          prevPosition[index].bottom = top + newRowHeight;
+          for (let j = index + 1; j < prevPosition.length; j++) {
+            const topValue = prevPosition[j - 1].bottom;
+            prevPosition[j].top = topValue;
+            prevPosition[j].bottom = prevPosition[j].height + topValue;
+          }
+          // item.height = newRowHeight;
+          // item.bottom = item.bottom - diff;
+          // item.top = index === 0 ? 0 : prevPosition[index - 1].bottom;
+          // prevPosition.splice(index, 1, item);
+          // for (let j = index + 1; j < prevPosition.length; j++) {
+          //   prevPosition[j].top = prevPosition[j - 1].bottom;
+          //   prevPosition[j].bottom = prevPosition[j].bottom - diff;
+          // }
+        }
+      }
+    });
+    if (hasChange) {
+      lastCachePosition.current = prevPosition;
+      setCachePosition(prevPosition);
+    }
+  }, []);
+
   // todo 为什么输出mergeColumns 或者cachePosition 都是好几遍 是不是那些废弃代码里的setState 导致的
   const handleUpdateRowHeight = useCallback((newRowHeight: number, rowIndex: number) => {
     // console.log(`rowHeight: ${newRowHeight}`);
     // console.log(`rowIndex: ${rowIndex}`);
-    setCachePosition((prevPosition) => {
-      const index = prevPosition.findIndex((c) => c.index === rowIndex);
-      if (index >= 0) {
-        const item = { ...prevPosition[index] };
-        const diff = item.height - newRowHeight;
-        if (diff) {
-          // todo 如果存在差距的话得更新下scrollTop  startOffset
-          item.height = newRowHeight;
-          item.bottom = item.bottom - diff;
-          for (let j = index + 1; j < prevPosition.length; j++) {
-            prevPosition[j].top = prevPosition[j - 1].bottom;
-            prevPosition[j].bottom = prevPosition[j].bottom - diff;
-          }
-          prevPosition.splice(index, 1, item);
+    const prevPosition = [...lastCachePosition.current];
+    const index = prevPosition.findIndex((c) => c.index === rowIndex);
+    if (index >= 0) {
+      const item = { ...prevPosition[index] };
+      const diff = item.height - newRowHeight;
+      if (diff) {
+        // todo 如果存在差距的话得更新下scrollTop  startOffset
+        item.height = newRowHeight;
+        item.bottom = item.bottom - diff;
+        for (let j = index + 1; j < prevPosition.length; j++) {
+          prevPosition[j].top = prevPosition[j - 1].bottom;
+          prevPosition[j].bottom = prevPosition[j].bottom - diff;
         }
+        prevPosition.splice(index, 1, item);
+        lastCachePosition.current = prevPosition;
+        setCachePosition(prevPosition);
       }
-      return [...prevPosition];
-    });
+    }
+    // if (!isEqual(prevPosition, lastCachePosition.current)) {
+    //   setCachePosition(prevPosition);
+    // }
+    // lastCachePosition.current = prevPosition;
+    // setCachePosition((prevPosition) => {
+    //   const index = prevPosition.findIndex((c) => c.index === rowIndex);
+    //   if (index >= 0) {
+    //     const item = { ...prevPosition[index] };
+    //     const diff = item.height - newRowHeight;
+    //     if (diff) {
+    //       // todo 如果存在差距的话得更新下scrollTop  startOffset
+    //       item.height = newRowHeight;
+    //       item.bottom = item.bottom - diff;
+    //       for (let j = index + 1; j < prevPosition.length; j++) {
+    //         prevPosition[j].top = prevPosition[j - 1].bottom;
+    //         prevPosition[j].bottom = prevPosition[j].bottom - diff;
+    //       }
+    //       prevPosition.splice(index, 1, item);
+    //     }
+    //   }
+    //   return [...prevPosition];
+    // });
   }, []);
-  // console.log(cachePosition);
 
   const getSumHeight = useCallback(
     (start: number, end: number) => {
@@ -671,17 +766,28 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     },
     [cachePosition, rowHeight],
   );
-
+  // 改成平摊数据后的高度
   const tbodyScrollHeight = useMemo(() => {
-    return getSumHeight(0, currentPageData.length);
-  }, [getSumHeight, currentPageData]);
+    return getSumHeight(0, displayedData.length);
+  }, [getSumHeight, displayedData]);
   // console.log(`tbodyScrollHeight: ${tbodyScrollHeight}`);
+  // console.log(cachePosition);
 
   useEffect(() => {
     lastScrollTop.current = 0;
     tbodyScrollTop.current = 0;
     setStartRowIndex(0);
   }, [sorterStates, filterStates, currentPage, pageSize]);
+  // todo 待测试树形数据 所有展开 最后一行也是树形数据 然后关闭最后一行
+  // 如果扩展行是全打开然后滚动到底部的话再关闭某一行的扩展行 这时候滚动范围是按当时全部打开的高度计算超过了实际的滚动范围
+  useEffect(() => {
+    // console.log('约束');
+    tbodyScrollTop.current = Math.min(
+      tbodyScrollTop.current,
+      tbodyScrollHeight - tbodyClientHeight,
+    );
+    lastScrollTop.current = Math.min(lastScrollTop.current, tbodyScrollHeight - tbodyClientHeight);
+  }, [expandedRowKeys, tbodyScrollHeight, tbodyClientHeight]);
 
   useEffect(() => {
     const update = () => {
@@ -703,8 +809,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             (clientHeight / tbodyScrollHeight) * clientHeight,
             BAR_THUMB_SIZE,
           );
+          // console.log(`tbodyScrollHeight: ${tbodyScrollHeight}`);
+          // console.log(`lastScrollTop.current: ${lastScrollTop.current}`);
           const scale = (tbodyScrollHeight - clientHeight) / (clientHeight - thumbSize);
+          // const y = Math.min(lastScrollTop.current, tbodyScrollHeight - clientHeight) / scale;
+          // console.log(`final: ${y}`);
           barYRef.current.style.transform = `translateY(${lastScrollTop.current / scale}px)`;
+          // barYRef.current.style.transform = `translateY(${Math.min(lastScrollTop.current, tbodyScrollHeight - clientHeight) / scale}px)`;
         }
         setTbodyClientWidth(clientWidth);
         setTbodyScrollWidth(scrollWidth);
@@ -782,7 +893,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   }, []);
 
   const handleVerticalScroll = useCallback(
-    (offsetTop: number) => {
+    (offsetTop: number, isWheel = true) => {
       // console.log(`vertical: ${offsetTop}`);
       if (virtualized) {
         const item = cachePosition.find((p) => p.bottom > offsetTop);
@@ -804,7 +915,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         tbodyScrollTop.current = offsetTop;
       }
       lastScrollTop.current = offsetTop;
-      onScroll && onScroll(lastScrollLeft.current, offsetTop);
+      if (isWheel) {
+        onScroll && onScroll(lastScrollLeft.current, offsetTop);
+      }
     },
     [cachePosition, virtualized],
   );
@@ -982,19 +1095,27 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const currDataSource = useMemo(() => {
     return virtualized
-      ? currentPageData.slice(startRowIndex, startRowIndex + getRenderMaxRows())
-      : currentPageData;
-  }, [virtualized, currentPageData, startRowIndex, getRenderMaxRows]);
+      ? displayedData.slice(startRowIndex, startRowIndex + getRenderMaxRows())
+      : displayedData;
+  }, [virtualized, displayedData, startRowIndex, getRenderMaxRows]);
   // console.log(currDataSource);
+
+  useEffect(() => {
+    handleVerticalScroll(lastScrollTop.current, false);
+  }, [expandedRowKeys, handleVerticalScroll]);
+
+  // useEffect(() => {
+  //   handleVerticalScroll(Math.min(lastScrollTop.current, tbodyScrollHeight - tbodyClientHeight), false);
+  // }, [expandedRowKeys, tbodyScrollHeight, tbodyClientHeight, handleVerticalScroll]);
 
   useEffect(() => {
     handleHorizontalScroll(lastScrollLeft.current, false);
   }, [mergeColumns, currDataSource, expandedRowKeys, handleHorizontalScroll]);
 
   const isTree = useMemo(() => {
-    const data = currentPageData.filter((d) => d?.children && d.children.length);
+    const data = displayedData.filter((d) => d?.children && d.children.length);
     return data.length > 0;
-  }, [currentPageData]);
+  }, [displayedData]);
 
   const renderBody = () => {
     return (
@@ -1035,6 +1156,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
               treeExpandKeys={treeExpandKeys}
               handleTreeExpand={handleTreeExpand}
               onUpdateRowHeight={handleUpdateRowHeight}
+              onUpdate={handleUpdate}
             />
           </table>
         </div>

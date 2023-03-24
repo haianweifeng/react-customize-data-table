@@ -145,7 +145,7 @@ for (let i = 0; i < 30; i++) {
   data.push({
     key: i,
     name: 'John Brown',
-    age: i + 1,
+    age: i,
     street: 'Lake Park',
     building: buildings[i % 4],
     number: 2035,
@@ -158,6 +158,7 @@ for (let i = 0; i < 30; i++) {
 
 const App = () => {
   const [list, setList] = useState(data);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([2, 28]);
 
   // useEffect(() => {
   //   setTimeout(() => {
@@ -189,19 +190,20 @@ const App = () => {
     column: ColumnsType<DataType>,
     event: Event,
   ) => {
-    console.log(`newWidth: ${newWidth}`);
-    console.log(`oldWidth: ${oldWidth}`);
-    console.log(column);
-    console.log(event);
+    // console.log(`newWidth: ${newWidth}`);
+    // console.log(`oldWidth: ${oldWidth}`);
+    // console.log(column);
+    // console.log(event);
   };
 
   const handleScroll = (scrollLeft: number, scrollTop: number) => {
-    console.log(`scrollLeft: ${scrollLeft}`);
-    console.log(`scrollTop: ${scrollTop}`);
+    // console.log(`scrollLeft: ${scrollLeft}`);
+    // console.log(`scrollTop: ${scrollTop}`);
   };
 
   return (
     <Table
+      virtualized
       columns={columns}
       dataSource={list}
       bordered
@@ -228,7 +230,7 @@ const App = () => {
         return {
           onClick: () => {
             // console.log(`rowIndex: ${rowIndex}`);
-            console.log('header row click');
+            // console.log('header row click');
           },
           // onMouseEnter: () => {
           //   console.log('row mouse enter');
@@ -246,7 +248,7 @@ const App = () => {
           onClick: () => {
             // console.log(column);
             // console.log(`rowIndex: ${rowIndex}`);
-            console.log('cell click');
+            // console.log('cell click');
           },
           // onMouseEnter: () => {
           //   console.log('cell mouse enter');
@@ -261,12 +263,20 @@ const App = () => {
       }}
       // rowSelection={{}}
       expandable={{
+        // expandedRowKeys,
+        // defaultExpandAllRows: true,
         expandedRowRender: (record: DataType) => {
           return 'expand content';
           // return record.expandContent;
         },
         rowExpandable: (record: DataType) => {
           return record.key % 2 === 0;
+        },
+        onExpand: (expanded: boolean, record: DataType) => {
+          // console.log(`expanded: ${expanded}`, 'record: ', record);
+          // setExpandedRowKeys((prev) => {
+          //   return expanded ? [...prev, record.key] : prev.filter((p) => p !== record.key);
+          // });
         },
       }}
       onScroll={handleScroll}

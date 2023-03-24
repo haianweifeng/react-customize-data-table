@@ -70,8 +70,10 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
   const trRef = useRef<HTMLTableRowElement>(null);
   const expandTrRef = useRef<HTMLTableRowElement>(null);
 
+  // 放到tbody 中检测所有tr 渲染完成再统一把所有行高行号返回给onUpdateRowHeight
   useEffect(() => {
     const update = () => {
+      // console.log('update');
       if (!trRef.current) return;
       let { height } = trRef.current.getBoundingClientRect();
       if (Number.isNaN(height)) height = 0;
@@ -80,7 +82,7 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
         expandHeight = expandTrRef.current.clientHeight;
       }
       const newHeight = height + expandHeight;
-      onUpdateRowHeight(newHeight, rowIndex);
+      // onUpdateRowHeight(newHeight, rowIndex);
     };
 
     const resizeObserver = () => {
@@ -186,6 +188,7 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
   };
 
   const classes: Record<string, boolean> = {
+    row: true,
     'row-even': striped && rowIndex % 2 !== 0,
     'row-odd': striped && rowIndex % 2 === 0,
     'row-selected': !!checked,

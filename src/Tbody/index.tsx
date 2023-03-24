@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useEffect, useRef } from 'react';
 import classnames from 'classnames';
 import Tr from '../Tr';
 import type {
@@ -8,6 +8,7 @@ import type {
   TreeExpandable,
   PrivateColumnsType,
 } from '../interface1';
+import ResizeObserver from 'resize-observer-polyfill';
 
 interface TbodyProps<T> {
   empty: React.ReactNode;
@@ -49,6 +50,7 @@ interface TbodyProps<T> {
   onRowEvents?: (record: T, rowIndex: number) => object;
   onCellEvents?: (record: T, rowIndex: number) => object;
   onUpdateRowHeight: (height: number, rowIndex: number) => void;
+  onUpdate: (rects: { rowIndex: number; rowHeight: number }[]) => void;
 }
 
 function Tbody<T extends { key?: number | string; children?: T[] }>(props: TbodyProps<T>) {
@@ -68,23 +70,67 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
     keyLevelMap,
     startRowIndex,
     tbodyClientWidth,
+    onUpdate,
     ...restProps
   } = props;
   // console.log('tbody render');
-  const flatRecords = useCallback(
-    (data: T[]) => {
-      const records: T[] = [];
-      data.map((d) => {
-        records.push(d);
-        const recordKey = getRecordKey(d);
-        if (d.children && d.children.length && treeExpandKeys.indexOf(recordKey) >= 0) {
-          records.push(...flatRecords(d.children));
-        }
-      });
-      return records;
-    },
-    [treeExpandKeys, getRecordKey],
-  );
+  // const flatRecords = useCallback(
+  //   (data: T[]) => {
+  //     const records: T[] = [];
+  //     data.map((d) => {
+  //       records.push(d);
+  //       const recordKey = getRecordKey(d);
+  //       if (d.children && d.children.length && treeExpandKeys.indexOf(recordKey) >= 0) {
+  //         records.push(...flatRecords(d.children));
+  //       }
+  //     });
+  //     return records;
+  //   },
+  //   [treeExpandKeys, getRecordKey],
+  // );
+
+  const tbodyRef = useRef<any>(null);
+  const resizeObserverIns = useRef<any>(null);
+  // index 是截取后的顺序 应该取原来在列表中的位置 这里不采取是监听 ResizeObserver 是因为获取到的startRowIndex 不准确 导致更新cachePosition 不对
+  useEffect(() => {
+    const update = () => {
+      // console.log(`update start: ${startRowIndex}`);
+      // console.log('tbody mount----');
+      const rects: { rowIndex: number; rowHeight: number }[] = [];
+      tbodyRef.current
+        .querySelectorAll('.row')
+        .forEach((trNode: HTMLTableRowElement, index: number) => {
+          if (!trNode) return;
+          // console.log(`index: ${index}`);
+          // console.log(`start: ${startRowIndex}`);
+          let { height } = trNode.getBoundingClientRect();
+          if (Number.isNaN(height)) height = 0;
+          let expandHeight = 0;
+          if (
+            trNode.nextElementSibling &&
+            trNode.nextElementSibling.classList.contains('row-expand')
+          ) {
+            expandHeight = trNode.nextElementSibling.clientHeight;
+          }
+          // console.log(`finalIndex: ${index + startRowIndex}`);
+          rects.push({ rowIndex: index + startRowIndex, rowHeight: height + expandHeight });
+        });
+      onUpdate && onUpdate(rects);
+    };
+    // const resizeObserver = () => {
+    //   resizeObserverIns.current = new ResizeObserver((entries) => {
+    //     let contentRect = entries[0].contentRect;
+    //     if (!(contentRect.width || contentRect.height)) return;
+    //     console.log(`end----: ${startRowIndex}`);
+    //     update();
+    //   });
+    //   tbodyRef.current && resizeObserverIns.current.observe(tbodyRef.current);
+    // };
+    // console.log(`start----: ${startRowIndex}`);
+    // resizeObserver();
+    if (!tbodyRef.current) return;
+    update();
+  }, [startRowIndex, columns, expandedRowKeys, dataSource, onUpdate]);
 
   const renderTr = (rowData: T, rowIndex: number) => {
     const recordKey = getRecordKey(rowData);
@@ -129,7 +175,7 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
   };
 
   return (
-    <tbody>
+    <tbody ref={tbodyRef}>
       {!dataSource.length ? (
         <tr key="empty-placeholder" className="row-placeholder">
           <td
@@ -142,7 +188,7 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
           </td>
         </tr>
       ) : null}
-      {flatRecords(dataSource).map((d, i: number) => renderTr(d, i + startRowIndex))}
+      {dataSource.map((d, i: number) => renderTr(d, i + startRowIndex))}
     </tbody>
   );
 }
