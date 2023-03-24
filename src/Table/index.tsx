@@ -778,7 +778,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     setStartRowIndex(0);
   }, [sorterStates, filterStates, currentPage, pageSize]);
 
-  // todo 树形结构的分页测试
   // 如果扩展行是全打开然后滚动到底部的话再关闭某一行的扩展行 这时候滚动范围是按当时全部打开的高度计算超过了实际的滚动范围
   useEffect(() => {
     // console.log('约束');

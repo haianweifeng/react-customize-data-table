@@ -52,6 +52,7 @@ const columns: ColumnsType<DataType>[] = [
   //   dataIndex: 'address',
   //   // width: '30%',
   //   key: 'address4',
+  //   fixed: 'right'
   // },
 ];
 
@@ -282,6 +283,9 @@ const App = () => {
   // const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
 
+  const [current, setCurrent] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+
   const rowSelection = {
     // selectedRowKeys,
     onChange: (selectedKeys: (string | number)[], selectedRows: DataType[]) => {
@@ -317,6 +321,15 @@ const App = () => {
       disabled: record.name === 'Jim Green jr.', // Column configuration not to be checked
       name: record.name,
     }),
+  };
+
+  const handleChange = (page: number, size: number) => {
+    setCurrent(page);
+    setPageSize(size);
+  };
+
+  const renderInfo = ({ total }: { current: number; total: number; pageSize: number }) => {
+    return `Total ${total} items`;
   };
 
   return (
@@ -364,6 +377,13 @@ const App = () => {
       bordered
       rowKey="key"
       height={300}
+      pagination={{
+        current,
+        pageSize,
+        align: 'right',
+        layout: ['sizes', 'prev', 'pager', 'next', 'jumper', renderInfo],
+        onChange: handleChange,
+      }}
       onRowEvents={(record: DataType, rowIndex: number) => {
         return {
           onClick: () => {
