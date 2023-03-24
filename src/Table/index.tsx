@@ -423,7 +423,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   // todo 点击扩展行后引起cachePosition 变化后 scrollTop 的更新计算 setRowHeight
   // todo 滚动到底部了但是改变了列宽引起的高度变化 scrollTop 的更新计算 width: 150 -> 180
-  // todo 考虑点击树形的第一行和最后一行折叠icon 虚拟滚动会不会出现空白 等到handleUpdateRowHeight 修复了
   // todo 待测试如果是可变行高会不会触发重新计算
   // todo 这里没有添加依赖项看eslint 在提交时候会不会报错
 
@@ -778,7 +777,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     tbodyScrollTop.current = 0;
     setStartRowIndex(0);
   }, [sorterStates, filterStates, currentPage, pageSize]);
-  // todo 待测试树形数据 所有展开 最后一行也是树形数据 然后关闭最后一行
+
+  // todo 树形结构的分页测试
   // 如果扩展行是全打开然后滚动到底部的话再关闭某一行的扩展行 这时候滚动范围是按当时全部打开的高度计算超过了实际的滚动范围
   useEffect(() => {
     // console.log('约束');

@@ -220,6 +220,62 @@ const data: DataType[] = [
     age: 302,
     address: 'Sidney No. 1 Lake Park',
   },
+  {
+    key: 31,
+    name: '王小虎',
+    age: 60,
+    address: '上海市普陀区金沙江路 1518 弄',
+    children: [
+      {
+        key: 311,
+        name: 'John Brown',
+        age: 42,
+        address: '上海市普陀区金沙江路 1519 弄',
+      },
+      {
+        key: 312,
+        name: 'John Brown jr.',
+        age: 30,
+        address: '上海市普陀区金沙江路 1520 弄',
+        children: [
+          {
+            key: 3121,
+            name: 'Jimmy Brown',
+            age: 16,
+            address: '上海市普陀区金沙江路 1521 弄',
+          },
+        ],
+      },
+      {
+        key: 313,
+        name: 'Jim Green sr.',
+        age: 72,
+        address: '上海市普陀区金沙江路 1522 弄',
+        children: [
+          {
+            key: 3131,
+            name: 'Jim Green',
+            age: 42,
+            address: '上海市普陀区金沙江路 1523 弄',
+            children: [
+              {
+                key: 31311,
+                name: 'Jim Green jr.',
+                age: 25,
+                address: '上海市普陀区金沙江路 1524 弄',
+              },
+              {
+                key: 31312,
+                name: 'Jimmy Green sr.',
+                age: 18,
+                address: '上海市普陀区金沙江路 1525 弄',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 const App = () => {
