@@ -40,7 +40,6 @@ import VirtualScrollBar from '../VirtualScrollBar';
 import Bar from '../Bar';
 import normalizeWheel from 'normalize-wheel';
 import ResizeObserver from 'resize-observer-polyfill';
-import { isEqual } from 'lodash';
 // import styles from './index.less';
 
 export interface TableProps<T> {
@@ -108,10 +107,9 @@ export interface TableProps<T> {
   empty?: string | React.ReactNode;
   /** 默认文案设置 */
   locale?: LocalType;
-  /** 单行表格的预期高度 todo */
+  /** 单行表格的预期高度 */
   rowHeight?: number;
   /** 单次render的最大行数 如果单次渲染的行数不足以撑开容器的高度则renderMaxRows 自动取值为容器可容纳的行数值 todo */
-  // rowsInView?: number;
   renderMaxRows?: number;
   /** 表格宽度 固定列或者产生横向滚动一定要设置width */
   width?: number;
@@ -128,7 +126,7 @@ export interface TableProps<T> {
     column: ColumnType<T>,
     event: Event,
   ) => void;
-  /** 表格行是否可选择配置项 todo header 需要表头空一行 */
+  /** 表格行是否可选择配置项 */
   rowSelection?: RowSelection<T>;
   // /** 排序取消事件 */
   // onSortCancel?: (col: ColumnsType<T>, order: 'asc' | 'desc') => void;
@@ -140,7 +138,7 @@ export interface TableProps<T> {
   }) => void;
   /** 筛选事件 */
   onFilter?: (filterInfo: Record<React.Key, React.Key[]>) => void;
-  /** 配置展开属性 todo header 需要表头空一行 */
+  /** 配置展开属性 */
   expandable?: Expandable<T>;
   /** 配置树形数据属性 */
   treeProps?: TreeExpandable<T>;

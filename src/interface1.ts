@@ -185,7 +185,6 @@ export type PrivateColumnType<T> = ColumnType<T> & {
 };
 
 // todo 约束children 的伸缩功能
-// todo 对于可选择列和可扩展列 设置个warning 提醒说不能设置children
 export type PrivateColumnGroupType<T> = Omit<PrivateColumnType<T>, 'dataIndex' | 'type'> & {
   children: Omit<PrivateColumnsType<T>, 'type'>;
 };

@@ -16,6 +16,14 @@ interface DataType {
 
 const columns: ColumnsType<DataType>[] = [
   {
+    type: 'expand',
+    // children: [
+    //   {
+    //     title: 'hahah',
+    //   }
+    // ]
+  },
+  {
     title: 'Name',
     dataIndex: 'name',
     key: 'name',

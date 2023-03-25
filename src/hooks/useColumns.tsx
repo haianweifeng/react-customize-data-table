@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import omit from 'omit.js';
 import type {
   ColumnsType,
   RowSelection,
@@ -6,6 +7,7 @@ import type {
   PrivateColumnGroupType,
   PrivateColumnType,
   PrivateColumnsType,
+  ColumnGroupType,
 } from '../interface1';
 import { SELECTION_EXPAND_COLUMN_WIDTH } from '../utils/constant';
 import { getColumnKey } from '../utils/util';
@@ -123,9 +125,14 @@ function useColumns<T>(
     originColumns.map((column, index) => {
       if ('type' in column && (column?.type === 'checkbox' || column?.type === 'radio')) {
         existSelection = true;
+        if ('children' in column) {
+          console.error(
+            "column.children is not allowed when column is 'checkbox' | 'radio' | 'expand'.",
+          );
+        }
         mergeColumns.push({
           key: 'SELECTION_COLUMN',
-          ...column,
+          ...omit(column as ColumnGroupType<T>, ['children']),
           _columnKey: getColumnKey(column, 'SELECTION_COLUMN'),
           title: rowSelection?.columnTitle || column.title || '',
           width: rowSelection?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
@@ -135,9 +142,14 @@ function useColumns<T>(
       if ('type' in column && column?.type === 'expand') {
         if (expandable && expandable?.expandedRowRender) {
           existExpand = true;
+          if ('children' in column) {
+            console.error(
+              "column.children is not allowed when column is 'checkbox' | 'radio' | 'expand'.",
+            );
+          }
           mergeColumns.push({
             key: 'EXPAND_COLUMN',
-            ...column,
+            ...omit(column as ColumnGroupType<T>, ['children']),
             _columnKey: getColumnKey(column, 'EXPAND_COLUMN'),
             title: expandable?.columnTitle || column.title || '',
             width: expandable?.columnWidth || SELECTION_EXPAND_COLUMN_WIDTH,
