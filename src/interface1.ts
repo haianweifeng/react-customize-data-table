@@ -128,16 +128,13 @@ export type ColumnType<T> = {
   ellipsis?: boolean | TooltipType;
   /** 表头列合并 */
   colSpan?: number;
-  // headerColSpan?: number;
   /** 是否允许拖拽调整宽度 需开启 border 属性，对于多级表头只支持最后一级表头拖拽调整宽度 */
   resizable?: boolean;
   /** 设置单元格属性 */
   onCell?: (record: T, rowIndex: number) => CellType;
-  // /** 支持的排序方式 todo 好像不需要 */
-  // sortDirections?: ['ascend', 'descend'];
   /** 默认排序 defaultSortOrder */
   defaultSortOrder?: 'asc' | 'desc';
-  // /** 排序的受控属性,外界可用此控制列的排序 */
+  /** 排序的受控属性,外界可用此控制列的排序 */
   sortOrder?: 'asc' | 'desc' | null;
   /** 排序函数 */
   sorter?: (rowA: T, rowB: T) => number | Sorter<T>;
@@ -160,14 +157,8 @@ export type ColumnType<T> = {
   filterSearch?: (value: string, record: FilterMenus) => boolean | boolean;
   /** 表头的筛选菜单项 */
   filters?: FilterMenus[];
-  // /** 可以自定义筛选菜单 */
-  // filterDropdown?: () => React.ReactNode;
-  // /** 用于控制自定义筛选菜单是否可见 */
-  // filterDropdownOpen?: boolean;
   /** 筛选函数 */
   filterMethod?: (value: React.Key, record: T) => boolean;
-  // /** 自定义筛选菜单可见变化时调用 */
-  // onFilterDropdownOpenChange?: (open: boolean) => any;
 };
 
 export type ColumnGroupType<T> = Omit<ColumnType<T>, 'dataIndex' | 'type'> & {
@@ -184,7 +175,6 @@ export type PrivateColumnType<T> = ColumnType<T> & {
   _ignoreRightBorder?: boolean;
 };
 
-// todo 约束children 的伸缩功能
 export type PrivateColumnGroupType<T> = Omit<PrivateColumnType<T>, 'dataIndex' | 'type'> & {
   children: Omit<PrivateColumnsType<T>, 'type'>;
 };
