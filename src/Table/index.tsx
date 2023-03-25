@@ -323,12 +323,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const [treeExpandKeys, handleTreeExpand] = useTreeExpand(allKeys, treeProps);
 
-  // todo 应该是基于list 进行获取所有records keys
-  // todo 多级表头中扩展行过滤后出现的都是不允许展开扩展行怎么展示
   const totalData = useMemo(() => {
     return getFilterData(getSortData(dataSource));
   }, [dataSource, getSortData, getFilterData]);
-  // console.log(totalData);
 
   const currentPageData = useMemo(() => {
     if (pagination) {
@@ -531,7 +528,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       rowSelection.onChange(finalSelectedKeys, selectedRecords);
     }
 
-    if (rowSelection && !rowSelection?.selectedRowKeys) {
+    if (!rowSelection?.selectedRowKeys) {
       updateSelectedKeys(finalSelectedKeys);
     }
   };

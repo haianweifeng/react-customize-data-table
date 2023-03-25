@@ -12,6 +12,9 @@ interface DataType {
 
 const columns: ColumnsType<DataType>[] = [
   {
+    type: 'checkbox',
+  },
+  {
     title: 'Name',
     dataIndex: 'name',
     key: 'name',

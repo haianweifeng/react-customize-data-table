@@ -243,7 +243,7 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
         }
       }
 
-      if (rowSelection && !rowSelection?.selectedRowKeys) {
+      if (!rowSelection?.selectedRowKeys) {
         setSelectedKeys(finalSelectedKeys);
       }
 
