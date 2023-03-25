@@ -323,12 +323,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const [treeExpandKeys, handleTreeExpand] = useTreeExpand(allKeys, treeProps);
 
-  // todo 待测试有没有考虑树形中children data 的排序 过滤
   // todo 应该是基于list 进行获取所有records keys
-  // todo list 如果在这里添加了treeChilren 数据遇到虚拟列表会被切分 应该放到tbody 中处理 已处理 待测试
+  // todo 多级表头中扩展行过滤后出现的都是不允许展开扩展行怎么展示
   const totalData = useMemo(() => {
     return getFilterData(getSortData(dataSource));
   }, [dataSource, getSortData, getFilterData]);
+  // console.log(totalData);
 
   const currentPageData = useMemo(() => {
     if (pagination) {
@@ -420,11 +420,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     setCachePosition(positions);
     // eslint-disable-line react-hooks/exhaustive-deps
   }, [dataSource, rowHeight, getDataByTreeExpandKeys]);
-
-  // todo 点击扩展行后引起cachePosition 变化后 scrollTop 的更新计算 setRowHeight
-  // todo 滚动到底部了但是改变了列宽引起的高度变化 scrollTop 的更新计算 width: 150 -> 180
-  // todo 待测试如果是可变行高会不会触发重新计算
-  // todo 这里没有添加依赖项看eslint 在提交时候会不会报错
 
   const handleResize = useCallback(
     (targetColumns: PrivateColumnsType<T>) => {
@@ -670,6 +665,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const [showScrollbarY, setShowScrollbarY] = useState<boolean>(false);
   const [showScrollbarX, setShowScrollbarX] = useState<boolean>(false);
 
+  // todo 待测试如果是可变行高会不会触发重新计算
+  // todo 这里没有添加依赖项看eslint 在提交时候会不会报错
   const handleUpdate = useCallback((rects: { rowIndex: number; rowHeight: number }[]) => {
     let hasChange = false;
     const prevPosition = [...lastCachePosition.current];
@@ -692,14 +689,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             prevPosition[j].top = topValue;
             prevPosition[j].bottom = prevPosition[j].height + topValue;
           }
-          // item.height = newRowHeight;
-          // item.bottom = item.bottom - diff;
-          // item.top = index === 0 ? 0 : prevPosition[index - 1].bottom;
-          // prevPosition.splice(index, 1, item);
-          // for (let j = index + 1; j < prevPosition.length; j++) {
-          //   prevPosition[j].top = prevPosition[j - 1].bottom;
-          //   prevPosition[j].bottom = prevPosition[j].bottom - diff;
-          // }
         }
       }
     });
@@ -772,12 +761,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // console.log(`tbodyScrollHeight: ${tbodyScrollHeight}`);
   // console.log(cachePosition);
 
-  useEffect(() => {
-    lastScrollTop.current = 0;
-    tbodyScrollTop.current = 0;
-    setStartRowIndex(0);
-  }, [sorterStates, filterStates, currentPage, pageSize]);
-
   // 如果扩展行是全打开然后滚动到底部的话再关闭某一行的扩展行 这时候滚动范围是按当时全部打开的高度计算超过了实际的滚动范围
   useEffect(() => {
     // console.log('约束');
@@ -789,8 +772,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   }, [expandedRowKeys, tbodyScrollHeight, tbodyClientHeight]);
 
   useEffect(() => {
+    lastScrollTop.current = 0;
+    tbodyScrollTop.current = 0;
+    setStartRowIndex(0);
+  }, [sorterStates, filterStates, currentPage, pageSize]);
+
+  useEffect(() => {
     const update = () => {
-      // console.log('update');
       if (tbodyRef.current) {
         const tbodyNode = tbodyRef.current;
         const clientWidth = tbodyNode.clientWidth;
@@ -893,7 +881,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const handleVerticalScroll = useCallback(
     (offsetTop: number, isWheel = true) => {
-      // console.log(`vertical: ${offsetTop}`);
       if (virtualized) {
         const item = cachePosition.find((p) => p.bottom > offsetTop);
         if (item) {

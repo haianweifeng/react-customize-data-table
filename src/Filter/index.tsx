@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import classnames from 'classnames';
-import { isEqual } from 'lodash';
 import Checkbox from '../Checkbox';
 import Radio from '../Radio';
 import Icon from '../Icon';
@@ -79,41 +78,17 @@ const Filter = (props: FilterProps) => {
     return result;
   }, []);
 
-  const handleDocumentClick = useCallback(
-    (event: Event) => {
-      const { target } = event;
-      if (
-        !filterContainerRef.current ||
-        elementContains(filterContainerRef.current, target) ||
-        !popperRef.current ||
-        elementContains(popperRef.current, target)
-      ) {
-        return;
-      }
-      if (!isEqual(checkedValue, filteredValue)) {
-        onChange(checkedValue);
-      }
-      setSearchValue('');
-      setVisible(false);
-      document.removeEventListener('click', handleDocumentClick);
-      event.stopPropagation();
-    },
-    [checkedValue, filteredValue, onChange, elementContains],
-  );
-
   const handleReset = () => {
     onReset();
     setSearchValue('');
     setCheckedValue([]);
     setVisible(false);
-    document.removeEventListener('click', handleDocumentClick);
   };
 
   const handleFilter = () => {
     onChange(checkedValue);
     setSearchValue('');
     setVisible(false);
-    document.removeEventListener('click', handleDocumentClick);
   };
 
   const getPosition = () => {
@@ -168,16 +143,34 @@ const Filter = (props: FilterProps) => {
 
     return () => {
       removePopper();
-      document.removeEventListener('click', handleDocumentClick);
     };
-    // eslint-disable-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
+    const handleDocumentClick = (event: Event) => {
+      const { target } = event;
+      if (
+        !filterContainerRef.current ||
+        elementContains(filterContainerRef.current, target) ||
+        !popperRef.current ||
+        elementContains(popperRef.current, target)
+      ) {
+        return;
+      }
+      onChange(checkedValue);
+      setSearchValue('');
+      setVisible(false);
+      event.stopPropagation();
+    };
     if (visible) {
       document.addEventListener('click', handleDocumentClick);
+    } else {
+      document.removeEventListener('click', handleDocumentClick);
     }
-  }, [visible, handleDocumentClick]);
+    return () => {
+      document.removeEventListener('click', handleDocumentClick);
+    };
+  }, [visible, onChange, checkedValue]);
 
   const filterOptions = useMemo(() => {
     return filters.filter((f) => {
