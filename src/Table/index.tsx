@@ -144,10 +144,6 @@ export interface TableProps<T> {
   treeProps?: TreeExpandable<T>;
 }
 
-// todo 还未测试列宽设为百分比的情况
-// todo bug 如果dataIndex 在data 中找不到对应字段数据 是不是要加个key 给用户自己设置
-// todo 2.单元格word-break 样式更改
-// 设置colgroup 列的宽度  然后获取每个单元格最后渲染的宽度 重新设置 colgroup 的宽度
 function Table<T extends { key?: number | string; children?: T[] }>(props: TableProps<T>) {
   const localeContext = useContext(LocaleContext);
 
@@ -165,7 +161,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     columns,
     dataSource,
     pagination,
-    // columns: originColumns,
     treeProps,
     expandable,
     rowSelection,

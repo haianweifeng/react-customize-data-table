@@ -38,7 +38,7 @@ export type TooltipType = {
 export interface RowSelection<T> {
   /** 自定义列表选择框标题 */
   columnTitle?: React.ReactNode;
-  /** 自定义列表选择框宽度 todo 不支持百分比 */
+  /** 自定义列表选择框宽度 */
   columnWidth?: string | number;
   /** 选择框的默认属性配置 */
   getCheckboxProps?: (record: T) => any;
@@ -119,10 +119,9 @@ export type ColumnType<T> = {
   title?: React.ReactNode;
   /** 列宽度 */
   width?: number | string;
-  // width?: string | number;
-  /** 最大列宽 不支持百分比 如果是表头分组的话只支持设置在底层的列宽 todo */
+  /** 最大列宽 如果是表头分组的话只支持设置在底层的列宽 */
   maxWidth?: number | string;
-  /** 最小列宽 不支持百分比 如果是表头分组的话只支持设置在底层的列宽 todo */
+  /** 最小列宽 如果是表头分组的话只支持设置在底层的列宽 */
   minWidth?: number | string;
   /** 超过宽度将自动省略 */
   ellipsis?: boolean | TooltipType;
