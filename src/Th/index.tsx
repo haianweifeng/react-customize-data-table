@@ -93,7 +93,7 @@ function Th<T>(props: ThProps<T>) {
 
   const cellEvents = useMemo(() => {
     return typeof onHeaderCellEvents === 'function'
-      ? onHeaderCellEvents(omitColumnProps(column), rowIndex)
+      ? onHeaderCellEvents(omitColumnProps(column), rowIndex) ?? {}
       : {};
   }, [onHeaderCellEvents, rowIndex, column, omitColumnProps]);
 

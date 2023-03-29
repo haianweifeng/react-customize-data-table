@@ -152,7 +152,7 @@ function Thead<T>(props: TheadProps<T>) {
 
       let styles: React.CSSProperties =
         typeof headerCellStyle === 'function'
-          ? headerCellStyle(omitColumnProps(column), rowIndex, colIndex)
+          ? headerCellStyle(omitColumnProps(column), rowIndex, colIndex) ?? {}
           : headerCellStyle || {};
 
       let baseProps: ThProps<T> = {
@@ -221,9 +221,9 @@ function Thead<T>(props: TheadProps<T>) {
             : headerRowClassName || '';
 
         let styles: React.CSSProperties =
-          typeof headerRowStyle === 'function' ? headerRowStyle(i) : headerRowStyle || {};
+          typeof headerRowStyle === 'function' ? headerRowStyle(i) ?? {} : headerRowStyle || {};
 
-        const rowEvents = typeof onHeaderRowEvents === 'function' ? onHeaderRowEvents(i) : {};
+        const rowEvents = typeof onHeaderRowEvents === 'function' ? onHeaderRowEvents(i) ?? {} : {};
 
         return (
           <tr key={i} className={rowClassName} style={styles} {...rowEvents}>
