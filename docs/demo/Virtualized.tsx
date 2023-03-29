@@ -83,6 +83,7 @@ for (let i = 0; i < 50; i++) {
     dataIndex: `salary${i}`,
     key: `salary${i}`,
     width: 120,
+    fixed: i === 49 ? 'right' : null,
   });
 }
 
@@ -145,7 +146,7 @@ const App = () => {
       bordered
       rowKey="id"
       height={500}
-      renderMaxRows={10}
+      renderMaxRows={20}
     />
   );
 };

@@ -8,7 +8,7 @@ import type {
   TreeExpandable,
 } from '../interface1';
 import Td from '../Td';
-import ResizeObserver from 'resize-observer-polyfill';
+// import ResizeObserver from 'resize-observer-polyfill';
 
 interface TrProps<T> {
   rowData: T;
@@ -26,6 +26,9 @@ interface TrProps<T> {
   treeProps?: TreeExpandable<T>;
   columns: PrivateColumnsType<T>;
   checked: 'indeterminate' | boolean;
+  virtualized: boolean;
+  offsetLeft: number;
+  offsetRight: number;
   handleExpand: (expanded: boolean, record: T, recordKey: number | string) => void;
   handleTreeExpand: (treeExpanded: boolean, record: T, recordKey: number | string) => void;
   handleSelect: (
@@ -59,6 +62,8 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
     expanded,
     expandable,
     bordered,
+    virtualized,
+    offsetLeft,
     rowStyle,
     rowClassName,
     onRowEvents,
@@ -66,39 +71,39 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
     ...restProps
   } = props;
 
-  const resizeObserverIns = useRef<any>(null);
+  // const resizeObserverIns = useRef<any>(null);
   const trRef = useRef<HTMLTableRowElement>(null);
   const expandTrRef = useRef<HTMLTableRowElement>(null);
 
   // 放到tbody 中检测所有tr 渲染完成再统一把所有行高行号返回给onUpdateRowHeight
-  useEffect(() => {
-    const update = () => {
-      // console.log('update');
-      if (!trRef.current) return;
-      let { height } = trRef.current.getBoundingClientRect();
-      if (Number.isNaN(height)) height = 0;
-      let expandHeight = 0;
-      if (expandTrRef.current) {
-        expandHeight = expandTrRef.current.clientHeight;
-      }
-      const newHeight = height + expandHeight;
-      // onUpdateRowHeight(newHeight, rowIndex);
-    };
-
-    const resizeObserver = () => {
-      resizeObserverIns.current = new ResizeObserver((entries) => {
-        let contentRect = entries[0].contentRect;
-        if (!(contentRect.width || contentRect.height)) return;
-        update();
-      });
-      trRef.current && resizeObserverIns.current.observe(trRef.current);
-    };
-
-    resizeObserver();
-    return () => {
-      resizeObserverIns.current?.disconnect();
-    };
-  }, [rowIndex, expanded, onUpdateRowHeight]);
+  // useEffect(() => {
+  //   const update = () => {
+  //     // console.log('update');
+  //     if (!trRef.current) return;
+  //     let { height } = trRef.current.getBoundingClientRect();
+  //     if (Number.isNaN(height)) height = 0;
+  //     let expandHeight = 0;
+  //     if (expandTrRef.current) {
+  //       expandHeight = expandTrRef.current.clientHeight;
+  //     }
+  //     const newHeight = height + expandHeight;
+  //     // onUpdateRowHeight(newHeight, rowIndex);
+  //   };
+  //
+  //   const resizeObserver = () => {
+  //     resizeObserverIns.current = new ResizeObserver((entries) => {
+  //       let contentRect = entries[0].contentRect;
+  //       if (!(contentRect.width || contentRect.height)) return;
+  //       update();
+  //     });
+  //     trRef.current && resizeObserverIns.current.observe(trRef.current);
+  //   };
+  //
+  //   resizeObserver();
+  //   return () => {
+  //     resizeObserverIns.current?.disconnect();
+  //   };
+  // }, [rowIndex, expanded, onUpdateRowHeight]);
 
   const renderExpandRow = () => {
     const expandColumn = columns.find((column) => {
@@ -115,6 +120,9 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
 
     const cls =
       expandable?.expandedRowClassName && expandable.expandedRowClassName(rowData, rowIndex);
+
+    const style = virtualized && offsetLeft ? { transform: `translateX(${offsetLeft}px)` } : {};
+
     return (
       <tr
         key={`${rowIndex}_expand`}
@@ -123,6 +131,7 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
       >
         <td
           colSpan={columns.length}
+          style={style}
           className={classnames({ 'cell-ignore-right-border': bordered, 'cell-fixed-left': true })}
         >
           {expandable?.expandedRowRender &&
@@ -176,6 +185,8 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
           colSpan={colSpan}
           rowData={rowData}
           expandable={expandable}
+          virtualized={virtualized}
+          offsetLeft={offsetLeft}
           ignoreRightBorder={ignoreRightBorder}
           isFirstDefaultColumn={isFirstDefaultColumn}
           {...restProps}
@@ -199,7 +210,7 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
   }
 
   const style: React.CSSProperties =
-    typeof rowStyle === 'function' ? rowStyle(rowData, rowIndex) : rowStyle || {};
+    typeof rowStyle === 'function' ? rowStyle(rowData, rowIndex) ?? {} : rowStyle || {};
 
   return (
     <>

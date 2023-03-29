@@ -639,12 +639,16 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   // 纵向滚动偏移量
   const lastScrollTop = useRef<number>(0);
   const lastScrollLeft = useRef<number>(0);
+  const lastOffsetRight = useRef<number>(0);
 
   const realTbodyRef = useRef<HTMLTableElement>(null);
   const resizeObserverIns = useRef<any>(null);
 
   const barYRef = useRef<HTMLDivElement>(null);
   const barXRef = useRef<HTMLDivElement>(null);
+
+  const [offsetLeft, setOffsetLeft] = useState<number>(0);
+  const [offsetRight, setOffsetRight] = useState<number>(0);
 
   const [tbodyClientWidth, setTbodyClientWidth] = useState<number>(0);
   const [tbodyScrollWidth, setTbodyScrollWidth] = useState<number>(0);
@@ -654,7 +658,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const [showScrollbarY, setShowScrollbarY] = useState<boolean>(false);
   const [showScrollbarX, setShowScrollbarX] = useState<boolean>(false);
 
-  // todo 待测试如果是可变行高会不会触发重新计算
   // todo 这里没有添加依赖项看eslint 在提交时候会不会报错
   const handleUpdate = useCallback((rects: { rowIndex: number; rowHeight: number }[]) => {
     let hasChange = false;
@@ -668,7 +671,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         if (diff) {
           hasChange = true;
           // console.log(`index: ${index}`);
-          // todo 如果存在差距的话得更新下scrollTop  startOffset
           const top = index === 0 ? 0 : prevPosition[index - 1].bottom;
           prevPosition[index].height = newRowHeight;
           prevPosition[index].top = top;
@@ -834,14 +836,14 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         index === 0 ? 0 : tbodyScrollTop.current
       }px)`;
       el.querySelectorAll('th, td').forEach((cell: HTMLTableDataCellElement) => {
-        if (
-          cell.classList.contains('cell-empty') &&
-          cell.querySelector('.empty-placeholder-content')
-        ) {
-          (cell.querySelector(
-            '.empty-placeholder-content',
-          ) as any)!.style.transform = `translateX(${offsetLeft}px)`;
-        }
+        // if (
+        //   cell.classList.contains('cell-empty') &&
+        //   cell.querySelector('.empty-placeholder-content')
+        // ) {
+        //   (cell.querySelector(
+        //     '.empty-placeholder-content',
+        //   ) as any)!.style.transform = `translateX(${offsetLeft}px)`;
+        // }
         if (cell.classList.contains('cell-fixed-left')) {
           cell.style.transform = `translateX(${offsetLeft}px)`;
         } else if (cell.classList.contains('cell-fixed-right')) {
@@ -863,6 +865,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       });
     });
     lastScrollLeft.current = offsetLeft;
+    lastOffsetRight.current = offsetRight;
     if (isWheel) {
       onScroll && onScroll(offsetLeft, lastScrollTop.current);
     }
@@ -875,6 +878,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         if (item) {
           if (lastStartRowIndex.current !== item.index) {
             setStartRowIndex(item.index);
+            setOffsetLeft(lastScrollLeft.current);
+            setOffsetRight(lastOffsetRight.current);
             lastStartRowIndex.current = item.index;
           }
           if (realTbodyRef.current) {
@@ -897,6 +902,31 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     [cachePosition, virtualized],
   );
   // console.log(`startRowIndex: ${startRowIndex}`);
+
+  // 考虑renderMaxRows 小于容器高度时候会出现底部空白 这时候取的renderMaxRows刚好为能撑开容器高度那一行的行号
+  const getRenderMaxRows = useCallback(() => {
+    const item = cachePosition.find((c) => c.top >= tbodyClientHeight);
+    return item && tbodyClientHeight ? Math.max(renderMaxRows, item.index) : renderMaxRows;
+  }, [tbodyClientHeight, renderMaxRows, cachePosition]);
+
+  const currDataSource = useMemo(() => {
+    return virtualized
+      ? displayedData.slice(startRowIndex, startRowIndex + getRenderMaxRows())
+      : displayedData;
+  }, [virtualized, displayedData, startRowIndex, getRenderMaxRows]);
+  // console.log(currDataSource);
+
+  useEffect(() => {
+    handleVerticalScroll(lastScrollTop.current, false);
+  }, [expandedRowKeys, handleVerticalScroll]);
+
+  // useEffect(() => {
+  //   handleVerticalScroll(Math.min(lastScrollTop.current, tbodyScrollHeight - tbodyClientHeight), false);
+  // }, [expandedRowKeys, tbodyScrollHeight, tbodyClientHeight, handleVerticalScroll]);
+
+  useEffect(() => {
+    handleHorizontalScroll(lastScrollLeft.current, false);
+  }, [mergeColumns, expandedRowKeys, handleHorizontalScroll]);
 
   // 由于表头表体是通过div 包裹 会导致滚动时候表体先有了scrollLeft 然后表头才有导致更新不同步 表头总是慢于表体 所以采用自定义wheel 事件触发滚动
   useEffect(() => {
@@ -1062,31 +1092,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     };
   }, [showScrollbarY, showScrollbarX]);
 
-  // 考虑renderMaxRows 小于容器高度时候会出现底部空白 这时候取的renderMaxRows刚好为能撑开容器高度那一行的行号
-  const getRenderMaxRows = useCallback(() => {
-    const item = cachePosition.find((c) => c.top >= tbodyClientHeight);
-    return item && tbodyClientHeight ? Math.max(renderMaxRows, item.index) : renderMaxRows;
-  }, [tbodyClientHeight, renderMaxRows, cachePosition]);
-
-  const currDataSource = useMemo(() => {
-    return virtualized
-      ? displayedData.slice(startRowIndex, startRowIndex + getRenderMaxRows())
-      : displayedData;
-  }, [virtualized, displayedData, startRowIndex, getRenderMaxRows]);
-  // console.log(currDataSource);
-
-  useEffect(() => {
-    handleVerticalScroll(lastScrollTop.current, false);
-  }, [expandedRowKeys, handleVerticalScroll]);
-
-  // useEffect(() => {
-  //   handleVerticalScroll(Math.min(lastScrollTop.current, tbodyScrollHeight - tbodyClientHeight), false);
-  // }, [expandedRowKeys, tbodyScrollHeight, tbodyClientHeight, handleVerticalScroll]);
-
-  useEffect(() => {
-    handleHorizontalScroll(lastScrollLeft.current, false);
-  }, [mergeColumns, currDataSource, expandedRowKeys, handleHorizontalScroll]);
-
   const isTree = useMemo(() => {
     const data = displayedData.filter((d) => d?.children && d.children.length);
     return data.length > 0;
@@ -1105,6 +1110,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             <Tbody
               empty={empty}
               isTree={isTree}
+              virtualized={!!virtualized}
               striped={!!striped}
               bordered={!!bordered}
               selectionType={selectionType}
@@ -1120,6 +1126,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
               expandable={expandable}
               rowSelection={rowSelection}
               tbodyClientWidth={tbodyClientWidth}
+              offsetLeft={offsetLeft}
+              offsetRight={offsetRight}
               rowClassName={rowClassName}
               rowStyle={rowStyle}
               cellClassName={cellClassName}

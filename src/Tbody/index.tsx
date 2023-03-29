@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import classnames from 'classnames';
 import Tr from '../Tr';
 import type {
@@ -27,6 +27,9 @@ interface TbodyProps<T> {
   rowSelection?: RowSelection<T>;
   treeProps?: TreeExpandable<T>;
   tbodyClientWidth: number;
+  virtualized: boolean;
+  offsetLeft: number;
+  offsetRight: number;
   getRecordKey: (record: T) => any;
   selectionType: 'radio' | 'checkbox' | undefined;
   handleExpand: (expanded: boolean, record: T, recordKey: number | string) => void;
@@ -174,6 +177,7 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
     );
   };
 
+  // todo cell-empty 可以删除
   return (
     <tbody ref={tbodyRef}>
       {!dataSource.length ? (

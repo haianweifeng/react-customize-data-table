@@ -19,9 +19,9 @@ const columns: ColumnsType<DataType>[] = [
         <div>
           <div style={{ color: 'rgba(0, 0, 0, 0.85)' }}>{`${record.title}_${record.id}`}</div>
           <div style={{ color: 'rgba(0, 0, 0, 0.45)' }}>{record.paragraphs}</div>
-          <div>
-            <img src={record.image} alt="" />
-          </div>
+          {/*<div>*/}
+          {/*  <img src={record.image} alt="" />*/}
+          {/*</div>*/}
         </div>
       );
     },
@@ -90,7 +90,7 @@ const createData = (id: number) => {
     id,
     title: faker.lorem.words(),
     paragraphs: faker.lorem.sentences(),
-    image: imageUrls[id - 1],
+    // image: imageUrls[id - 1],
     // image: faker.image.nature(WIDTH, Math.floor(Math.random() * id * HEIGHT), true)
   };
 };

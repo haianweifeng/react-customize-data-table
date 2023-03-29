@@ -32,6 +32,9 @@ interface TdProps<T> {
   expandable?: Expandable<T>;
   rowSelection?: RowSelection<T>;
   isFirstDefaultColumn: boolean;
+  virtualized: boolean;
+  offsetLeft: number;
+  offsetRight: number;
   handleSelect: (
     isRadio: boolean,
     isChecked: boolean,
@@ -77,6 +80,9 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
     cellClassName,
     cellStyle,
     onCellEvents,
+    virtualized,
+    offsetLeft,
+    offsetRight,
   } = props;
 
   const cellRef = useRef<HTMLTableCellElement>(null);
@@ -132,6 +138,8 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
     [`cell-align-${align}`]: !!align,
     'selection-expand-column': !!isSelectionExpand,
     'cell-ignore-right-border': ignoreRightBorder,
+    'cell-fixed-last-left': !!column?._lastLeftFixed && virtualized && offsetLeft > 0,
+    'cell-fixed-first-right': !!column?._firstRightFixed && virtualized && offsetRight > 0,
     [column?.className ?? '']: !!column?.className,
   };
 
@@ -145,10 +153,35 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
 
   const cls = classnames(classes);
 
-  const styles: React.CSSProperties =
-    typeof cellStyle === 'function'
-      ? cellStyle(omitColumnProps(column), rowIndex, colIndex)
-      : cellStyle || {};
+  const styles: React.CSSProperties = useMemo(() => {
+    const style: React.CSSProperties =
+      typeof cellStyle === 'function'
+        ? cellStyle(omitColumnProps(column), rowIndex, colIndex) ?? {}
+        : cellStyle || {};
+    if (virtualized) {
+      if (column?.fixed === 'left' && offsetLeft) {
+        style.transform = `translateX(${offsetLeft}px)`;
+      }
+      if (column?.fixed === 'right' && offsetRight) {
+        style.transform = `translateX(-${offsetRight}px)`;
+      }
+    }
+    return style;
+  }, [cellStyle, column, rowIndex, colIndex, virtualized, offsetLeft, offsetRight]);
+
+  // const styles: React.CSSProperties =
+  //   typeof cellStyle === 'function'
+  //     ? (cellStyle(omitColumnProps(column), rowIndex, colIndex) ?? {})
+  //     : (cellStyle || {});
+  //
+  // if (virtualized) {
+  //   if (column?.fixed === 'left' && offsetLeft) {
+  //     styles.transform = `translateX(${offsetLeft}px)`;
+  //   }
+  //   if (column?.fixed === 'right' && offsetRight) {
+  //     styles.transform = `translateX(-${offsetRight}px)`;
+  //   }
+  // }
 
   const cellEvents = useMemo(() => {
     return typeof onCellEvents === 'function' ? onCellEvents(rowData, rowIndex) : {};

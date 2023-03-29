@@ -149,7 +149,7 @@ const columns: ColumnsType<DataType>[] = [
 const buildings = ['A', 'B', 'C', 'D'];
 
 const data: DataType[] = [];
-for (let i = 0; i < 30; i++) {
+for (let i = 0; i < 100; i++) {
   data.push({
     key: i,
     name: 'John Brown',
@@ -217,6 +217,7 @@ const App = () => {
       bordered
       rowKey="key"
       height={400}
+      renderMaxRows={10}
       // pagination={{
       //   defaultCurrent: 1,
       //   pageSize: 10,
