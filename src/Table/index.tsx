@@ -754,12 +754,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   // 如果扩展行是全打开然后滚动到底部的话再关闭某一行的扩展行 这时候滚动范围是按当时全部打开的高度计算超过了实际的滚动范围
   useEffect(() => {
-    // console.log('约束');
-    tbodyScrollTop.current = Math.min(
-      tbodyScrollTop.current,
-      tbodyScrollHeight - tbodyClientHeight,
-    );
-    lastScrollTop.current = Math.min(lastScrollTop.current, tbodyScrollHeight - tbodyClientHeight);
+    const spaceHeight = tbodyScrollHeight - tbodyClientHeight;
+    tbodyScrollTop.current = Math.min(tbodyScrollTop.current, spaceHeight);
+    tbodyScrollTop.current = Math.max(0, tbodyScrollTop.current);
+    lastScrollTop.current = Math.min(lastScrollTop.current, spaceHeight);
+    lastScrollTop.current = Math.max(0, lastScrollTop.current);
   }, [expandedRowKeys, tbodyScrollHeight, tbodyClientHeight]);
 
   useEffect(() => {
