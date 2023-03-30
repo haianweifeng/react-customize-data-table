@@ -835,14 +835,14 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         index === 0 ? 0 : tbodyScrollTop.current
       }px)`;
       el.querySelectorAll('th, td').forEach((cell: HTMLTableDataCellElement) => {
-        // if (
-        //   cell.classList.contains('cell-empty') &&
-        //   cell.querySelector('.empty-placeholder-content')
-        // ) {
-        //   (cell.querySelector(
-        //     '.empty-placeholder-content',
-        //   ) as any)!.style.transform = `translateX(${offsetLeft}px)`;
-        // }
+        if (
+          cell.classList.contains('cell-empty') &&
+          cell.querySelector('.empty-placeholder-content')
+        ) {
+          (cell.querySelector(
+            '.empty-placeholder-content',
+          ) as any)!.style.transform = `translateX(${offsetLeft}px)`;
+        }
         if (cell.classList.contains('cell-fixed-left')) {
           cell.style.transform = `translateX(${offsetLeft}px)`;
         } else if (cell.classList.contains('cell-fixed-right')) {
