@@ -10,6 +10,7 @@ import { createPortal } from 'react-dom';
 import classnames from 'classnames';
 import { debounce, throttle } from 'lodash';
 import './index.less';
+import { PREFIXCLS } from '../utils/constant';
 
 export type TooltipPlacement =
   | 'top'
@@ -67,7 +68,7 @@ const Tooltip = (props: TooltipProps) => {
     autoAdjustPlacement = true,
   } = props;
 
-  const timer = useRef<number>();
+  const timer = useRef<any>();
   const mountedRef = useRef<boolean>(false);
   const triggerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -600,14 +601,14 @@ const Tooltip = (props: TooltipProps) => {
 
   const renderToolTip = () => {
     const popperContainer = (
-      <div className="tooltip-popper-placeholder">
+      <div className={`${PREFIXCLS}-tooltip-popper-placeholder`}>
         <div
           ref={tooltipRef}
           className={classnames({
-            'tooltip-popper': true,
-            'tooltip-popper-show': showPopper,
-            [`tooltip-popper-${theme}`]: !!theme,
-            [`tooltip-popper-placement-${finalPlacement}`]: !!finalPlacement,
+            [`${PREFIXCLS}-tooltip-popper`]: true,
+            [`${PREFIXCLS}-tooltip-popper-show`]: showPopper,
+            [`${PREFIXCLS}-tooltip-popper-${theme}`]: !!theme,
+            [`${PREFIXCLS}-tooltip-popper-placement-${finalPlacement}`]: !!finalPlacement,
             [className]: !!className,
           })}
           style={{
@@ -627,9 +628,11 @@ const Tooltip = (props: TooltipProps) => {
             }
           }}
         >
-          <div className="tooltip-popper-content">
-            <div className="tooltip-popper-arrow" />
-            <div className="tooltip-popper-inner">{typeof tip === 'function' ? tip() : tip}</div>
+          <div className={`${PREFIXCLS}-tooltip-popper-content`}>
+            <div className={`${PREFIXCLS}-tooltip-popper-arrow`} />
+            <div className={`${PREFIXCLS}-tooltip-popper-inner`}>
+              {typeof tip === 'function' ? tip() : tip}
+            </div>
           </div>
         </div>
       </div>
