@@ -4,6 +4,7 @@ import Icon from '../Icon';
 import { ReactComponent as UpIcon } from '@/assets/arrow-up.svg';
 import { ReactComponent as DownIcon } from '@/assets/arrow-down.svg';
 import './index.less';
+import { PREFIXCLS } from '../utils/constant';
 
 interface SorterProps {
   activeAsc: boolean;
@@ -33,18 +34,24 @@ const Sorter = (props: SorterProps) => {
       <Icon
         component={UpIcon}
         onClick={handleAsc}
-        className={classnames({ 'sort-icon': true, 'sort-active-icon': activeAsc })}
+        className={classnames({
+          [`${PREFIXCLS}-sort-icon`]: true,
+          [`${PREFIXCLS}-sort-active-icon`]: activeAsc,
+        })}
       />
       <Icon
         component={DownIcon}
         onClick={handleDesc}
-        className={classnames({ 'sort-icon': true, 'sort-active-icon': activeDesc })}
+        className={classnames({
+          [`${PREFIXCLS}-sort-icon`]: true,
+          [`${PREFIXCLS}-sort-active-icon`]: activeDesc,
+        })}
       />
     </>
   );
 
   return (
-    <div className="sorter-container">
+    <div className={`${PREFIXCLS}-sorter-container`}>
       {typeof renderSorter === 'function'
         ? renderSorter({
             activeAsc,

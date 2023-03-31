@@ -2,6 +2,7 @@ import React from 'react';
 import type { ComponentType } from 'react';
 import classnames from 'classnames';
 import './index.less';
+import { PREFIXCLS } from '../utils/constant';
 
 export interface CustomIconComponentProps {
   width: string | number;
@@ -22,7 +23,7 @@ interface IconProps {
 const Icon = (props: IconProps) => {
   const { className = '', style = {}, component: Component, onClick } = props;
 
-  const cls = classnames({ icon: true, [className]: !!className });
+  const cls = classnames({ [`${PREFIXCLS}-icon`]: true, [className]: !!className });
 
   const svgBaseProps = {
     width: '1em',
