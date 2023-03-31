@@ -1,7 +1,8 @@
 import React, { useRef } from 'react';
 import classnames from 'classnames';
 import { generateUUID } from '../utils/util';
-import styles from './index.less';
+import './index.less';
+import { PREFIXCLS } from '../utils/constant';
 
 interface CheckboxProps {
   className?: string;
@@ -18,10 +19,10 @@ const Checkbox = (props: CheckboxProps) => {
   const idRef = useRef<string>(generateUUID());
 
   const cls = classnames({
-    [styles.checkbox]: true,
-    [styles.disabled]: disabled,
-    [styles.checked]: checked,
-    [styles.indeterminate]: checked === 'indeterminate',
+    [`${PREFIXCLS}-checkbox`]: true,
+    [`${PREFIXCLS}-checkbox-disabled`]: disabled,
+    [`${PREFIXCLS}-checkbox-checked`]: checked,
+    [`${PREFIXCLS}-checkbox-indeterminate`]: checked === 'indeterminate',
     [className]: !!className,
   });
 
@@ -45,10 +46,10 @@ const Checkbox = (props: CheckboxProps) => {
         type="checkbox"
         onChange={handleChange}
         checked={checked === true}
-        className={styles.checkboxInput}
+        className={`${PREFIXCLS}-checkbox-input`}
       />
-      <span className={styles.checkboxInner} />
-      {children && <span className={styles.name}>{children}</span>}
+      <span className={`${PREFIXCLS}-checkbox-inner`} />
+      {children && <span className={`${PREFIXCLS}-checkbox-name`}>{children}</span>}
     </label>
   );
 };

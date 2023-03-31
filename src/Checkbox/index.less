@@ -4,7 +4,9 @@
 @background-active-color: #197afa;
 @disabled-border-color: #d9d9d9;
 
-.checkbox {
+@prefix: rv-table;
+
+.@{prefix}-checkbox {
   position: relative;
   display: inline-block;
   box-sizing: border-box;
@@ -14,7 +16,7 @@
   // vertical-align: middle;
   cursor: pointer;
 
-  .checkboxInput {
+  .@{prefix}-checkbox-input {
     position: absolute;
     top: 0;
     left: 0;
@@ -28,13 +30,13 @@
     opacity: 0;
   }
 
-  .name {
+  .@{prefix}-checkbox-name {
     padding-right: 8px;
     padding-left: 8px;
     vertical-align: middle;
   }
 
-  .checkboxInner {
+  .@{prefix}-checkbox-inner {
     position: relative;
     top: 0;
     left: 0;
@@ -66,15 +68,15 @@
 
   &:hover,
   &:focus {
-    .checkboxInner {
+    .@{prefix}-checkbox-inner {
       border-color: @border-active-color;
     }
   }
 }
 
-.checked,
-.indeterminate {
-  .checkboxInner {
+.@{prefix}-checkbox-checked,
+.@{prefix}-checkbox-indeterminate {
+  .@{prefix}-checkbox-inner {
     background: @background-active-color;
     border-color: @border-active-color;
     animation: effect 0.6s ease-out;
@@ -85,22 +87,22 @@
   }
 }
 
-.checked {
-  .checkboxInner {
+.@{prefix}-checkbox-checked {
+  .@{prefix}-checkbox-inner {
     &:after {
       transform: translate(-50%, -65%) rotate(-45deg);
     }
   }
 }
 
-.disabled {
+.@{prefix}-checkbox-disabled {
   cursor: not-allowed;
 
-  .checkboxInput {
+  .@{prefix}-checkbox-input {
     pointer-events: none;
   }
 
-  .checkboxInner {
+  .@{prefix}-checkbox-inner {
     background-color: #f5f5f5;
     border-color: @disabled-border-color;
     box-shadow: none;
@@ -114,23 +116,23 @@
 
   &:hover,
   &:focus {
-    .checkboxInner {
+    .@{prefix}-checkbox-inner {
       border-color: @disabled-border-color;
     }
   }
 }
 
-.checked.disabled {
-  .checkboxInner {
+.@{prefix}-checkbox-checked.@{prefix}-checkbox-disabled {
+  .@{prefix}-checkbox-inner {
     &:after {
       border-color: rgba(0, 0, 0, 0.25);
     }
   }
 }
 
-.indeterminate,
-.indeterminate.disabled {
-  .checkboxInner {
+.@{prefix}-checkbox-indeterminate,
+.@{prefix}-checkbox-indeterminate.@{prefix}-checkbox-disabled {
+  .@{prefix}-checkbox-inner {
     &:after {
       height: 2px;
       border-color: #fff;
@@ -140,8 +142,8 @@
   }
 }
 
-.indeterminate.disabled {
-  .checkboxInner {
+.@{prefix}-checkbox-indeterminate.@{prefix}-checkbox-disabled {
+  .@{prefix}-checkbox-inner {
     &:after {
       border-color: @disabled-border-color;
     }
