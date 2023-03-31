@@ -31,7 +31,19 @@ import VirtualList from '../VirtualList';
 import type { PaginationProps } from '../index';
 import '../style/index.less';
 import { getRowKey, getParent } from '../utils/util';
-import { BAR_THUMB_SIZE, BAR_WIDTH } from '../utils/constant';
+import {
+  BAR_THUMB_SIZE,
+  BAR_WIDTH,
+  CLASS_CELL_EMPTY,
+  CLASS_CELL_FIXED_FIRST,
+  CLASS_CELL_FIXED_FIRST_RIGHT,
+  CLASS_CELL_FIXED_LAST,
+  CLASS_CELL_FIXED_LAST_LEFT,
+  CLASS_CELL_FIXED_LEFT,
+  CLASS_CELL_FIXED_RIGHT,
+  CLASS_EMPTY_CONTENT,
+  PREFIXCLS,
+} from '../utils/constant';
 import { omitColumnProps } from '../utils/util';
 import LocaleContext from '../LocalProvider/context';
 import ScrollBar from '../ScrollBar';
@@ -670,7 +682,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         const diff = item.height - newRowHeight;
         if (diff) {
           hasChange = true;
-          // console.log(`index: ${index}`);
           const top = index === 0 ? 0 : prevPosition[index - 1].bottom;
           prevPosition[index].height = newRowHeight;
           prevPosition[index].top = top;
@@ -786,8 +797,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             (clientHeight / tbodyScrollHeight) * clientHeight,
             BAR_THUMB_SIZE,
           );
-          // console.log(`tbodyScrollHeight: ${tbodyScrollHeight}`);
-          // console.log(`lastScrollTop.current: ${lastScrollTop.current}`);
           const scale = (tbodyScrollHeight - clientHeight) / (clientHeight - thumbSize);
           // const y = Math.min(lastScrollTop.current, tbodyScrollHeight - clientHeight) / scale;
           // console.log(`final: ${y}`);
@@ -835,31 +844,30 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         index === 0 ? 0 : tbodyScrollTop.current
       }px)`;
       el.querySelectorAll('th, td').forEach((cell: HTMLTableDataCellElement) => {
-        if (
-          cell.classList.contains('cell-empty') &&
-          cell.querySelector('.empty-placeholder-content')
-        ) {
+        if (cell.classList.contains(CLASS_CELL_EMPTY) && cell.querySelector(CLASS_EMPTY_CONTENT)) {
           (cell.querySelector(
-            '.empty-placeholder-content',
+            CLASS_EMPTY_CONTENT,
           ) as any)!.style.transform = `translateX(${offsetLeft}px)`;
         }
-        if (cell.classList.contains('cell-fixed-left')) {
+        if (cell.classList.contains(CLASS_CELL_FIXED_LEFT)) {
           cell.style.transform = `translateX(${offsetLeft}px)`;
-        } else if (cell.classList.contains('cell-fixed-right')) {
+        } else if (cell.classList.contains(CLASS_CELL_FIXED_RIGHT)) {
           cell.style.transform = `translateX(-${offsetRight}px)`;
         }
-        if (cell.classList.contains('cell-is-last-fixedLeft')) {
-          if (offsetLeft > 0) {
-            cell.classList.add('cell-fixed-last-left');
-          } else {
-            cell.classList.remove('cell-fixed-last-left');
-          }
-        } else if (cell.classList.contains('cell-is-first-fixedRight')) {
-          if (offsetRight > 0) {
-            cell.classList.add('cell-fixed-first-right');
-          } else {
-            cell.classList.remove('cell-fixed-first-right');
-          }
+        if (cell.classList.contains(CLASS_CELL_FIXED_LAST)) {
+          // if (offsetLeft > 0) {
+          //   cell.classList.add(CLASS_CELL_FIXED_LAST_LEFT);
+          // } else {
+          //   cell.classList.remove(CLASS_CELL_FIXED_LAST_LEFT);
+          // }
+          cell.classList[offsetLeft > 0 ? 'add' : 'remove'](CLASS_CELL_FIXED_LAST_LEFT);
+        } else if (cell.classList.contains(CLASS_CELL_FIXED_FIRST)) {
+          // if (offsetRight > 0) {
+          //   cell.classList.add(CLASS_CELL_FIXED_FIRST_RIGHT);
+          // } else {
+          //   cell.classList.remove(CLASS_CELL_FIXED_FIRST_RIGHT);
+          // }
+          cell.classList[offsetRight > 0 ? 'add' : 'remove'](CLASS_CELL_FIXED_FIRST_RIGHT);
         }
       });
     });
@@ -1098,13 +1106,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const renderBody = () => {
     return (
-      <div className="tbody-container">
-        <div ref={tbodyRef} className="table-tbody">
-          <table
-            ref={realTbodyRef}
-            style={{ width: scrollWidth }}
-            className={classnames({ 'empty-tbody-table': !currDataSource.length })}
-          >
+      <div className={`${PREFIXCLS}-tbody-container`}>
+        <div ref={tbodyRef} className={`${PREFIXCLS}-tbody`}>
+          <table ref={realTbodyRef} style={{ width: scrollWidth }}>
             <Colgroup columns={flattenColumns} />
             <Tbody
               empty={empty}
@@ -1168,10 +1172,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return (
       <div
         ref={theadRef}
-        className={classnames({
-          'table-thead': true,
-          // 'table-head-gutter': showScrollbarY,
-        })}
+        className={`${PREFIXCLS}-thead`}
+        // className={classnames({
+        //   'table-thead': true,
+        //   // 'table-head-gutter': showScrollbarY,
+        // })}
       >
         <table style={{ width: scrollWidth }}>
           <Colgroup columns={flattenColumns} />
@@ -1210,16 +1215,21 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         pagination,
         { onChange: handlePaginationChange },
       );
-      return <Pagination {...pageProps} className="table-pagination" />;
+      return <Pagination {...pageProps} className={`${PREFIXCLS}-pagination`} />;
     }
     return null;
   };
 
   const tableWrapClass = classnames({
-    'table-container': true,
-    'table-small': size === 'small',
-    'table-large': size === 'large',
-    'table-bordered': bordered,
+    [`${PREFIXCLS}-container`]: true,
+    [`${PREFIXCLS}-small`]: size === 'small',
+    [`${PREFIXCLS}-large`]: size === 'large',
+    [`${PREFIXCLS}-bordered`]: bordered,
+    [`${PREFIXCLS}-empty`]: !currDataSource.length,
+    // 'table-container': true,
+    // 'table-small': size === 'small',
+    // 'table-large': size === 'large',
+    // 'table-bordered': bordered,
     [className]: !!className,
   });
 
@@ -1238,9 +1248,15 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         {showHeader ? renderHeader() : null}
         {renderBody()}
         {loading ? (
-          <div className="table-loading">{typeof loading === 'boolean' ? <Spin /> : loading}</div>
+          <div className={`${PREFIXCLS}-loading`}>
+            {typeof loading === 'boolean' ? <Spin /> : loading}
+          </div>
         ) : null}
-        <div ref={resizeLineRef} className="table-resize-line" style={{ display: 'none' }} />
+        <div
+          ref={resizeLineRef}
+          className={`${PREFIXCLS}-resize-line`}
+          style={{ display: 'none' }}
+        />
       </div>
       {renderPagination()}
     </>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef } from 'react';
 import classnames from 'classnames';
 import Tr from '../Tr';
 import type {
@@ -8,7 +8,14 @@ import type {
   TreeExpandable,
   PrivateColumnsType,
 } from '../interface1';
-import ResizeObserver from 'resize-observer-polyfill';
+// import ResizeObserver from 'resize-observer-polyfill';
+import {
+  CLASS_CELL_EMPTY,
+  CLASS_EMPTY_CONTENT,
+  CLASS_ROW,
+  CLASS_ROW_EXPAND,
+  PREFIXCLS,
+} from '../utils/constant';
 
 interface TbodyProps<T> {
   empty: React.ReactNode;
@@ -93,29 +100,24 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
   // );
 
   const tbodyRef = useRef<any>(null);
-  const resizeObserverIns = useRef<any>(null);
+  // const resizeObserverIns = useRef<any>(null);
   // index 是截取后的顺序 应该取原来在列表中的位置 这里不采取是监听 ResizeObserver 是因为获取到的startRowIndex 不准确 导致更新cachePosition 不对
   useEffect(() => {
     const update = () => {
-      // console.log(`update start: ${startRowIndex}`);
-      // console.log('tbody mount----');
       const rects: { rowIndex: number; rowHeight: number }[] = [];
       tbodyRef.current
-        .querySelectorAll('.row')
-        .forEach((trNode: HTMLTableRowElement, index: number) => {
+        .querySelectorAll(`.${CLASS_ROW}`)
+        ?.forEach((trNode: HTMLTableRowElement, index: number) => {
           if (!trNode) return;
-          // console.log(`index: ${index}`);
-          // console.log(`start: ${startRowIndex}`);
           let { height } = trNode.getBoundingClientRect();
           if (Number.isNaN(height)) height = 0;
           let expandHeight = 0;
           if (
             trNode.nextElementSibling &&
-            trNode.nextElementSibling.classList.contains('row-expand')
+            trNode.nextElementSibling.classList.contains(CLASS_ROW_EXPAND)
           ) {
             expandHeight = trNode.nextElementSibling.clientHeight;
           }
-          // console.log(`finalIndex: ${index + startRowIndex}`);
           rects.push({ rowIndex: index + startRowIndex, rowHeight: height + expandHeight });
         });
       onUpdate && onUpdate(rects);
@@ -180,12 +182,15 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
   return (
     <tbody ref={tbodyRef}>
       {!dataSource.length ? (
-        <tr key="empty-placeholder" className="row-placeholder">
+        <tr key="empty-placeholder" className={`${PREFIXCLS}-row-placeholder`}>
           <td
             colSpan={columns.length}
-            className={classnames({ 'cell-empty': true, 'cell-ignore-right-border': bordered })}
+            className={classnames({
+              [CLASS_CELL_EMPTY]: true,
+              [`${PREFIXCLS}-cell-ignore-right-border`]: bordered,
+            })}
           >
-            <div className="empty-placeholder-content" style={{ width: tbodyClientWidth }}>
+            <div className={CLASS_EMPTY_CONTENT} style={{ width: tbodyClientWidth }}>
               {empty}
             </div>
           </td>

@@ -14,6 +14,7 @@ import {
   ColumnType,
   ColumnGroupType,
 } from '../interface1';
+import { PREFIXCLS } from '../utils/constant';
 
 export interface ThProps<T> {
   rowIndex: number;
@@ -120,7 +121,7 @@ function Th<T>(props: ThProps<T>) {
   const renderTooltip = (content: React.ReactNode) => {
     if (typeof column.ellipsis === 'object') {
       const ellipsis = column.ellipsis;
-      const triggerEl = <span className="cell-tooltip-content">{content}</span>;
+      const triggerEl = <span className={`${PREFIXCLS}-cell-tooltip-content`}>{content}</span>;
       if (ellipsis.renderTooltip) {
         return ellipsis.renderTooltip(triggerEl, content);
       }
@@ -137,7 +138,7 @@ function Th<T>(props: ThProps<T>) {
       !('children' in column) &&
       !column._ignoreRightBorder &&
       column?.resizable ? (
-      <div className="cell-header-resizable" onMouseDown={handleMouseDown} />
+      <div className={`${PREFIXCLS}-cell-header-resizable`} onMouseDown={handleMouseDown} />
     ) : null;
   };
 
@@ -145,7 +146,7 @@ function Th<T>(props: ThProps<T>) {
     return showTooltip && isOverflow ? (
       renderTooltip(column.title)
     ) : !!column.ellipsis ? (
-      <span className="cell-tooltip-content">{column.title}</span>
+      <span className={`${PREFIXCLS}-cell-tooltip-content`}>{column.title}</span>
     ) : (
       column.title
     );
@@ -243,18 +244,18 @@ function Th<T>(props: ThProps<T>) {
         rowSpan={'children' in column && column?.children.length ? 1 : rowSpan}
         {...cellEvents}
       >
-        <div className="cell-header">
+        <div className={`${PREFIXCLS}-cell-header`}>
           <span
             ref={columnTitleRef}
             className={classnames({
-              'column-title': true,
-              'column-title-ellipsis': !!column.ellipsis,
+              [`${PREFIXCLS}-column-title`]: true,
+              [`${PREFIXCLS}-column-title-ellipsis`]: !!column.ellipsis,
             })}
           >
             {renderTitle()}
           </span>
           {column.sorter || column.filters ? (
-            <div className="sorter-filter">
+            <div className={`${PREFIXCLS}-sorter-filter`}>
               {column.sorter ? renderSorterContent() : null}
               {column.filters ? renderFilterContent() : null}
             </div>

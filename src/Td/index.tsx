@@ -12,6 +12,15 @@ import type {
   TreeExpandable,
 } from '../interface1';
 import '../style/index.less';
+import {
+  CLASS_CELL_FIXED_FIRST,
+  CLASS_CELL_FIXED_FIRST_RIGHT,
+  CLASS_CELL_FIXED_LAST,
+  CLASS_CELL_FIXED_LAST_LEFT,
+  CLASS_CELL_FIXED_LEFT,
+  CLASS_CELL_FIXED_RIGHT,
+  PREFIXCLS,
+} from '../utils/constant';
 
 interface TdProps<T> {
   rowData: T;
@@ -130,16 +139,21 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
   const align = column?.align || 'left';
 
   const classes: Record<string, boolean> = {
-    'cell-ellipsis': !!column?.ellipsis && !isSelectionExpand && !isTreeColumn,
-    'cell-fixed-left': column?.fixed === 'left',
-    'cell-fixed-right': column?.fixed === 'right',
-    'cell-is-last-fixedLeft': !!column?._lastLeftFixed,
-    'cell-is-first-fixedRight': !!column?._firstRightFixed,
-    [`cell-align-${align}`]: !!align,
-    'selection-expand-column': !!isSelectionExpand,
-    'cell-ignore-right-border': ignoreRightBorder,
-    'cell-fixed-last-left': !!column?._lastLeftFixed && virtualized && offsetLeft > 0,
-    'cell-fixed-first-right': !!column?._firstRightFixed && virtualized && offsetRight > 0,
+    // [`${PREFIXCLS}-cell-ellipsis`]: !!column?.ellipsis && !isSelectionExpand && !isTreeColumn,
+    // [`${PREFIXCLS}-cell-fixed-left`]: column?.fixed === 'left',
+    [`${PREFIXCLS}-cell-ellipsis`]: !!column?.ellipsis && !isSelectionExpand && !isTreeColumn,
+    [CLASS_CELL_FIXED_LEFT]: column?.fixed === 'left',
+    [CLASS_CELL_FIXED_RIGHT]: column?.fixed === 'right',
+    [CLASS_CELL_FIXED_LAST]: !!column?._lastLeftFixed,
+    [CLASS_CELL_FIXED_FIRST]: !!column?._firstRightFixed,
+    // ['cell-is-last-fixedLeft']: !!column?._lastLeftFixed,
+    // 'cell-is-first-fixedRight': !!column?._firstRightFixed,
+    [`${PREFIXCLS}-cell-align-${align}`]: !!align,
+    [`${PREFIXCLS}-selection-expand-column`]: !!isSelectionExpand,
+    // 'selection-expand-column': !!isSelectionExpand,
+    [`${PREFIXCLS}-cell-ignore-right-border`]: ignoreRightBorder,
+    [CLASS_CELL_FIXED_LAST_LEFT]: !!column?._lastLeftFixed && virtualized && offsetLeft > 0,
+    [CLASS_CELL_FIXED_FIRST_RIGHT]: !!column?._firstRightFixed && virtualized && offsetRight > 0,
     [column?.className ?? '']: !!column?.className,
   };
 
@@ -193,7 +207,7 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
 
   const renderTooltip = (content: React.ReactNode) => {
     if (typeof ellipsis === 'object') {
-      const triggerEl = <span className="cell-tooltip-content">{content}</span>;
+      const triggerEl = <span className={`${PREFIXCLS}-cell-tooltip-content`}>{content}</span>;
       if (ellipsis?.renderTooltip) {
         return ellipsis.renderTooltip(triggerEl, content);
       }
@@ -209,7 +223,7 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
     return showTooltip && isOverflow ? (
       renderTooltip(content)
     ) : !!column?.ellipsis ? (
-      <span className="cell-tooltip-content">{content}</span>
+      <span className={`${PREFIXCLS}-cell-tooltip-content`}>{content}</span>
     ) : (
       content
     );
@@ -259,8 +273,8 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
     const expandIcon = (
       <span
         className={classnames({
-          'expand-icon': true,
-          'expand-icon-divider': expanded,
+          [`${PREFIXCLS}-expand-icon`]: true,
+          [`${PREFIXCLS}-expand-icon-divider`]: expanded,
         })}
         onClick={(event) => {
           handleExpand(!expanded, rowData, recordKey);
@@ -308,9 +322,9 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
             event.stopPropagation();
           }}
           className={classnames({
-            'expand-icon': true,
-            'icon-tree': true,
-            'expand-icon-divider': treeExpanded,
+            [`${PREFIXCLS}-expand-icon`]: true,
+            [`${PREFIXCLS}-icon-tree`]: true,
+            [`${PREFIXCLS}-expand-icon-divider`]: treeExpanded,
           })}
         />
       );
@@ -327,9 +341,12 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
           ref={cellRef}
           {...cellEvents}
         >
-          <div style={{ marginLeft: treeLevel * treeIndent }} className="cell-tree-container">
+          <div
+            style={{ marginLeft: treeLevel * treeIndent }}
+            className={`${PREFIXCLS}-cell-tree-container`}
+          >
             {treeIcon}
-            <span ref={contentRef} className="cell-content-ellipsis">
+            <span ref={contentRef} className={`${PREFIXCLS}-cell-content-ellipsis`}>
               {renderContent(content)}
             </span>
           </div>
@@ -353,7 +370,7 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
               paddingLeft: treeLevel > 0 || (isTree && treeLevel === 0) ? 25 : 0,
             }}
             ref={contentRef}
-            className="cell-content-ellipsis"
+            className={`${PREFIXCLS}-cell-content-ellipsis`}
           >
             {renderContent(content)}
           </div>

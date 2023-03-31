@@ -13,6 +13,13 @@ import type {
 import Th from '../Th';
 import type { ThProps } from '../Th';
 import { omitColumnProps } from '../utils/util';
+import {
+  CLASS_CELL_FIXED_FIRST,
+  CLASS_CELL_FIXED_LAST,
+  CLASS_CELL_FIXED_LEFT,
+  CLASS_CELL_FIXED_RIGHT,
+  PREFIXCLS,
+} from '../utils/constant';
 
 interface TheadProps<T> {
   bordered: boolean;
@@ -130,11 +137,11 @@ function Thead<T>(props: TheadProps<T>) {
           : headerCellClassName || '';
 
       const classes = {
-        'cell-fixed-left': column.fixed === 'left',
-        'cell-fixed-right': column.fixed === 'right',
-        'cell-is-last-fixedLeft': !!column._lastLeftFixed,
-        'cell-is-first-fixedRight': !!column._firstRightFixed,
-        'cell-ignore-right-border': column._ignoreRightBorder,
+        [CLASS_CELL_FIXED_LEFT]: column.fixed === 'left',
+        [CLASS_CELL_FIXED_RIGHT]: column.fixed === 'right',
+        [CLASS_CELL_FIXED_LAST]: !!column?._lastLeftFixed,
+        [CLASS_CELL_FIXED_FIRST]: !!column?._firstRightFixed,
+        [`${PREFIXCLS}-cell-ignore-right-border`]: column._ignoreRightBorder,
         [colClassName]: !!column.className,
         [cellClassName]: !!cellClassName,
       };
@@ -143,10 +150,10 @@ function Thead<T>(props: TheadProps<T>) {
         'type' in column && column.type && ['expand', 'checkbox', 'radio'].includes(column.type);
 
       const cls = classnames({
-        'cell-align-center': column.align === 'center',
-        'cell-align-right': column.align === 'right',
-        'selection-expand-column': isSelectionExpand,
-        'cell-ellipsis': isSelectionExpand && !!column.ellipsis,
+        [`${PREFIXCLS}-cell-align-center`]: column.align === 'center',
+        [`${PREFIXCLS}-cell-align-right`]: column.align === 'right',
+        [`${PREFIXCLS}-selection-expand-column`]: isSelectionExpand,
+        [`${PREFIXCLS}-cell-ellipsis`]: isSelectionExpand && !!column.ellipsis,
         ...classes,
       });
 
@@ -176,7 +183,7 @@ function Thead<T>(props: TheadProps<T>) {
           ...baseProps,
           rowSpan: 1,
           className: classnames({
-            'cell-align-center': true,
+            [`${PREFIXCLS}-cell-align-center`]: true,
             ...classes,
           }),
         };

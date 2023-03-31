@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo } from 'react';
+import React, { useRef, useMemo } from 'react';
 import classnames from 'classnames';
 import type {
   ColumnType,
@@ -8,6 +8,7 @@ import type {
   TreeExpandable,
 } from '../interface1';
 import Td from '../Td';
+import { CLASS_CELL_FIXED_LEFT, CLASS_ROW, CLASS_ROW_EXPAND, PREFIXCLS } from '../utils/constant';
 // import ResizeObserver from 'resize-observer-polyfill';
 
 interface TrProps<T> {
@@ -126,13 +127,16 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
     return (
       <tr
         key={`${rowIndex}_expand`}
-        className={classnames({ cls, 'row-expand': true })}
+        className={classnames({ cls, [CLASS_ROW_EXPAND]: true })}
         ref={expandTrRef}
       >
         <td
           colSpan={columns.length}
           style={style}
-          className={classnames({ 'cell-ignore-right-border': bordered, 'cell-fixed-left': true })}
+          className={classnames({
+            [`${PREFIXCLS}-cell-ignore-right-border`]: bordered,
+            [CLASS_CELL_FIXED_LEFT]: true,
+          })}
         >
           {expandable?.expandedRowRender &&
             expandable?.expandedRowRender(rowData, rowIndex, expanded)}
@@ -199,10 +203,14 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
   };
 
   const classes: Record<string, boolean> = {
-    row: true,
-    'row-even': striped && rowIndex % 2 !== 0,
-    'row-odd': striped && rowIndex % 2 === 0,
-    'row-selected': !!checked,
+    [CLASS_ROW]: true,
+    [`${PREFIXCLS}-row-even`]: striped && rowIndex % 2 !== 0,
+    [`${PREFIXCLS}-row-odd`]: striped && rowIndex % 2 === 0,
+    [`${PREFIXCLS}-row-selected`]: !!checked,
+    // row: true,
+    // 'row-even': striped && rowIndex % 2 !== 0,
+    // 'row-odd': striped && rowIndex % 2 === 0,
+    // 'row-selected': !!checked,
   };
 
   if (rowClassName && rowClassName(rowData, rowIndex)) {
