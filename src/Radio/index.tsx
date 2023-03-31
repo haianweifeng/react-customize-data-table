@@ -1,7 +1,8 @@
-import styles from './index.less';
+import './index.less';
 import React, { useRef } from 'react';
 import { generateUUID } from '../utils/util';
 import classnames from 'classnames';
+import { PREFIXCLS } from '../utils/constant';
 
 interface RadioProps {
   className?: string;
@@ -26,9 +27,9 @@ const Radio = (props: RadioProps) => {
   const idRef = useRef<string>(generateUUID());
 
   const cls = classnames({
-    [styles.radio]: true,
-    [styles.disabled]: disabled,
-    [styles.checked]: checked,
+    [`${PREFIXCLS}-radio`]: true,
+    [`${PREFIXCLS}-radio-disabled`]: disabled,
+    [`${PREFIXCLS}-radio-checked`]: checked,
     [className]: !!className,
   });
 
@@ -53,10 +54,10 @@ const Radio = (props: RadioProps) => {
         name={name}
         onChange={handleChange}
         checked={checked}
-        className={styles.radioInput}
+        className={`${PREFIXCLS}-radio-input`}
       />
-      <span className={styles.radioInner} />
-      {children && <span className={styles.name}>{children}</span>}
+      <span className={`${PREFIXCLS}-radio-inner`} />
+      {children && <span className={`${PREFIXCLS}-radio-name`}>{children}</span>}
     </label>
   );
 };
