@@ -13,7 +13,7 @@ import VirtualBody from '../VirtualBody';
 import Colgroup from '../Colgroup';
 import Pagination from '../Pagination';
 import Spin from '../Spin';
-import type { RowKeyType, CachePositionType, LocalType } from '../interface';
+import type { RowKeyType, LocalType } from '../interface';
 import type {
   ColumnsType,
   ColumnType,
@@ -33,7 +33,6 @@ import '../style/index.less';
 import { getRowKey, getParent } from '../utils/util';
 import {
   BAR_THUMB_SIZE,
-  BAR_WIDTH,
   CLASS_CELL_EMPTY,
   CLASS_CELL_FIXED_FIRST,
   CLASS_CELL_FIXED_FIRST_RIGHT,
@@ -844,9 +843,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         index === 0 ? 0 : tbodyScrollTop.current
       }px)`;
       el.querySelectorAll('th, td').forEach((cell: HTMLTableDataCellElement) => {
-        if (cell.classList.contains(CLASS_CELL_EMPTY) && cell.querySelector(CLASS_EMPTY_CONTENT)) {
+        if (
+          cell.classList.contains(CLASS_CELL_EMPTY) &&
+          cell.querySelector(`.${CLASS_EMPTY_CONTENT}`)
+        ) {
           (cell.querySelector(
-            CLASS_EMPTY_CONTENT,
+            `.${CLASS_EMPTY_CONTENT}`,
           ) as any)!.style.transform = `translateX(${offsetLeft}px)`;
         }
         if (cell.classList.contains(CLASS_CELL_FIXED_LEFT)) {
@@ -855,18 +857,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           cell.style.transform = `translateX(-${offsetRight}px)`;
         }
         if (cell.classList.contains(CLASS_CELL_FIXED_LAST)) {
-          // if (offsetLeft > 0) {
-          //   cell.classList.add(CLASS_CELL_FIXED_LAST_LEFT);
-          // } else {
-          //   cell.classList.remove(CLASS_CELL_FIXED_LAST_LEFT);
-          // }
           cell.classList[offsetLeft > 0 ? 'add' : 'remove'](CLASS_CELL_FIXED_LAST_LEFT);
         } else if (cell.classList.contains(CLASS_CELL_FIXED_FIRST)) {
-          // if (offsetRight > 0) {
-          //   cell.classList.add(CLASS_CELL_FIXED_FIRST_RIGHT);
-          // } else {
-          //   cell.classList.remove(CLASS_CELL_FIXED_FIRST_RIGHT);
-          // }
           cell.classList[offsetRight > 0 ? 'add' : 'remove'](CLASS_CELL_FIXED_FIRST_RIGHT);
         }
       });
