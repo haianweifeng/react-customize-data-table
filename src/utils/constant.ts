@@ -27,6 +27,12 @@ export const CLASS_CELL_EMPTY = `${PREFIXCLS}-cell-empty`;
 
 export const CLASS_EMPTY_CONTENT = `${PREFIXCLS}-empty-placeholder-content`;
 
+export const CLASS_SCROLLBAR_TRACK = `${PREFIXCLS}-scrollbar-track`;
+
+export const CLASS_SCROLLBAR_TRACK_SCROLLING = `${PREFIXCLS}-scrollbar-track-scrolling`;
+
+export const CLASS_SCROLLBAR_TRACK_ACTIVE = `${PREFIXCLS}-scrollbar-track-active`;
+
 export const omitColumnProps = [
   '_width',
   '_columnKey',

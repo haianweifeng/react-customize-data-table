@@ -1,4 +1,6 @@
-.scrollbar-track {
+@import '../style/variables.less';
+
+.@{table-prefix}-scrollbar-track {
   position: absolute;
   right: 0px;
   bottom: 0px;
@@ -9,57 +11,57 @@
   transition: background-color 0.2s linear, opacity 0.2s linear;
 }
 
-.scrollbar-track-scrolling {
+.@{table-prefix}-scrollbar-track-scrolling {
   visibility: visible;
   opacity: 1;
 }
 
-.scrollbar-track-active {
+.@{table-prefix}-scrollbar-track-active {
   background-color: rgba(252, 252, 252, 0.95);
   visibility: visible;
   opacity: 1;
 
-  &.scrollbar-track-vertical {
+  &.@{table-prefix}-scrollbar-track-vertical {
     border-left: 1px solid #dedede;
     // border-bottom: 1px solid #dedede;
 
-    .scrollbar-thumb {
+    .@{table-prefix}-scrollbar-thumb {
       width: 11px;
       border-radius: 8px;
     }
   }
 
-  &.scrollbar-track-horizontal {
+  &.@{table-prefix}-scrollbar-track-horizontal {
     border-top: 1px solid #dedede;
 
-    .scrollbar-thumb {
+    .@{table-prefix}-scrollbar-thumb {
       height: 11px;
       border-radius: 8px;
     }
   }
 }
 
-.scrollbar-track-horizontal {
+.@{table-prefix}-scrollbar-track-horizontal {
   left: 0;
   height: 16px;
 
-  .scrollbar-thumb {
+  .@{table-prefix}-scrollbar-thumb {
     bottom: 2px;
     height: 8px;
   }
 }
 
-.scrollbar-track-vertical {
+.@{table-prefix}-scrollbar-track-vertical {
   top: 0;
   width: 16px;
 
-  .scrollbar-thumb {
+  .@{table-prefix}-scrollbar-thumb {
     right: 2px;
     width: 8px;
   }
 }
 
-.scrollbar-thumb {
+.@{table-prefix}-scrollbar-thumb {
   position: absolute;
   display: block;
   width: 0;

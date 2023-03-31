@@ -2,7 +2,7 @@ import React, { forwardRef, useMemo, useRef, useEffect } from 'react';
 import classnames from 'classnames';
 import './index.less';
 import { extractPixel } from '../utils/util';
-import { BAR_THUMB_SIZE } from '../utils/constant';
+import { BAR_THUMB_SIZE, CLASS_SCROLLBAR_TRACK, PREFIXCLS } from '../utils/constant';
 // todo 考虑移动端touch事件
 interface VirtualScrollBarProps {
   className?: string;
@@ -115,13 +115,13 @@ const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((prop
   return (
     <div
       className={classnames({
-        'scrollbar-track': true,
-        [`scrollbar-track-${orientation}`]: !!orientation,
+        [CLASS_SCROLLBAR_TRACK]: true,
+        [`${PREFIXCLS}-scrollbar-track-${orientation}`]: !!orientation,
         [className]: !!className,
       })}
       ref={scrollTrackRef}
     >
-      <div className="scrollbar-thumb" ref={ref} style={thumbStyle} />
+      <div className={`${PREFIXCLS}-scrollbar-thumb`} ref={ref} style={thumbStyle} />
     </div>
   );
 });

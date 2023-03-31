@@ -41,6 +41,9 @@ import {
   CLASS_CELL_FIXED_LEFT,
   CLASS_CELL_FIXED_RIGHT,
   CLASS_EMPTY_CONTENT,
+  CLASS_SCROLLBAR_TRACK,
+  CLASS_SCROLLBAR_TRACK_ACTIVE,
+  CLASS_SCROLLBAR_TRACK_SCROLLING,
   PREFIXCLS,
 } from '../utils/constant';
 import { omitColumnProps } from '../utils/util';
@@ -939,9 +942,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     const wheelEndDetector = (target: HTMLElement, isVertical: boolean) => {
       window.clearTimeout(isVertical ? wheelYEndTimer.current : wheelXEndTimer.current);
       const wheelEndTimer = window.setTimeout(() => {
-        target.classList.remove('scrollbar-track-scrolling');
+        target.classList.remove(CLASS_SCROLLBAR_TRACK_SCROLLING);
         if (mouseLeave.current) {
-          target.classList.remove('scrollbar-track-active');
+          target.classList.remove(CLASS_SCROLLBAR_TRACK_ACTIVE);
         }
       }, 600);
       if (isVertical) {
@@ -1004,7 +1007,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
       const barEl = thumbEl!.parentNode as HTMLElement;
       if (barEl) {
-        barEl.classList.add('scrollbar-track-scrolling');
+        barEl.classList.add(CLASS_SCROLLBAR_TRACK_SCROLLING);
       }
       wheelEndDetector(barEl, isVertical);
     };
@@ -1054,23 +1057,23 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   useEffect(() => {
     const handleMouseEnter = (event: any) => {
       mouseLeave.current = false;
-      const scrollBarTrackNode = getParent(event.target, '.scrollbar-track');
+      const scrollBarTrackNode = getParent(event.target, `.${CLASS_SCROLLBAR_TRACK}`);
       if (
         scrollBarTrackNode &&
-        scrollBarTrackNode.classList.contains('scrollbar-track-scrolling')
+        scrollBarTrackNode.classList.contains(CLASS_SCROLLBAR_TRACK_SCROLLING)
       ) {
-        scrollBarTrackNode.classList.remove('scrollbar-track-scrolling');
-        scrollBarTrackNode.classList.add('scrollbar-track-active');
+        scrollBarTrackNode.classList.remove(CLASS_SCROLLBAR_TRACK_SCROLLING);
+        scrollBarTrackNode.classList.add(CLASS_SCROLLBAR_TRACK_ACTIVE);
       }
     };
 
     const handleMouseLeave = (event: any) => {
       mouseLeave.current = true;
-      const scrollBarTrackNode = getParent(event.target, '.scrollbar-track');
+      const scrollBarTrackNode = getParent(event.target, `.${CLASS_SCROLLBAR_TRACK}`);
       if (scrollBarTrackNode) {
         setTimeout(() => {
-          if (!scrollBarTrackNode.classList.contains('scrollbar-track-scrolling')) {
-            scrollBarTrackNode.classList.remove('scrollbar-track-active');
+          if (!scrollBarTrackNode.classList.contains(CLASS_SCROLLBAR_TRACK_SCROLLING)) {
+            scrollBarTrackNode.classList.remove(CLASS_SCROLLBAR_TRACK_ACTIVE);
           }
         }, 600);
       }
