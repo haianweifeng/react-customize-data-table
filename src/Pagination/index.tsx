@@ -9,6 +9,7 @@ import { ReactComponent as LeftDoubleArrow } from '@/assets/left-double-arrow.sv
 import { ReactComponent as RightDoubleArrow } from '@/assets/right-double-arrow.svg';
 import LocaleContext from '../LocalProvider/context';
 import './index.less';
+import { PREFIXCLS } from '../utils/constant';
 
 export interface PaginationProps {
   className?: string;
@@ -174,14 +175,12 @@ const Pagination = (props: PaginationProps) => {
     if ('current' in props) {
       setCurrent(props.current || 1);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.current]);
 
   useEffect(() => {
     if ('pageSize' in props) {
       setPageSize(props.pageSize || 10);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.pageSize]);
 
   useEffect(() => {
@@ -218,15 +217,15 @@ const Pagination = (props: PaginationProps) => {
       <div
         key={type}
         className={classnames({
-          'pagination-item': true,
-          'pagination-item-more': true,
-          'pagination-item-more-disabled': disabled,
+          [`${PREFIXCLS}-pagination-item`]: true,
+          [`${PREFIXCLS}-pagination-item-more`]: true,
+          [`${PREFIXCLS}-pagination-item-more-disabled`]: disabled,
         })}
         onClick={() => handleChange(page)}
       >
         <Icon
           component={type === 'jump-next' ? RightDoubleArrow : LeftDoubleArrow}
-          className="pagination-double-arrow-icon"
+          className={`${PREFIXCLS}-pagination-double-arrow-icon`}
         />
       </div>
     );
@@ -260,29 +259,36 @@ const Pagination = (props: PaginationProps) => {
 
   const renderPageSizes = () => {
     return (
-      <div key="sizes" ref={selectRef} className="pagination-pagesize" onClick={handleClick}>
+      <div
+        key="sizes"
+        ref={selectRef}
+        className={`${PREFIXCLS}-pagination-pagesize`}
+        onClick={handleClick}
+      >
         <div
           className={classnames({
-            'pagination-select-inner': true,
-            'pagination-select-focus': isFocus,
-            'pagination-select-disabled': disabled,
+            [`${PREFIXCLS}-pagination-select-inner`]: true,
+            [`${PREFIXCLS}-pagination-select-focus`]: isFocus,
+            [`${PREFIXCLS}-pagination-select-disabled`]: disabled,
           })}
         >
-          <span className="pagination-select-result">{`${pageSize}${locale.items_per_page}`}</span>
-          <Icon component={DownIcon} className="pagination-down-icon" />
+          <span
+            className={`${PREFIXCLS}-pagination-select-result`}
+          >{`${pageSize}${locale.items_per_page}`}</span>
+          <Icon component={DownIcon} className={`${PREFIXCLS}-pagination-down-icon`} />
         </div>
         <div
           className={classnames({
-            'pagination-pagesize-list': true,
-            'pagination-pagesize-list-show': isFocus,
+            [`${PREFIXCLS}-pagination-pagesize-list`]: true,
+            [`${PREFIXCLS}-pagination-pagesize-list-show`]: isFocus,
           })}
         >
           {pageSizeOptions.map((p) => {
             return (
               <div
                 className={classnames({
-                  'pagination-select-option': true,
-                  'pagination-select-option-active': pageSize === p,
+                  [`${PREFIXCLS}-pagination-select-option`]: true,
+                  [`${PREFIXCLS}-pagination-select-option-active`]: pageSize === p,
                 })}
                 key={p}
                 onClick={() => handleSelect(p)}
@@ -303,7 +309,7 @@ const Pagination = (props: PaginationProps) => {
     const originalElement = (
       <Icon
         component={type === 'next' ? RightArrow : LeftArrow}
-        className="pagination-arrow-icon"
+        className={`${PREFIXCLS}-pagination-arrow-icon`}
       />
     );
 
@@ -311,8 +317,8 @@ const Pagination = (props: PaginationProps) => {
       <div
         key={type}
         className={classnames({
-          'pagination-item': true,
-          'pageination-item-disabled': isDisabled,
+          [`${PREFIXCLS}-pagination-item`]: true,
+          [`${PREFIXCLS}-pageination-item-disabled`]: isDisabled,
         })}
         onClick={() => {
           if (isDisabled) return;
@@ -329,8 +335,8 @@ const Pagination = (props: PaginationProps) => {
         <div
           key={type}
           className={classnames({
-            'pagination-custom-item': true,
-            'pagination-custom-item-disabled': isDisabled,
+            [`${PREFIXCLS}-pagination-custom-item`]: true,
+            [`${PREFIXCLS}-pagination-custom-item-disabled`]: isDisabled,
           })}
           onClick={() => {
             if (isDisabled) return;
@@ -352,8 +358,8 @@ const Pagination = (props: PaginationProps) => {
       <div
         key="jumper"
         className={classnames({
-          'pagination-jumper': true,
-          'pagination-jumper-disabled': disabled,
+          [`${PREFIXCLS}-pagination-jumper`]: true,
+          [`${PREFIXCLS}-pagination-jumper-disabled`]: disabled,
         })}
       >
         {locale.jump_to}
@@ -370,10 +376,10 @@ const Pagination = (props: PaginationProps) => {
   };
 
   const cls = classnames({
-    'pagination-container': true,
-    'pagination-small': size === 'small',
-    'pagination-center': align === 'center',
-    'pagination-right': align === 'right',
+    [`${PREFIXCLS}-pagination-container`]: true,
+    [`${PREFIXCLS}-pagination-small`]: size === 'small',
+    [`${PREFIXCLS}-pagination-center`]: align === 'center',
+    [`${PREFIXCLS}-pagination-right`]: align === 'right',
     [className]: !!className,
   });
 
@@ -393,7 +399,7 @@ const Pagination = (props: PaginationProps) => {
           default:
             if (typeof layoutType === 'function') {
               return (
-                <div className="pagination-info" key="infos">
+                <div className={`${PREFIXCLS}-pagination-info`} key="infos">
                   {(layoutType as any)({ current, total, pageSize })}
                 </div>
               );

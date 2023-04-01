@@ -1,5 +1,6 @@
 import React, { isValidElement } from 'react';
 import classnames from 'classnames';
+import { PREFIXCLS } from '../utils/constant';
 
 interface PagerProps {
   page: number;
@@ -17,9 +18,9 @@ const Pager = (props: PagerProps) => {
   const { disabled, page, active, itemRender, onClick } = props;
 
   const cls = classnames({
-    'pagination-item': true,
-    'pagination-item-active': active,
-    'pageination-item-disabled': disabled,
+    [`${PREFIXCLS}-pagination-item`]: true,
+    [`${PREFIXCLS}-pagination-item-active`]: active,
+    [`${PREFIXCLS}-pageination-item-disabled`]: disabled,
   });
 
   const handleClick = () => {
@@ -38,9 +39,9 @@ const Pager = (props: PagerProps) => {
     return isValidElement(customNode) ? (
       <div
         className={classnames({
-          'pagination-custom-item': true,
-          'pageination-custom-item-active': active,
-          'pagination-custom-item-disabled': disabled,
+          [`${PREFIXCLS}-pagination-custom-item`]: true,
+          [`${PREFIXCLS}-pageination-custom-item-active`]: active,
+          [`${PREFIXCLS}-pagination-custom-item-disabled`]: disabled,
         })}
         onClick={handleClick}
       >
