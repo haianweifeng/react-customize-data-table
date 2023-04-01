@@ -9,6 +9,7 @@ import { ReactComponent as EmptyIcon } from '@/assets/empty.svg';
 import type { FilterMenus } from '../interface';
 import { generateUUID } from '../utils/util';
 import './index.less';
+import { PREFIXCLS } from '../utils/constant';
 
 interface FilterProps {
   locale: Record<string, string>;
@@ -187,15 +188,19 @@ const Filter = (props: FilterProps) => {
 
   return (
     <>
-      <div className="filter-container" ref={filterContainerRef} onClick={handleClick}>
+      <div
+        className={`${PREFIXCLS}-filter-container`}
+        ref={filterContainerRef}
+        onClick={handleClick}
+      >
         {typeof filterIcon === 'function' ? (
           filterIcon(!!filteredValue.length)
         ) : (
           <Icon
             component={FilterIcon}
             className={classnames({
-              'filter-icon': true,
-              'filter-icon-active': filteredValue.length,
+              [`${PREFIXCLS}-filter-icon`]: true,
+              [`${PREFIXCLS}-filter-icon-active`]: filteredValue.length,
             })}
           />
         )}
@@ -203,29 +208,29 @@ const Filter = (props: FilterProps) => {
       <div
         ref={popperRef}
         className={classnames({
-          'filter-popper': true,
-          'filter-popper-show': visible,
-          'filter-popper-hidden': !visible,
+          [`${PREFIXCLS}-filter-popper`]: true,
+          [`${PREFIXCLS}-filter-popper-show`]: visible,
+          [`${PREFIXCLS}-filter-popper-hidden`]: !visible,
         })}
         onClick={(event: React.MouseEvent) => {
           event.stopPropagation();
         }}
       >
         {!!filterSearch && filters.length ? (
-          <div className="filter-search">
+          <div className={`${PREFIXCLS}-filter-search`}>
             <div
               className={classnames({
-                'search-input-wrap': true,
-                'search-input-wrap-focus': isFocus,
+                [`${PREFIXCLS}-search-wrap`]: true,
+                [`${PREFIXCLS}-search-wrap-focus`]: isFocus,
               })}
             >
-              <div className="input-prefix">
+              <div className={`${PREFIXCLS}-filter-input-prefix`}>
                 <Icon component={QueryIcon} />
               </div>
               <input
                 type="text"
                 placeholder={locale?.filterSearchPlaceholder}
-                className="search-input"
+                className={`${PREFIXCLS}-filter-search-input`}
                 value={searchValue}
                 onFocus={handleFocus}
                 onBlur={handleBlur}
@@ -234,21 +239,21 @@ const Filter = (props: FilterProps) => {
             </div>
           </div>
         ) : null}
-        <div className="filter-list">
+        <div className={`${PREFIXCLS}-filter-list`}>
           {!filters.length && (
-            <div className="filter-empty">
-              <Icon component={EmptyIcon} className="filter-empty-icon" />
+            <div className={`${PREFIXCLS}-filter-empty`}>
+              <Icon component={EmptyIcon} className={`${PREFIXCLS}-filter-empty-icon`} />
               <span>{locale?.filterEmptyText}</span>
             </div>
           )}
           {filters.length > 0 && !filterOptions.length && !!filterSearch && (
-            <div className="filter-empty">
+            <div className={`${PREFIXCLS}-filter-empty`}>
               <span>{locale?.filterResult}</span>
             </div>
           )}
           {filterOptions.map((f) => {
             return (
-              <div className="filter-item" key={f.value}>
+              <div className={`${PREFIXCLS}-filter-item`} key={f.value}>
                 {filterMultiple ? (
                   <Checkbox
                     checked={checkedValue.indexOf(f.value) >= 0}
@@ -272,11 +277,11 @@ const Filter = (props: FilterProps) => {
             );
           })}
         </div>
-        <div className="filter-footer">
+        <div className={`${PREFIXCLS}-filter-footer`}>
           <div
             className={classnames({
-              'filter-btn': true,
-              'filter-btn-disabled': !checkedValue.length,
+              [`${PREFIXCLS}-filter-btn`]: true,
+              [`${PREFIXCLS}-filter-btn-disabled`]: !checkedValue.length,
             })}
             onClick={handleFilter}
           >
@@ -284,8 +289,8 @@ const Filter = (props: FilterProps) => {
           </div>
           <div
             className={classnames({
-              'filter-btn': true,
-              'filter-btn-disabled': !checkedValue.length,
+              [`${PREFIXCLS}-filter-btn`]: true,
+              [`${PREFIXCLS}-filter-btn-disabled`]: !checkedValue.length,
             })}
             onClick={handleReset}
           >

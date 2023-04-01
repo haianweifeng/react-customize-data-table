@@ -1,12 +1,12 @@
 @import '../style/variables.less';
 
-.filter-container {
+.@{table-prefix}-filter-container {
   display: flex;
   align-items: center;
   width: 18px;
   // margin-left: 5px;
 
-  .filter-icon {
+  .@{table-prefix}-filter-icon {
     color: @icon-color;
     font-size: 16px;
     cursor: pointer;
@@ -16,12 +16,12 @@
     }
   }
 
-  .filter-icon-active {
+  .@{table-prefix}-filter-icon-active {
     color: @icon-active-color;
   }
 }
 
-.filter-popper {
+.@{table-prefix}-filter-popper {
   position: absolute;
   z-index: 1000;
   white-space: nowrap;
@@ -31,22 +31,18 @@
     0 9px 28px 8px rgba(0, 0, 0, 0.05);
 }
 
-.filter-popper-show {
+.@{table-prefix}-filter-popper-show {
   display: block;
   margin-top: 9px;
   transform: translateX(-50%);
   animation: fade 0.3s ease;
 }
 
-.filter-popper-hidden {
+.@{table-prefix}-filter-popper-hidden {
   display: none;
 }
 
-.filter-list {
-  // padding: 8px 0 0;
-}
-
-.filter-item {
+.@{table-prefix}-filter-item {
   padding: 7px 16px;
   font-weight: normal;
   cursor: pointer;
@@ -56,14 +52,14 @@
   }
 }
 
-.filter-empty {
+.@{table-prefix}-filter-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   font-weight: normal;
 
-  .filter-empty-icon {
+  .@{table-prefix}-filter-empty-icon {
     font-size: 28px;
   }
 
@@ -74,12 +70,12 @@
   }
 }
 
-.filter-search {
+.@{table-prefix}-filter-search {
   padding: 8px;
   border-bottom: 1px solid #ddd;
 }
 
-.search-input-wrap {
+.@{table-prefix}-search-wrap {
   display: flex;
   align-items: center;
   width: 100%;
@@ -93,15 +89,15 @@
   }
 }
 
-.search-input-wrap-focus {
+.@{table-prefix}-search-wrap-focus {
   border: 1px solid #197afa;
 }
 
-.input-prefix {
+.@{table-prefix}-filter-input-prefix {
   margin-right: 4px;
 }
 
-.search-input {
+.@{table-prefix}-filter-search-input {
   display: inline-block;
   box-sizing: border-box;
   color: rgba(0, 0, 0, 0.85);
@@ -109,7 +105,7 @@
   outline: none;
 }
 
-.filter-footer {
+.@{table-prefix}-filter-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -117,7 +113,7 @@
   overflow: hidden;
   border-top: 1px solid #ddd;
 
-  .filter-btn {
+  .@{table-prefix}-filter-btn {
     padding: 0 7px;
     color: rgba(0, 0, 0, 0.85);
     font-weight: normal;
@@ -125,7 +121,7 @@
     cursor: pointer;
   }
 
-  .filter-btn-disabled {
+  .@{table-prefix}-filter-btn-disabled {
     color: #c5c8ce;
     cursor: not-allowed;
   }
