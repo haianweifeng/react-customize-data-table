@@ -1,6 +1,7 @@
 import React from 'react';
 import classnames from 'classnames';
 import './index.less';
+import { PREFIXCLS } from '../utils/constant';
 
 export interface SpinProps {
   className?: string;
@@ -33,169 +34,169 @@ const Spin = (props: SpinProps) => {
 
   const renderBounce = () => {
     return (
-      <div className="spinner-bounce">
-        <div className="double-bounce" />
-        <div className="double-bounce" />
+      <div className={`${PREFIXCLS}-spinner-bounce`}>
+        <div className={`${PREFIXCLS}-double-bounce`} />
+        <div className={`${PREFIXCLS}-double-bounce`} />
       </div>
     );
   };
 
   const renderChase = () => {
     return (
-      <div className="spinner-chase">
-        <div className="chase-dot" />
-        <div className="chase-dot" />
-        <div className="chase-dot" />
-        <div className="chase-dot" />
-        <div className="chase-dot" />
-        <div className="chase-dot" />
+      <div className={`${PREFIXCLS}-spinner-chase`}>
+        <div className={`${PREFIXCLS}-chase-dot`} />
+        <div className={`${PREFIXCLS}-chase-dot`} />
+        <div className={`${PREFIXCLS}-chase-dot`} />
+        <div className={`${PREFIXCLS}-chase-dot`} />
+        <div className={`${PREFIXCLS}-chase-dot`} />
+        <div className={`${PREFIXCLS}-chase-dot`} />
       </div>
     );
   };
 
   const renderWave = () => {
     return (
-      <div className="spinner-wave">
-        <div className="wave-item" />
-        <div className="wave-item" />
-        <div className="wave-item" />
-        <div className="wave-item" />
-        <div className="wave-item" />
+      <div className={`${PREFIXCLS}-spinner-wave`}>
+        <div className={`${PREFIXCLS}-wave-item`} />
+        <div className={`${PREFIXCLS}-wave-item`} />
+        <div className={`${PREFIXCLS}-wave-item`} />
+        <div className={`${PREFIXCLS}-wave-item`} />
+        <div className={`${PREFIXCLS}-wave-item`} />
       </div>
     );
   };
 
   const renderCube = () => {
     return (
-      <div className="spinner-cube">
-        <div className="cube-item" />
-        <div className="cube-item" />
+      <div className={`${PREFIXCLS}-spinner-cube`}>
+        <div className={`${PREFIXCLS}-cube-item`} />
+        <div className={`${PREFIXCLS}-cube-item`} />
       </div>
     );
   };
 
   const rederPulse = () => {
-    return <div className="spinner-pulse" />;
+    return <div className={`${PREFIXCLS}-spinner-pulse`} />;
   };
 
   const renderChaseBounce = () => {
     return (
-      <div className="spinner-chase-bounce">
-        <div className="chase-bounce" />
-        <div className="chase-bounce" />
+      <div className={`${PREFIXCLS}-spinner-chase-bounce`}>
+        <div className={`${PREFIXCLS}-chase-bounce`} />
+        <div className={`${PREFIXCLS}-chase-bounce`} />
       </div>
     );
   };
 
   const renderCircle = () => {
     return (
-      <div className="spinner-circle">
-        <div className="circle-dot" />
-        <div className="circle-dot" />
-        <div className="circle-dot" />
-        <div className="circle-dot" />
-        <div className="circle-dot" />
-        <div className="circle-dot" />
-        <div className="circle-dot" />
-        <div className="circle-dot" />
-        <div className="circle-dot" />
-        <div className="circle-dot" />
-        <div className="circle-dot" />
-        <div className="circle-dot" />
+      <div className={`${PREFIXCLS}-spinner-circle`}>
+        <div className={`${PREFIXCLS}-circle-dot`} />
+        <div className={`${PREFIXCLS}-circle-dot`} />
+        <div className={`${PREFIXCLS}-circle-dot`} />
+        <div className={`${PREFIXCLS}-circle-dot`} />
+        <div className={`${PREFIXCLS}-circle-dot`} />
+        <div className={`${PREFIXCLS}-circle-dot`} />
+        <div className={`${PREFIXCLS}-circle-dot`} />
+        <div className={`${PREFIXCLS}-circle-dot`} />
+        <div className={`${PREFIXCLS}-circle-dot`} />
+        <div className={`${PREFIXCLS}-circle-dot`} />
+        <div className={`${PREFIXCLS}-circle-dot`} />
+        <div className={`${PREFIXCLS}-circle-dot`} />
       </div>
     );
   };
 
   const renderFlow = () => {
     return (
-      <div className="spinner-flow">
-        <div className="flow-dot" />
-        <div className="flow-dot" />
-        <div className="flow-dot" />
+      <div className={`${PREFIXCLS}-spinner-flow`}>
+        <div className={`${PREFIXCLS}-flow-dot`} />
+        <div className={`${PREFIXCLS}-flow-dot`} />
+        <div className={`${PREFIXCLS}-flow-dot`} />
       </div>
     );
   };
 
   const renderGrid = () => {
     return (
-      <div className="spinner-grid">
-        <div className="grid-cube" />
-        <div className="grid-cube" />
-        <div className="grid-cube" />
-        <div className="grid-cube" />
-        <div className="grid-cube" />
-        <div className="grid-cube" />
-        <div className="grid-cube" />
-        <div className="grid-cube" />
-        <div className="grid-cube" />
+      <div className={`${PREFIXCLS}-spinner-grid`}>
+        <div className={`${PREFIXCLS}-grid-cube`} />
+        <div className={`${PREFIXCLS}-grid-cube`} />
+        <div className={`${PREFIXCLS}-grid-cube`} />
+        <div className={`${PREFIXCLS}-grid-cube`} />
+        <div className={`${PREFIXCLS}-grid-cube`} />
+        <div className={`${PREFIXCLS}-grid-cube`} />
+        <div className={`${PREFIXCLS}-grid-cube`} />
+        <div className={`${PREFIXCLS}-grid-cube`} />
+        <div className={`${PREFIXCLS}-grid-cube`} />
       </div>
     );
   };
 
   const renderCircleFade = () => {
     return (
-      <div className="spinner-circle-fade">
-        <div className="circle-fade-dot" />
-        <div className="circle-fade-dot" />
-        <div className="circle-fade-dot" />
-        <div className="circle-fade-dot" />
-        <div className="circle-fade-dot" />
-        <div className="circle-fade-dot" />
-        <div className="circle-fade-dot" />
-        <div className="circle-fade-dot" />
-        <div className="circle-fade-dot" />
-        <div className="circle-fade-dot" />
-        <div className="circle-fade-dot" />
-        <div className="circle-fade-dot" />
+      <div className={`${PREFIXCLS}-spinner-circle-fade`}>
+        <div className={`${PREFIXCLS}-circle-fade-dot`} />
+        <div className={`${PREFIXCLS}-circle-fade-dot`} />
+        <div className={`${PREFIXCLS}-circle-fade-dot`} />
+        <div className={`${PREFIXCLS}-circle-fade-dot`} />
+        <div className={`${PREFIXCLS}-circle-fade-dot`} />
+        <div className={`${PREFIXCLS}-circle-fade-dot`} />
+        <div className={`${PREFIXCLS}-circle-fade-dot`} />
+        <div className={`${PREFIXCLS}-circle-fade-dot`} />
+        <div className={`${PREFIXCLS}-circle-fade-dot`} />
+        <div className={`${PREFIXCLS}-circle-fade-dot`} />
+        <div className={`${PREFIXCLS}-circle-fade-dot`} />
+        <div className={`${PREFIXCLS}-circle-fade-dot`} />
       </div>
     );
   };
 
   const renderFold = () => {
     return (
-      <div className="spinner-fold">
-        <div className="fold-cube" />
-        <div className="fold-cube" />
-        <div className="fold-cube" />
-        <div className="fold-cube" />
+      <div className={`${PREFIXCLS}-spinner-fold`}>
+        <div className={`${PREFIXCLS}-fold-cube`} />
+        <div className={`${PREFIXCLS}-fold-cube`} />
+        <div className={`${PREFIXCLS}-fold-cube`} />
+        <div className={`${PREFIXCLS}-fold-cube`} />
       </div>
     );
   };
 
   const renderRing = () => {
     return (
-      <div className="spinner-ring">
-        <div className="ring" />
+      <div className={`${PREFIXCLS}-spinner-ring`}>
+        <div className={`${PREFIXCLS}-ring`} />
       </div>
     );
   };
 
   const renderDefault = () => {
     return (
-      <div className="spinner-default">
-        <div className="default-dot" />
-        <div className="default-dot" />
-        <div className="default-dot" />
-        <div className="default-dot" />
+      <div className={`${PREFIXCLS}-spinner-default`}>
+        <div className={`${PREFIXCLS}-default-dot`} />
+        <div className={`${PREFIXCLS}-default-dot`} />
+        <div className={`${PREFIXCLS}-default-dot`} />
+        <div className={`${PREFIXCLS}-default-dot`} />
       </div>
     );
   };
 
   const renderLoading = () => {
     return (
-      <div className="spinner-loading">
-        <div className="loading-item" />
-        <div className="loading-item" />
-        <div className="loading-item" />
-        <div className="loading-item" />
-        <div className="loading-item" />
-        <div className="loading-item" />
-        <div className="loading-item" />
-        <div className="loading-item" />
-        <div className="loading-item" />
-        <div className="loading-item" />
-        <div className="loading-item" />
-        <div className="loading-item" />
+      <div className={`${PREFIXCLS}-spinner-loading`}>
+        <div className={`${PREFIXCLS}-loading-item`} />
+        <div className={`${PREFIXCLS}-loading-item`} />
+        <div className={`${PREFIXCLS}-loading-item`} />
+        <div className={`${PREFIXCLS}-loading-item`} />
+        <div className={`${PREFIXCLS}-loading-item`} />
+        <div className={`${PREFIXCLS}-loading-item`} />
+        <div className={`${PREFIXCLS}-loading-item`} />
+        <div className={`${PREFIXCLS}-loading-item`} />
+        <div className={`${PREFIXCLS}-loading-item`} />
+        <div className={`${PREFIXCLS}-loading-item`} />
+        <div className={`${PREFIXCLS}-loading-item`} />
+        <div className={`${PREFIXCLS}-loading-item`} />
       </div>
     );
   };
@@ -236,28 +237,28 @@ const Spin = (props: SpinProps) => {
   };
 
   const spinCls = classnames({
-    spin: true,
-    'spin-small': size === 'small',
-    'spin-large': size === 'large',
+    [`${PREFIXCLS}-spin`]: true,
+    [`${PREFIXCLS}-spin-small`]: size === 'small',
+    [`${PREFIXCLS}-spin-large`]: size === 'large',
     [className]: !!className,
   });
 
   const spinContent = (
     <div style={style} className={spinCls}>
       {renderIndicator(type)}
-      {tip ? <div className="spin-tip">{tip}</div> : null}
+      {tip ? <div className={`${PREFIXCLS}-spin-tip`}>{tip}</div> : null}
     </div>
   );
 
   return children ? (
     <div
       className={classnames({
-        'spin-container': true,
-        'spin-mask': isLoading,
+        [`${PREFIXCLS}-spin-container`]: true,
+        [`${PREFIXCLS}-spin-mask`]: isLoading,
       })}
     >
-      {isLoading && <div className="spin-loading">{spinContent}</div>}
-      <div className="spin-content">{children}</div>
+      {isLoading && <div className={`${PREFIXCLS}-spin-loading`}>{spinContent}</div>}
+      <div className={`${PREFIXCLS}-spin-content`}>{children}</div>
     </div>
   ) : (
     spinContent
