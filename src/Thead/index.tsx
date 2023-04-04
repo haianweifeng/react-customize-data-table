@@ -9,7 +9,7 @@ import type {
   PrivateColumnGroupType,
   SortState,
   FilterState,
-} from '../interface1';
+} from '../interface';
 import Th from '../Th';
 import type { ThProps } from '../Th';
 import { omitColumnProps } from '../utils/util';

@@ -1,6 +1,6 @@
 import React from 'react';
-import type { PrivateColumnsType } from '../interface1';
-import type { ColumnsWithType } from '../interface';
+import type { PrivateColumnsType } from '../interface';
+// import type { ColumnsWithType } from '../interface';
 
 interface ColgroupProps<T> {
   // colWidths: number[];

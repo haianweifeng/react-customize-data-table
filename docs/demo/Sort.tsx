@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { ColumnsType, FilterInfoType } from 'react-data-table';
 import { Table } from 'react-data-table';
-import type { SortState } from '../../src/interface1';
+import type { SortState } from '../../src/interface';
 
 interface DataType {
   key: string;

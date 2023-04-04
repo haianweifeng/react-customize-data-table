@@ -8,7 +8,7 @@ import type {
   PrivateColumnType,
   PrivateColumnsType,
   ColumnGroupType,
-} from '../interface1';
+} from '../interface';
 import { SELECTION_EXPAND_COLUMN_WIDTH } from '../utils/constant';
 import { getColumnKey } from '../utils/util';
 // todo 考虑如果是children的列不能再设置type 担心children 中type 是'checkbox' | 'radio' | 'expand' 测试ts 有没有约束提示

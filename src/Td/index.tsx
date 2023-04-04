@@ -10,7 +10,7 @@ import type {
   PrivateColumnType,
   RowSelection,
   TreeExpandable,
-} from '../interface1';
+} from '../interface';
 import '../style/index.less';
 import {
   CLASS_CELL_FIXED_FIRST,

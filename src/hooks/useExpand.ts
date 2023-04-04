@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Expandable } from '../interface1';
+import { Expandable } from '../interface';
 
 function useExpand<T extends { key?: React.Key; children?: T[] }>(
   allKeys: React.Key[],

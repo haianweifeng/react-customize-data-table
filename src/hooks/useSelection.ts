@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useMemo, useEffect } from 'react';
-import { RowSelection } from '../interface1';
+import { RowSelection } from '../interface';
 
 function useSelection<T extends { key?: React.Key; children?: T[] }>(
   dataSource: T[],

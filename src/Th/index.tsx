@@ -13,7 +13,7 @@ import {
   PrivateColumnGroupType,
   ColumnType,
   ColumnGroupType,
-} from '../interface1';
+} from '../interface';
 import { PREFIXCLS } from '../utils/constant';
 
 export interface ThProps<T> {

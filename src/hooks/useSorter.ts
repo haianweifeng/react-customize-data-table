@@ -6,7 +6,7 @@ import {
   PrivateColumnType,
   Sorter,
   SortState,
-} from '../interface1';
+} from '../interface';
 
 function useSorter<T extends { key?: React.Key; children?: T[] }>(
   mergeColumns: PrivateColumnsType<T>,

@@ -7,7 +7,7 @@ import type {
   RowSelection,
   TreeExpandable,
   PrivateColumnsType,
-} from '../interface1';
+} from '../interface';
 // import ResizeObserver from 'resize-observer-polyfill';
 import {
   CLASS_CELL_EMPTY,

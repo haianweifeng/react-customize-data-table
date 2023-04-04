@@ -7,7 +7,7 @@ import type {
   ColumnType,
   PrivateColumnGroupType,
   PrivateColumnType,
-} from '../interface1';
+} from '../interface';
 
 export function generateUUID() {
   const time = new Date().getTime().toString(36);

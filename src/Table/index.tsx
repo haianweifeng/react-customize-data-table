@@ -26,7 +26,7 @@ import type {
   PrivateColumnGroupType,
   ResizeInfo,
   CachePosition,
-} from '../interface1';
+} from '../interface';
 import type { PaginationProps } from '../index';
 import '../style/index.less';
 import { getParent } from '../utils/util';

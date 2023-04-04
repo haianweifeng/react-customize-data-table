@@ -6,7 +6,7 @@ import type {
   PrivateColumnsType,
   RowSelection,
   TreeExpandable,
-} from '../interface1';
+} from '../interface';
 import Td from '../Td';
 import { CLASS_CELL_FIXED_LEFT, CLASS_ROW, CLASS_ROW_EXPAND, PREFIXCLS } from '../utils/constant';
 // import ResizeObserver from 'resize-observer-polyfill';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { PrivateColumnsType, FilterState } from '../interface1';
+import { PrivateColumnsType, FilterState } from '../interface';
 
 function useFilter<T extends { key?: React.Key; children?: T[] }>(
   mergeColumns: PrivateColumnsType<T>,
