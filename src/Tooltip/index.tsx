@@ -207,9 +207,13 @@ const Tooltip = (props: TooltipProps) => {
         tooltipRect.height / 2,
       );
 
-      const isPopupYOverLimit = isOverLimit(offsetTop, offsetBottom, tooltipRect.height);
+      // const isPopupYOverLimit = isOverLimit(offsetTop, offsetBottom, tooltipRect.height);
+      const isPopupYOverLimit =
+        isPopupYTopOverLimitWithTriggerHeight && isPopupYBottomOverLimitWithTriggerHeight;
 
-      const isPopupXOverLimit = isOverLimit(offsetLeft, offsetRight, tooltipRect.width);
+      // const isPopupXOverLimit = isOverLimit(offsetLeft, offsetRight, tooltipRect.width);
+      const isPopupXOverLimit =
+        isPopupXLeftOverLimitWithTriggerWidth && isPopupXRightOverLimitWithTriggerWidth;
 
       const isPopupYEnoughWithHalfSide = isHalfAllEnough(
         restBottomInPopup - halfHeight,
@@ -596,7 +600,6 @@ const Tooltip = (props: TooltipProps) => {
       document.removeEventListener('click', debounceHide);
       window.removeEventListener('resize', debounceResize);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const renderToolTip = () => {
