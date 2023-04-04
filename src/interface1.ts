@@ -13,6 +13,16 @@ export type SortState<T> = {
   sorter: (rowA: T, rowB: T) => number;
 };
 
+export type RowKeyType<T> = string | ((row: T) => string | number);
+
+export type LocalType = {
+  filterSearchPlaceholder: string;
+  filterEmptyText: string;
+  filterResult: string;
+  filterConfirm: string;
+  filterReset: string;
+};
+
 export type CellType = { colSpan?: number; rowSpan?: number };
 
 export type FilterMenus = { label: string; value: string };

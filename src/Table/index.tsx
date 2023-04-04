@@ -9,12 +9,12 @@ import usePagination from '../hooks/usePagination';
 import useTreeExpand from '../hooks/useTreeExpand';
 import Thead from '../Thead';
 import Tbody from '../Tbody';
-import VirtualBody from '../VirtualBody';
 import Colgroup from '../Colgroup';
 import Pagination from '../Pagination';
 import Spin from '../Spin';
-import type { RowKeyType, LocalType } from '../interface';
 import type {
+  LocalType,
+  RowKeyType,
   ColumnsType,
   ColumnType,
   RowSelection,
@@ -27,10 +27,9 @@ import type {
   ResizeInfo,
   CachePosition,
 } from '../interface1';
-import VirtualList from '../VirtualList';
 import type { PaginationProps } from '../index';
 import '../style/index.less';
-import { getRowKey, getParent } from '../utils/util';
+import { getParent } from '../utils/util';
 import {
   BAR_THUMB_SIZE,
   CLASS_CELL_EMPTY,
@@ -48,13 +47,9 @@ import {
 } from '../utils/constant';
 import { omitColumnProps } from '../utils/util';
 import LocaleContext from '../LocalProvider/context';
-import ScrollBar from '../ScrollBar';
-import ScrollBars from '../ScrollBars';
-import VirtualScrollBar from '../VirtualScrollBar';
 import Bar from '../Bar';
 import normalizeWheel from 'normalize-wheel';
 import ResizeObserver from 'resize-observer-polyfill';
-// import styles from './index.less';
 
 export interface TableProps<T> {
   /** 表格的样式类名 */

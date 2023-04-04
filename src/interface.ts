@@ -1,13 +1,9 @@
 import type React from 'react';
 
-// todo 把column 增加type?: string 可选属性 expanded checkbox radio
-// todo 待测试rowSelection.columnTitle 的ellipsis 需要改造后
-// rowSelection 中不再设置type
-// expandable 也需要修改
 export interface RowSelectionType<T> {
   /** 自定义列表选择框标题 */
   columnTitle?: React.ReactNode;
-  /** 自定义列表选择框宽度 todo 把这个宽度设置到colgroup 中 */
+  /** 自定义列表选择框宽度 */
   columnWidth?: string | number;
   // /** 把选择框列固定在左边 */
   // fixed?: boolean;
@@ -231,12 +227,12 @@ export type LevelRecordType<T> = Record<number, T[]>;
 
 export type TreeLevelType = Record<string | number, number>;
 
-export type RowKeyType<T> = string | ((row: T) => string | number);
-
 // export type CachePositionType = { index: number; top: number; bottom: number; height: number };
 export type CachePositionType = { index: number; top: number; bottom: number; height: number };
 
 export type ResizeInfoType = { startPosX: number; resizingRect: DOMRect };
+
+export type RowKeyType<T> = string | ((row: T) => string | number);
 
 export type LocalType = {
   filterSearchPlaceholder: string;

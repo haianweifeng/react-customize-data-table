@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ColumnsType, PrivateColumnsType } from '../interface1';
+import type { PrivateColumnsType } from '../interface1';
 import type { ColumnsWithType } from '../interface';
 
 interface ColgroupProps<T> {
