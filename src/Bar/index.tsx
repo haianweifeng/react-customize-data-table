@@ -12,7 +12,7 @@ interface VirtualScrollBarProps {
   onScroll?: (offset: number) => void;
 }
 
-const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((props, ref) => {
+const Bar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((props, ref) => {
   const { orientation, size, contentSize, className = '', onScroll } = props;
 
   const scrollTrackRef = useRef<HTMLDivElement>(null);
@@ -125,4 +125,4 @@ const VirtualScrollBar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((prop
     </div>
   );
 });
-export default VirtualScrollBar;
+export default Bar;

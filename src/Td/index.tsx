@@ -139,18 +139,13 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
   const align = column?.align || 'left';
 
   const classes: Record<string, boolean> = {
-    // [`${PREFIXCLS}-cell-ellipsis`]: !!column?.ellipsis && !isSelectionExpand && !isTreeColumn,
-    // [`${PREFIXCLS}-cell-fixed-left`]: column?.fixed === 'left',
     [`${PREFIXCLS}-cell-ellipsis`]: !!column?.ellipsis && !isSelectionExpand && !isTreeColumn,
     [CLASS_CELL_FIXED_LEFT]: column?.fixed === 'left',
     [CLASS_CELL_FIXED_RIGHT]: column?.fixed === 'right',
     [CLASS_CELL_FIXED_LAST]: !!column?._lastLeftFixed,
     [CLASS_CELL_FIXED_FIRST]: !!column?._firstRightFixed,
-    // ['cell-is-last-fixedLeft']: !!column?._lastLeftFixed,
-    // 'cell-is-first-fixedRight': !!column?._firstRightFixed,
     [`${PREFIXCLS}-cell-align-${align}`]: !!align,
     [`${PREFIXCLS}-selection-expand-column`]: !!isSelectionExpand,
-    // 'selection-expand-column': !!isSelectionExpand,
     [`${PREFIXCLS}-cell-ignore-right-border`]: ignoreRightBorder,
     [CLASS_CELL_FIXED_LAST_LEFT]: !!column?._lastLeftFixed && virtualized && offsetLeft > 0,
     [CLASS_CELL_FIXED_FIRST_RIGHT]: !!column?._firstRightFixed && virtualized && offsetRight > 0,
@@ -182,20 +177,6 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
     }
     return style;
   }, [cellStyle, column, rowIndex, colIndex, virtualized, offsetLeft, offsetRight]);
-
-  // const styles: React.CSSProperties =
-  //   typeof cellStyle === 'function'
-  //     ? (cellStyle(omitColumnProps(column), rowIndex, colIndex) ?? {})
-  //     : (cellStyle || {});
-  //
-  // if (virtualized) {
-  //   if (column?.fixed === 'left' && offsetLeft) {
-  //     styles.transform = `translateX(${offsetLeft}px)`;
-  //   }
-  //   if (column?.fixed === 'right' && offsetRight) {
-  //     styles.transform = `translateX(-${offsetRight}px)`;
-  //   }
-  // }
 
   const cellEvents = useMemo(() => {
     return typeof onCellEvents === 'function' ? onCellEvents(rowData, rowIndex) : {};

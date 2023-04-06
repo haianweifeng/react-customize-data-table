@@ -8,7 +8,6 @@ import type {
   TreeExpandable,
   PrivateColumnsType,
 } from '../interface';
-// import ResizeObserver from 'resize-observer-polyfill';
 import {
   CLASS_CELL_EMPTY,
   CLASS_EMPTY_CONTENT,
@@ -59,7 +58,6 @@ interface TbodyProps<T> {
   ) => React.CSSProperties | React.CSSProperties;
   onRowEvents?: (record: T, rowIndex: number) => object;
   onCellEvents?: (record: T, rowIndex: number) => object;
-  onUpdateRowHeight: (height: number, rowIndex: number) => void;
   onUpdate: (rects: { rowIndex: number; rowHeight: number }[]) => void;
 }
 
@@ -83,25 +81,9 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
     onUpdate,
     ...restProps
   } = props;
-  // console.log('tbody render');
-  // const flatRecords = useCallback(
-  //   (data: T[]) => {
-  //     const records: T[] = [];
-  //     data.map((d) => {
-  //       records.push(d);
-  //       const recordKey = getRecordKey(d);
-  //       if (d.children && d.children.length && treeExpandKeys.indexOf(recordKey) >= 0) {
-  //         records.push(...flatRecords(d.children));
-  //       }
-  //     });
-  //     return records;
-  //   },
-  //   [treeExpandKeys, getRecordKey],
-  // );
 
   const tbodyRef = useRef<any>(null);
-  // const resizeObserverIns = useRef<any>(null);
-  // index 是截取后的顺序 应该取原来在列表中的位置 这里不采取是监听 ResizeObserver 是因为获取到的startRowIndex 不准确 导致更新cachePosition 不对
+
   useEffect(() => {
     const update = () => {
       const rects: { rowIndex: number; rowHeight: number }[] = [];
@@ -122,17 +104,6 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
         });
       onUpdate && onUpdate(rects);
     };
-    // const resizeObserver = () => {
-    //   resizeObserverIns.current = new ResizeObserver((entries) => {
-    //     let contentRect = entries[0].contentRect;
-    //     if (!(contentRect.width || contentRect.height)) return;
-    //     console.log(`end----: ${startRowIndex}`);
-    //     update();
-    //   });
-    //   tbodyRef.current && resizeObserverIns.current.observe(tbodyRef.current);
-    // };
-    // console.log(`start----: ${startRowIndex}`);
-    // resizeObserver();
     if (!tbodyRef.current) return;
     update();
   }, [startRowIndex, columns, expandedRowKeys, dataSource, onUpdate]);

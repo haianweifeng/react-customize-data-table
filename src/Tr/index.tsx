@@ -9,7 +9,6 @@ import type {
 } from '../interface';
 import Td from '../Td';
 import { CLASS_CELL_FIXED_LEFT, CLASS_ROW, CLASS_ROW_EXPAND, PREFIXCLS } from '../utils/constant';
-// import ResizeObserver from 'resize-observer-polyfill';
 
 interface TrProps<T> {
   rowData: T;
@@ -40,7 +39,6 @@ interface TrProps<T> {
     selected: boolean,
     event: Event,
   ) => void;
-  onUpdateRowHeight: (height: number, rowIndex: number) => void;
   rowClassName?: (record: T, index: number) => string;
   rowStyle?: (record: T, index: number) => React.CSSProperties | React.CSSProperties;
   cellClassName?: (column: ColumnType<T>, rowIndex: number, colIndex: number) => string | string;
@@ -68,43 +66,11 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
     rowStyle,
     rowClassName,
     onRowEvents,
-    onUpdateRowHeight,
     ...restProps
   } = props;
 
-  // const resizeObserverIns = useRef<any>(null);
   const trRef = useRef<HTMLTableRowElement>(null);
   const expandTrRef = useRef<HTMLTableRowElement>(null);
-
-  // 放到tbody 中检测所有tr 渲染完成再统一把所有行高行号返回给onUpdateRowHeight
-  // useEffect(() => {
-  //   const update = () => {
-  //     // console.log('update');
-  //     if (!trRef.current) return;
-  //     let { height } = trRef.current.getBoundingClientRect();
-  //     if (Number.isNaN(height)) height = 0;
-  //     let expandHeight = 0;
-  //     if (expandTrRef.current) {
-  //       expandHeight = expandTrRef.current.clientHeight;
-  //     }
-  //     const newHeight = height + expandHeight;
-  //     // onUpdateRowHeight(newHeight, rowIndex);
-  //   };
-  //
-  //   const resizeObserver = () => {
-  //     resizeObserverIns.current = new ResizeObserver((entries) => {
-  //       let contentRect = entries[0].contentRect;
-  //       if (!(contentRect.width || contentRect.height)) return;
-  //       update();
-  //     });
-  //     trRef.current && resizeObserverIns.current.observe(trRef.current);
-  //   };
-  //
-  //   resizeObserver();
-  //   return () => {
-  //     resizeObserverIns.current?.disconnect();
-  //   };
-  // }, [rowIndex, expanded, onUpdateRowHeight]);
 
   const renderExpandRow = () => {
     const expandColumn = columns.find((column) => {
@@ -207,10 +173,6 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
     [`${PREFIXCLS}-row-even`]: striped && rowIndex % 2 !== 0,
     [`${PREFIXCLS}-row-odd`]: striped && rowIndex % 2 === 0,
     [`${PREFIXCLS}-row-selected`]: !!checked,
-    // row: true,
-    // 'row-even': striped && rowIndex % 2 !== 0,
-    // 'row-odd': striped && rowIndex % 2 === 0,
-    // 'row-selected': !!checked,
   };
 
   if (rowClassName && rowClassName(rowData, rowIndex)) {
