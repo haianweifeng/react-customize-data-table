@@ -81,11 +81,6 @@ const Tooltip = (props: TooltipProps) => {
 
   const [pos, setPos] = useState<{ left: number; top: number }>({ left: -9999, top: -9999 });
 
-  if (!isValidElement(children)) {
-    console.error(new Error('Tooltip expect a valid ReactElement as children.'));
-    return null;
-  }
-
   const popupContainer = getPopupContainer();
 
   const isManual = trigger === 'click';
@@ -529,7 +524,7 @@ const Tooltip = (props: TooltipProps) => {
     }
     onVisibleChange && onVisibleChange(false);
     if (isManual) {
-      document.removeEventListener('click', debounceHide);
+      document.removeEventListener('click', handleHide);
     }
   };
 
@@ -571,7 +566,7 @@ const Tooltip = (props: TooltipProps) => {
   const handleClick = (e: any) => {
     if (!isManual) return;
     handleShow();
-    document.addEventListener('click', debounceHide);
+    document.addEventListener('click', handleHide);
     e.stopPropagation();
   };
 
@@ -579,6 +574,7 @@ const Tooltip = (props: TooltipProps) => {
     if ('visible' in props) {
       setShowPopper(!!visible);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   useEffect(() => {
@@ -597,9 +593,10 @@ const Tooltip = (props: TooltipProps) => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      document.removeEventListener('click', debounceHide);
+      document.removeEventListener('click', handleHide);
       window.removeEventListener('resize', debounceResize);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const renderToolTip = () => {
@@ -642,6 +639,11 @@ const Tooltip = (props: TooltipProps) => {
     );
     return popupContainer ? createPortal(popperContainer, popupContainer) : null;
   };
+
+  if (!isValidElement(children)) {
+    console.error(new Error('Tooltip expect a valid ReactElement as children.'));
+    return null;
+  }
 
   const newProps: any = { ref: triggerRef };
   newProps.onMouseEnter = handleMouseEnter;

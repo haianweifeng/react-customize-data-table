@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { TreeExpandable } from '../interface';
+import type React from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import type { TreeExpandable } from '../interface';
 
 function useTreeExpand<T extends { key?: React.Key; children?: T[] }>(
   allKeys: React.Key[],
@@ -37,6 +38,7 @@ function useTreeExpand<T extends { key?: React.Key; children?: T[] }>(
     if (treeProps && 'expandedRowKeys' in treeProps && treeProps.expandedRowKeys) {
       setTreeExpandKeys(treeProps?.expandedRowKeys || []);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [treeProps?.expandedRowKeys]);
 
   return [treeExpandKeys, handleTreeExpand] as const;

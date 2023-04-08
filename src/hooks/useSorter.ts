@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
+import type React from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import type {
   ColumnType,
   PrivateColumnGroupType,
   PrivateColumnsType,

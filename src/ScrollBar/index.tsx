@@ -29,8 +29,8 @@ const Scrollbar = (props: ScrollbarProps) => {
   }, [contentSize, size, thumbSize]);
 
   const handleMouseMoveThumb = (event: any) => {
-    let deltaX = event.clientX - lastedClientX.current;
-    let deltaY = event.clientY - lastedClientY.current;
+    const deltaX = event.clientX - lastedClientX.current;
+    const deltaY = event.clientY - lastedClientY.current;
     lastedClientX.current = event.clientX;
     lastedClientY.current = event.clientY;
 

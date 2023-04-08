@@ -175,12 +175,14 @@ const Pagination = (props: PaginationProps) => {
     if ('current' in props) {
       setCurrent(props.current || 1);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.current]);
 
   useEffect(() => {
     if ('pageSize' in props) {
       setPageSize(props.pageSize || 10);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.pageSize]);
 
   useEffect(() => {

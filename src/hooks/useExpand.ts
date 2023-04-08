@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Expandable } from '../interface';
+import type React from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import type { Expandable } from '../interface';
 
 function useExpand<T extends { key?: React.Key; children?: T[] }>(
   allKeys: React.Key[],
@@ -36,6 +37,7 @@ function useExpand<T extends { key?: React.Key; children?: T[] }>(
     if (expandable && 'expandedRowKeys' in expandable && expandable.expandedRowKeys) {
       setExpandedRowKeys(expandable?.expandedRowKeys || []);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expandable?.expandedRowKeys]);
 
   return [expandedRowKeys, handleExpand] as const;

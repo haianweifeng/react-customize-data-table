@@ -1,7 +1,7 @@
-import React from 'react';
+import type React from 'react';
 import omit from 'omit.js';
-import type { RowKeyType } from '../interface';
 import type {
+  RowKeyType,
   ColumnGroupType,
   ColumnsType,
   ColumnType,

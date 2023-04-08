@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { PrivateColumnsType, FilterState } from '../interface';
+import type React from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import type { PrivateColumnsType, FilterState } from '../interface';
 
 function useFilter<T extends { key?: React.Key; children?: T[] }>(
   mergeColumns: PrivateColumnsType<T>,
@@ -73,7 +74,7 @@ function useFilter<T extends { key?: React.Key; children?: T[] }>(
       const newFilterStates = generateFilterStates(mergeColumns);
       setFilterStates(newFilterStates);
     }
-  }, [mergeColumns]);
+  }, [mergeColumns, generateFilterStates]);
 
   return [filterStates, updateFilterStates, getFilterData] as const;
 }

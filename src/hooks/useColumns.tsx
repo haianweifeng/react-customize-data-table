@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import type React from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import omit from 'omit.js';
 import type {
   ColumnsType,
@@ -186,7 +187,7 @@ function useColumns<T>(
       });
     }
     return mergeColumns;
-    // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [originColumns, addColumnKeyForColumn]);
 
   const initMergeColumns = useMemo(() => {

@@ -157,7 +157,7 @@ function Thead<T>(props: TheadProps<T>) {
         ...classes,
       });
 
-      let styles: React.CSSProperties =
+      const styles: React.CSSProperties =
         typeof headerCellStyle === 'function'
           ? headerCellStyle(omitColumnProps(column), rowIndex, colIndex) ?? {}
           : headerCellStyle || {};
@@ -207,7 +207,6 @@ function Thead<T>(props: TheadProps<T>) {
       onMouseDown,
       headerCellStyle,
       headerCellClassName,
-      omitColumnProps,
     ],
   );
 
@@ -227,7 +226,7 @@ function Thead<T>(props: TheadProps<T>) {
             ? headerRowClassName(i)
             : headerRowClassName || '';
 
-        let styles: React.CSSProperties =
+        const styles: React.CSSProperties =
           typeof headerRowStyle === 'function' ? headerRowStyle(i) ?? {} : headerRowStyle || {};
 
         const rowEvents = typeof onHeaderRowEvents === 'function' ? onHeaderRowEvents(i) ?? {} : {};

@@ -33,12 +33,14 @@ function usePagination(pagination?: PaginationProps) {
     if (pagination && 'current' in pagination) {
       setCurrentPage(pagination?.current || 1);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination?.current]);
 
   useEffect(() => {
     if (pagination && 'pageSize' in pagination) {
       setPageSize(pagination?.pageSize || 10);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination?.pageSize]);
 
   return [currentPage, pageSize, updateCurrentPage, handlePaginationChange] as const;

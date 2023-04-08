@@ -1,4 +1,5 @@
-import React, { useMemo, useCallback } from 'react';
+import type React from 'react';
+import { useMemo, useCallback } from 'react';
 
 function useFlattenData<T extends { key?: React.Key; children?: T[] }>(dataSource: T[]) {
   const flatRecord = useCallback((data: T[]) => {

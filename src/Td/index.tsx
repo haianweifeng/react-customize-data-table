@@ -180,7 +180,7 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
 
   const cellEvents = useMemo(() => {
     return typeof onCellEvents === 'function' ? onCellEvents(rowData, rowIndex) : {};
-  }, []);
+  }, [onCellEvents, rowData, rowIndex]);
 
   const ellipsis = column.ellipsis;
 
@@ -275,12 +275,10 @@ function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<
 
   const renderCell = () => {
     if ('type' in column && column.type && ['expand', 'radio', 'checkbox'].includes(column.type)) {
-      switch (column.type) {
-        case 'radio':
-        case 'checkbox':
-          return renderSelectionCell(column.type);
-        case 'expand':
-          return renderExpandCell();
+      if (column.type === 'radio' || column.type === 'checkbox') {
+        return renderSelectionCell(column.type);
+      } else if (column.type === 'expand') {
+        return renderExpandCell();
       }
     }
 

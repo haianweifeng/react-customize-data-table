@@ -5,7 +5,7 @@ import Checkbox from '../Checkbox';
 import Sorter from '../Sorter';
 import Filter from '../Filter';
 import { getParent, getPropertyValueSum, omitColumnProps } from '../utils/util';
-import {
+import type {
   ResizeInfo,
   SortState,
   FilterState,
@@ -96,7 +96,7 @@ function Th<T>(props: ThProps<T>) {
     return typeof onHeaderCellEvents === 'function'
       ? onHeaderCellEvents(omitColumnProps(column), rowIndex) ?? {}
       : {};
-  }, [onHeaderCellEvents, rowIndex, column, omitColumnProps]);
+  }, [onHeaderCellEvents, rowIndex, column]);
 
   const handleChange = (selected: boolean, event: any) => {
     if (typeof (cellEvents as any)?.onClick === 'function') {
@@ -226,12 +226,10 @@ function Th<T>(props: ThProps<T>) {
 
   const renderContent = () => {
     if ('type' in column && column.type && ['expand', 'checkbox', 'radio'].includes(column.type)) {
-      switch (column.type) {
-        case 'checkbox':
-        case 'radio':
-          return renderSelection(column.type);
-        case 'expand':
-          return renderExpand();
+      if (column.type === 'radio' || column.type === 'checkbox') {
+        return renderSelection(column.type);
+      } else if (column.type === 'expand') {
+        return renderExpand();
       }
     }
     return (

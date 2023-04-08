@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import classnames from 'classnames';
 import Checkbox from '../Checkbox';
 import Radio from '../Radio';
@@ -65,19 +65,6 @@ const Filter = (props: FilterProps) => {
       });
     }
   };
-
-  const elementContains = useCallback((elem: HTMLElement, target: any) => {
-    let result = false;
-    let parent = target.parentNode;
-    while (parent) {
-      if (parent === elem) {
-        result = true;
-        return result;
-      }
-      parent = parent.parentNode;
-    }
-    return result;
-  }, []);
 
   const handleReset = () => {
     onReset();
@@ -148,6 +135,19 @@ const Filter = (props: FilterProps) => {
   }, []);
 
   useEffect(() => {
+    const elementContains = (elem: HTMLElement, target: any) => {
+      let result = false;
+      let parent = target.parentNode;
+      while (parent) {
+        if (parent === elem) {
+          result = true;
+          return result;
+        }
+        parent = parent.parentNode;
+      }
+      return result;
+    };
+
     const handleDocumentClick = (event: Event) => {
       const { target } = event;
       if (

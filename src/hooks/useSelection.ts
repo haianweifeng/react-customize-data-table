@@ -1,5 +1,6 @@
-import React, { useCallback, useState, useMemo, useEffect } from 'react';
-import { RowSelection } from '../interface';
+import type React from 'react';
+import { useCallback, useState, useMemo, useEffect } from 'react';
+import type { RowSelection } from '../interface';
 
 function useSelection<T extends { key?: React.Key; children?: T[] }>(
   dataSource: T[],
@@ -199,7 +200,7 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
 
   const handleSelect = useCallback(
     (
-      isRadio: boolean,
+      radio: boolean,
       isChecked: boolean,
       record: T,
       recordKey: React.Key,
@@ -211,13 +212,13 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
       let selectedRecords: T[];
       let finalSelectedKeys: React.Key[];
       if (!isChecked) {
-        keys = isRadio ? [recordKey] : [...selectedKeys, recordKey];
+        keys = radio ? [recordKey] : [...selectedKeys, recordKey];
       } else {
         keys = selectedKeys.filter((key) => key !== recordKey);
         halfKeys = halfSelectedKeys.filter((halfKey) => halfKey !== recordKey);
       }
       if (selected) {
-        if (!isRadio) {
+        if (!radio) {
           const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = fillMissSelectedKeys(keys);
           finalSelectedKeys = checkedKeys;
           selectedRecords = [...checkedKeyRecordMap.values()];
@@ -228,7 +229,7 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
           setHalfSelectedKeys([]);
         }
       } else {
-        if (!isRadio) {
+        if (!radio) {
           const { checkedKeyRecordMap, checkedKeys, halfCheckedKeys } = removeUselessKeys(
             keys,
             halfKeys,
@@ -255,7 +256,7 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
         rowSelection?.onChange(finalSelectedKeys, selectedRecords);
       }
     },
-    [selectedKeys, halfSelectedKeys, rowSelection],
+    [selectedKeys, halfSelectedKeys, rowSelection, fillMissSelectedKeys, removeUselessKeys],
   );
 
   useEffect(() => {
@@ -271,6 +272,7 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
         setSelectedKeys(rowSelection.selectedRowKeys || []);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectionType, rowSelection?.selectedRowKeys, fillMissSelectedKeys]);
 
   return [

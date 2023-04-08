@@ -36,7 +36,7 @@ const Bar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((props, ref) => {
     let thumbNode: HTMLDivElement | null;
 
     const handleMouseMoveThumb = (event: MouseEvent) => {
-      let delta = (isVertical ? event.clientY : event.clientX) - lastClient.current;
+      const delta = (isVertical ? event.clientY : event.clientX) - lastClient.current;
       lastPosition.current += delta;
       lastPosition.current = Math.max(0, lastPosition.current);
       lastPosition.current = Math.min(lastPosition.current, size - thumbSize);
@@ -75,9 +75,10 @@ const Bar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((props, ref) => {
     return () => {
       thumbNode?.removeEventListener('mousedown', handleMouseDownThumb);
     };
-  }, [ref, thumbSize, size, ratio, orientation, isVertical]);
+  }, [ref, thumbSize, size, ratio, orientation, isVertical, onScroll]);
 
   useEffect(() => {
+    const scrollTrackNode = scrollTrackRef.current;
     const handleMouseDownTrack = (event: any) => {
       let thumbNode: HTMLDivElement | null = null;
       if (ref !== null && typeof ref !== 'function') {
@@ -96,10 +97,10 @@ const Bar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((props, ref) => {
       }
     };
 
-    scrollTrackRef.current?.addEventListener('mousedown', handleMouseDownTrack);
+    scrollTrackNode?.addEventListener('mousedown', handleMouseDownTrack);
 
     return () => {
-      scrollTrackRef.current?.removeEventListener('mousedown', handleMouseDownTrack);
+      scrollTrackNode?.removeEventListener('mousedown', handleMouseDownTrack);
     };
   }, [ref, size, contentSize, thumbSize, ratio, isVertical, onScroll]);
 

@@ -137,8 +137,6 @@ export interface TableProps<T> {
   ) => void;
   /** 表格行是否可选择配置项 */
   rowSelection?: RowSelection<T>;
-  // /** 排序取消事件 */
-  // onSortCancel?: (col: ColumnsType<T>, order: 'asc' | 'desc') => void;
   /** 排序事件 */
   onSort?: (sortResult: {
     column: ColumnType<T>;
@@ -238,10 +236,10 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             levelRecordMap: childrenLevelRecordMap,
           } = getLevelInfo(d.children, level + 1);
           maxTreeLevel = childrenMaxTreeLevel;
-          for (let [key, value] of childrenKeyLevelMap.entries()) {
+          for (const [key, value] of childrenKeyLevelMap.entries()) {
             keyLevelMap.set(key, value);
           }
-          for (let [key, value] of childrenLevelRecordMap) {
+          for (const [key, value] of childrenLevelRecordMap) {
             if (!(levelRecordMap.get(key) instanceof Set)) {
               levelRecordMap.set(key, new Set());
             }
@@ -271,15 +269,16 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const selectionType = useMemo(() => {
     const column = columns.find(
-      (column) => 'type' in column && (column?.type === 'checkbox' || column?.type === 'radio'),
+      (col) => 'type' in col && (col?.type === 'checkbox' || col?.type === 'radio'),
     );
     if (column) return (column as ColumnType<T>).type as 'checkbox' | 'radio';
     return rowSelection ? rowSelection?.type || 'checkbox' : undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columns, rowSelection?.type]);
 
   const flattenDataSource = useMemo(() => {
     return flatRecords(dataSource);
-  }, [dataSource]);
+  }, [dataSource, flatRecords]);
 
   const allKeys = useMemo(() => {
     return flattenDataSource.map((record) => {
@@ -352,7 +351,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       });
       return records;
     },
-    [treeExpandKeys],
+    [treeExpandKeys, getRecordKey],
   );
 
   const displayedData = useMemo(() => {
@@ -435,8 +434,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     });
     lastCachePosition.current = positions;
     setCachePosition(positions);
-    // eslint-disable-line react-hooks/exhaustive-deps
-  }, [dataSource, rowHeight, getDataByTreeExpandKeys]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataSource, rowHeight, getDataByTreeExpandKeys, getRecordKey]);
 
   const handleResize = useCallback(
     (targetColumns: PrivateColumnsType<T>) => {
@@ -510,7 +509,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         updateMergeColumns(widthColumns);
       }
     },
-    [width, flatColumns, addWidthForColumns],
+    [width, flatColumns, addWidthForColumns, updateMergeColumns],
   );
 
   useEffect(() => {
@@ -604,7 +603,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         parseInt(resizeEl.style.left, 10) - (resizingRect.left - tableContainerRect.left);
 
       const modifyWidthForColumns = (
-        columnWidth: number,
+        colWidth: number,
         columnKey: React.Key,
         targetColumns: PrivateColumnsType<T>,
       ) => {
@@ -613,12 +612,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           if ('children' in column && column.children.length) {
             widthColumns.push({
               ...column,
-              children: modifyWidthForColumns(columnWidth, columnKey, column.children),
+              children: modifyWidthForColumns(colWidth, columnKey, column.children),
             });
           } else {
             if (column._columnKey === columnKey) {
               oldWidth = column._width as number;
-              widthColumns.push({ ...column, width: columnWidth });
+              widthColumns.push({ ...column, width: colWidth });
             } else {
               widthColumns.push({ ...column });
             }
@@ -660,7 +659,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const handleUpdate = useCallback((rects: { rowIndex: number; rowHeight: number }[]) => {
     let hasChange = false;
     const prevPosition = [...lastCachePosition.current];
-    rects.map((rect, i) => {
+    rects.map((rect) => {
       const index = prevPosition.findIndex((c) => c.index === rect.rowIndex);
       if (index >= 0) {
         const item = { ...prevPosition[index] };
@@ -721,13 +720,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       if (tbodyRef.current) {
         const tbodyNode = tbodyRef.current;
         const clientWidth = tbodyNode.clientWidth;
-        const scrollWidth = tbodyNode.scrollWidth;
+        const tScrollWidth = tbodyNode.scrollWidth;
         const clientHeight = tbodyNode.clientHeight;
-        const hasXScrollbar = scrollWidth > clientWidth;
+        const hasXScrollbar = tScrollWidth > clientWidth;
         const hasYScrollbar = tbodyScrollHeight > clientHeight;
         if (hasXScrollbar && barXRef.current) {
-          const thumbSize = Math.max((clientWidth / scrollWidth) * clientWidth, BAR_THUMB_SIZE);
-          const scale = (scrollWidth - clientWidth) / (clientWidth - thumbSize);
+          const thumbSize = Math.max((clientWidth / tScrollWidth) * clientWidth, BAR_THUMB_SIZE);
+          const scale = (tScrollWidth - clientWidth) / (clientWidth - thumbSize);
           barXRef.current.style.transform = `translateX(${lastScrollLeft.current / scale}px)`;
         }
         if (hasYScrollbar && barYRef.current) {
@@ -739,7 +738,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           barYRef.current.style.transform = `translateY(${lastScrollTop.current / scale}px)`;
         }
         setTbodyClientWidth(clientWidth);
-        setTbodyScrollWidth(scrollWidth);
+        setTbodyScrollWidth(tScrollWidth);
         setTbodyClientHeight(clientHeight);
         setShowScrollbarY(hasYScrollbar);
         setShowScrollbarX(hasXScrollbar);
@@ -748,7 +747,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
     const resizeObserver = () => {
       resizeObserverIns.current = new ResizeObserver((entries) => {
-        let contentRect = entries[0].contentRect;
+        const contentRect = entries[0].contentRect;
         if (!(contentRect.width || contentRect.height)) return;
         update();
       });
@@ -761,47 +760,50 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     };
   }, [tbodyScrollHeight, currentPage, pageSize, sorterStates]);
 
-  const handleHorizontalScroll = useCallback((offsetLeft: number, isWheel: boolean = true) => {
-    let offsetRight = 0;
-    if (tbodyRef.current) {
-      const clientWidth = tbodyRef.current.clientWidth;
-      const scrollWidth = tbodyRef.current.scrollWidth;
-      const maxScrollWidth = scrollWidth - clientWidth;
-      offsetRight = maxScrollWidth - offsetLeft;
-    }
+  const handleHorizontalScroll = useCallback(
+    (leftOffset: number, isWheel: boolean = true) => {
+      let rightOffset = 0;
+      if (tbodyRef.current) {
+        const clientWidth = tbodyRef.current.clientWidth;
+        const tScrollWidth = tbodyRef.current.scrollWidth;
+        const maxScrollWidth = tScrollWidth - clientWidth;
+        rightOffset = maxScrollWidth - leftOffset;
+      }
 
-    [theadRef.current, tbodyRef.current].forEach((el, index) => {
-      if (!el) return;
-      el.querySelector('table').style.transform = `translate(-${offsetLeft}px, -${
-        index === 0 ? 0 : tbodyScrollTop.current
-      }px)`;
-      el.querySelectorAll('th, td').forEach((cell: HTMLTableDataCellElement) => {
-        if (
-          cell.classList.contains(CLASS_CELL_EMPTY) &&
-          cell.querySelector(`.${CLASS_EMPTY_CONTENT}`)
-        ) {
-          (cell.querySelector(
-            `.${CLASS_EMPTY_CONTENT}`,
-          ) as any)!.style.transform = `translateX(${offsetLeft}px)`;
-        }
-        if (cell.classList.contains(CLASS_CELL_FIXED_LEFT)) {
-          cell.style.transform = `translateX(${offsetLeft}px)`;
-        } else if (cell.classList.contains(CLASS_CELL_FIXED_RIGHT)) {
-          cell.style.transform = `translateX(-${offsetRight}px)`;
-        }
-        if (cell.classList.contains(CLASS_CELL_FIXED_LAST)) {
-          cell.classList[offsetLeft > 0 ? 'add' : 'remove'](CLASS_CELL_FIXED_LAST_LEFT);
-        } else if (cell.classList.contains(CLASS_CELL_FIXED_FIRST)) {
-          cell.classList[offsetRight > 0 ? 'add' : 'remove'](CLASS_CELL_FIXED_FIRST_RIGHT);
-        }
+      [theadRef.current, tbodyRef.current].forEach((el, index) => {
+        if (!el) return;
+        el.querySelector('table').style.transform = `translate(-${leftOffset}px, -${
+          index === 0 ? 0 : tbodyScrollTop.current
+        }px)`;
+        el.querySelectorAll('th, td').forEach((cell: HTMLTableDataCellElement) => {
+          if (
+            cell.classList.contains(CLASS_CELL_EMPTY) &&
+            cell.querySelector(`.${CLASS_EMPTY_CONTENT}`)
+          ) {
+            (cell.querySelector(
+              `.${CLASS_EMPTY_CONTENT}`,
+            ) as any)!.style.transform = `translateX(${leftOffset}px)`;
+          }
+          if (cell.classList.contains(CLASS_CELL_FIXED_LEFT)) {
+            cell.style.transform = `translateX(${leftOffset}px)`;
+          } else if (cell.classList.contains(CLASS_CELL_FIXED_RIGHT)) {
+            cell.style.transform = `translateX(-${rightOffset}px)`;
+          }
+          if (cell.classList.contains(CLASS_CELL_FIXED_LAST)) {
+            cell.classList[leftOffset > 0 ? 'add' : 'remove'](CLASS_CELL_FIXED_LAST_LEFT);
+          } else if (cell.classList.contains(CLASS_CELL_FIXED_FIRST)) {
+            cell.classList[rightOffset > 0 ? 'add' : 'remove'](CLASS_CELL_FIXED_FIRST_RIGHT);
+          }
+        });
       });
-    });
-    lastScrollLeft.current = offsetLeft;
-    lastOffsetRight.current = offsetRight;
-    if (isWheel) {
-      onScroll && onScroll(offsetLeft, lastScrollTop.current);
-    }
-  }, []);
+      lastScrollLeft.current = leftOffset;
+      lastOffsetRight.current = rightOffset;
+      if (isWheel) {
+        onScroll && onScroll(leftOffset, lastScrollTop.current);
+      }
+    },
+    [onScroll],
+  );
 
   const handleVerticalScroll = useCallback(
     (offsetTop: number, isWheel = true) => {
@@ -831,7 +833,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         onScroll && onScroll(lastScrollLeft.current, offsetTop);
       }
     },
-    [cachePosition, virtualized],
+    [cachePosition, virtualized, onScroll],
   );
 
   // 考虑renderMaxRows 小于容器高度时候会出现底部空白 这时候取的renderMaxRows刚好为能撑开容器高度那一行的行号
@@ -965,9 +967,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
     if (!showScrollbarY && !showScrollbarX) return;
 
-    tbodyRef.current?.addEventListener('wheel', wheelListener, { passive: false });
+    const tbodyNode = tbodyRef.current;
+
+    tbodyNode?.addEventListener('wheel', wheelListener, { passive: false });
     return () => {
-      tbodyRef.current?.removeEventListener('wheel', wheelListener);
+      tbodyNode?.removeEventListener('wheel', wheelListener);
     };
   }, [
     showScrollbarY,
@@ -1002,18 +1006,21 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       }
     };
 
-    barYRef.current?.parentNode?.addEventListener('mouseenter', handleMouseEnter);
-    barXRef.current?.parentNode?.addEventListener('mouseenter', handleMouseEnter);
+    const barYNode = barYRef.current;
+    const barXNode = barXRef.current;
 
-    barYRef.current?.parentNode?.addEventListener('mouseleave', handleMouseLeave);
-    barXRef.current?.parentNode?.addEventListener('mouseleave', handleMouseLeave);
+    barYNode?.parentNode?.addEventListener('mouseenter', handleMouseEnter);
+    barXNode?.parentNode?.addEventListener('mouseenter', handleMouseEnter);
+
+    barYNode?.parentNode?.addEventListener('mouseleave', handleMouseLeave);
+    barXNode?.parentNode?.addEventListener('mouseleave', handleMouseLeave);
 
     return () => {
-      barYRef.current?.parentNode?.removeEventListener('mouseenter', handleMouseEnter);
-      barXRef.current?.parentNode?.removeEventListener('mouseenter', handleMouseEnter);
+      barYNode?.parentNode?.removeEventListener('mouseenter', handleMouseEnter);
+      barXNode?.parentNode?.removeEventListener('mouseenter', handleMouseEnter);
 
-      barYRef.current?.parentNode?.removeEventListener('mouseleave', handleMouseLeave);
-      barXRef.current?.parentNode?.removeEventListener('mouseleave', handleMouseLeave);
+      barYNode?.parentNode?.removeEventListener('mouseleave', handleMouseLeave);
+      barXNode?.parentNode?.removeEventListener('mouseleave', handleMouseLeave);
     };
   }, [showScrollbarY, showScrollbarX]);
 

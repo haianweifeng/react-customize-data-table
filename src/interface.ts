@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 export type FilterState<T> = {
   key: React.Key;
@@ -189,28 +189,3 @@ export type PrivateColumnGroupType<T> = Omit<PrivateColumnType<T>, 'dataIndex' |
 };
 
 export type PrivateColumnsType<T> = (PrivateColumnGroupType<T> | PrivateColumnType<T>)[];
-
-export interface CellProps {
-  /** 列的类型 */
-  type?: 'expand' | 'checkbox' | 'radio' | 'default';
-  /** 设置对齐方式 */
-  align?: 'left' | 'center' | 'right';
-  /** 样式类名 */
-  className?: string;
-  /** 列固定 */
-  fixed?: 'left' | 'right';
-  /** 单元格占据的列数 */
-  colSpan: number;
-  /** 单元格占据的行数 */
-  rowSpan: number;
-  /** 单元格渲染内容 */
-  content: React.ReactNode | (() => React.ReactNode);
-  /** 是否是最后一列向左固定的列 */
-  _lastLeftFixed?: boolean;
-  /** 是否是向右固定的第一列 */
-  _firstRightFixed?: boolean;
-  /** 超过宽度将自动省略 */
-  ellipsis?: boolean | TooltipType;
-  /** 列宽度 */
-  width?: number | string;
-}
