@@ -1,4 +1,5 @@
 ---
+toc: content
 title: Pagination
 group:
   path: /pagination

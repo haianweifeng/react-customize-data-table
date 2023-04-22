@@ -1,5 +1,7 @@
-### 自定义排序图标
+---
+title: 排序图标
+order: 13
+toc: content
+---
 
-###### 设置 Table 的 renderSorter 属性来自定义图标
-
-<code src='./SortRender.tsx'></code>
+<code src='../examples/SortRender.tsx' description='设置`column.renderSorter` 自定义排序图标'>自定义排序图标</code>

@@ -13,6 +13,12 @@ export type SortState<T> = {
   sorter: (rowA: T, rowB: T) => number;
 };
 
+export type SorterResult<T> = {
+  column: ColumnType<T>;
+  order: 'asc' | 'desc' | null;
+  field: string | undefined;
+};
+
 export type RowKeyType<T> = string | ((row: T) => string | number);
 
 export type LocalType = {
@@ -40,9 +46,9 @@ export type TooltipType = {
   /** tooltip 用 Tooltip 组件显示完整内容 */
   tooltip: boolean;
   /** tooltipTheme 配置 Tooltip 的主题 */
-  tooltipTheme: 'dark' | 'light';
+  tooltipTheme?: 'dark' | 'light';
   /** 自定义渲染tooltip 气泡框 */
-  renderTooltip: (trigger: React.ReactNode, tip: React.ReactNode) => React.ReactNode;
+  renderTooltip?: (trigger: React.ReactNode, tip: React.ReactNode) => React.ReactNode;
 };
 
 export interface RowSelection<T> {
@@ -52,7 +58,7 @@ export interface RowSelection<T> {
   columnWidth?: string | number;
   /** 选择框的默认属性配置 */
   getCheckboxProps?: (record: T) => any;
-  /** 渲染表体的勾选框 适合不是树形数据中允许用户自定义 */
+  /** 渲染表体的勾选框 适合不是树形数据中允许用户自定义 树形数据的话因为存在父级选择了自己得全部选择 */
   renderCell?: (
     checked: boolean,
     record: T,
@@ -146,7 +152,7 @@ export type ColumnType<T> = {
   /** 排序的受控属性,外界可用此控制列的排序 */
   sortOrder?: 'asc' | 'desc' | null;
   /** 排序函数 */
-  sorter?: (rowA: T, rowB: T) => number | Sorter<T>;
+  sorter?: ((rowA: T, rowB: T) => number) | Sorter<T>;
   /** 自定义排序图标 */
   renderSorter?: (params: {
     activeAsc: boolean;
@@ -155,15 +161,15 @@ export type ColumnType<T> = {
     triggerDesc: (event: React.MouseEvent) => void;
   }) => React.ReactNode;
   /** 默认筛选值 */
-  defaultFilteredValue?: string[];
+  defaultFilteredValue?: React.Key[];
   /** 筛选的受控属性 */
-  filteredValue?: string[];
+  filteredValue?: React.Key[];
   /** 筛选是否多选 */
   filterMultiple?: boolean;
   /** 自定义 filter 图标 */
   filterIcon?: (filtered: boolean) => React.ReactNode;
   /** 筛选菜单项是否可搜索 */
-  filterSearch?: (value: string, record: FilterMenus) => boolean | boolean;
+  filterSearch?: ((value: string, record: FilterMenus) => boolean) | boolean;
   /** 表头的筛选菜单项 */
   filters?: FilterMenus[];
   /** 筛选函数 */
@@ -171,7 +177,7 @@ export type ColumnType<T> = {
 };
 
 export type ColumnGroupType<T> = Omit<ColumnType<T>, 'dataIndex' | 'type'> & {
-  children: Omit<ColumnsType<T>, 'type'>;
+  children: (ColumnGroupType<T> | Omit<ColumnType<T>, 'type'>)[];
 };
 
 export type ColumnsType<T> = (ColumnGroupType<T> | ColumnType<T>)[];

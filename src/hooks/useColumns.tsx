@@ -1,18 +1,18 @@
-import type React from 'react';
-import { useState, useMemo, useCallback } from 'react';
 import omit from 'omit.js';
+import type React from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type {
+  ColumnGroupType,
   ColumnsType,
-  RowSelection,
   Expandable,
   PrivateColumnGroupType,
-  PrivateColumnType,
   PrivateColumnsType,
-  ColumnGroupType,
+  PrivateColumnType,
+  RowSelection,
 } from '../interface';
 import { SELECTION_EXPAND_COLUMN_WIDTH } from '../utils/constant';
 import { getColumnKey } from '../utils/util';
-// todo 考虑如果是children的列不能再设置type 担心children 中type 是'checkbox' | 'radio' | 'expand' 测试ts 有没有约束提示
+
 function useColumns<T>(
   originColumns: ColumnsType<T>,
   rowSelection?: RowSelection<T>,
@@ -127,7 +127,7 @@ function useColumns<T>(
       if ('type' in column && (column?.type === 'checkbox' || column?.type === 'radio')) {
         existSelection = true;
         if ('children' in column) {
-          console.error(
+          console.warn(
             "column.children is not allowed when column is 'checkbox' | 'radio' | 'expand'.",
           );
         }
@@ -144,7 +144,7 @@ function useColumns<T>(
         if (expandable && expandable?.expandedRowRender) {
           existExpand = true;
           if ('children' in column) {
-            console.error(
+            console.warn(
               "column.children is not allowed when column is 'checkbox' | 'radio' | 'expand'.",
             );
           }
@@ -188,7 +188,15 @@ function useColumns<T>(
     }
     return mergeColumns;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [originColumns, addColumnKeyForColumn]);
+  }, [
+    originColumns,
+    addColumnKeyForColumn,
+    rowSelection?.columnTitle,
+    rowSelection?.columnWidth,
+    expandable?.columnTitle,
+    expandable?.columnWidth,
+    rowSelection?.type,
+  ]);
 
   const initMergeColumns = useMemo(() => {
     return getMergeColumns();

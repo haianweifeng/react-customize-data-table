@@ -1,18 +1,17 @@
-import React, { useMemo, useCallback } from 'react';
 import classnames from 'classnames';
+import React, { useCallback, useMemo } from 'react';
 import type {
-  ResizeInfo,
-  ColumnType,
   ColumnGroupType,
-  PrivateColumnType,
-  PrivateColumnsType,
-  PrivateColumnGroupType,
-  SortState,
+  ColumnType,
   FilterState,
+  PrivateColumnGroupType,
+  PrivateColumnsType,
+  PrivateColumnType,
+  ResizeInfo,
+  SortState,
 } from '../interface';
-import Th from '../Th';
 import type { ThProps } from '../Th';
-import { omitColumnProps } from '../utils/util';
+import Th from '../Th';
 import {
   CLASS_CELL_FIXED_FIRST,
   CLASS_CELL_FIXED_LAST,
@@ -20,6 +19,7 @@ import {
   CLASS_CELL_FIXED_RIGHT,
   PREFIXCLS,
 } from '../utils/constant';
+import { omitColumnProps } from '../utils/util';
 
 interface TheadProps<T> {
   bordered: boolean;
@@ -28,18 +28,18 @@ interface TheadProps<T> {
   locale: Record<string, string>;
   checked: boolean | 'indeterminate';
   columns: PrivateColumnsType<T>;
-  headerCellClassName?: (
-    column: ColumnType<T> | ColumnGroupType<T>,
-    rowIndex: number,
-    colIndex: number,
-  ) => string | string;
-  headerCellStyle?: (
-    column: ColumnType<T> | ColumnGroupType<T>,
-    rowIndex: number,
-    colIndex: number,
-  ) => React.CSSProperties | React.CSSProperties;
-  headerRowClassName?: (rowIndex: number) => string | string;
-  headerRowStyle?: (rowIndex: number) => React.CSSProperties | React.CSSProperties;
+  headerCellClassName?:
+    | ((column: ColumnType<T> | ColumnGroupType<T>, rowIndex: number, colIndex: number) => string)
+    | string;
+  headerCellStyle?:
+    | ((
+        column: ColumnType<T> | ColumnGroupType<T>,
+        rowIndex: number,
+        colIndex: number,
+      ) => React.CSSProperties)
+    | React.CSSProperties;
+  headerRowClassName?: ((rowIndex: number) => string) | string;
+  headerRowStyle?: ((rowIndex: number) => React.CSSProperties) | React.CSSProperties;
   onSelectAll: (selected: boolean) => void;
   onSort: (col: PrivateColumnType<T> | PrivateColumnGroupType<T>, order: 'asc' | 'desc') => void;
   onFilterChange: (

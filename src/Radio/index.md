@@ -1,24 +1,22 @@
-## Radio
+---
+toc: content
+title: Radio
+group:
+  path: /radio
+---
 
-Demo:
+# Radio 单选框
 
-```tsx
-import React, { useState } from 'react';
-import { Radio } from 'react-data-table';
+### 基本用法
 
-const [checked, setChecked] = useState<boolean>(false);
+<code src="./demo/Basic.tsx"></code>
 
-const handleChange = (value: boolean) => {
-  setChecked(value);
-};
+### API
 
-export default () => (
-  <>
-    <Radio checked={checked} onChange={handleChange}>
-      Radio
-    </Radio>
-  </>
-);
-```
-
-More skills for writing demo: https://d.umijs.org/guide/basic#write-component-demo
+| 属性      | 类型                                   | 默认值  | 说明             |
+| --------- | -------------------------------------- | ------- | ---------------- |
+| className | string                                 | -       | 扩展 className   |
+| style     | CSSProperties                          | -       | 样式对象         |
+| checked   | boolean                                | 'false' | 勾选状态         |
+| disabled  | boolean                                | 'false' | 开启禁用状态     |
+| onChange  | (checked: boolean, event: any) => void | -       | 变化时的回调函数 |

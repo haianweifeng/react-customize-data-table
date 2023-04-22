@@ -1,3 +1,7 @@
-### 空数据
+---
+title: 空数据
+order: 5
+toc: content
+---
 
-<code src='./Empty.tsx' desc="通过设置empty 属性可以自定义数据为空时的提示内容,默认是'No data'"></code>
+<code src='../examples/Empty.tsx' description="设置`empty` 属性自定义数据为空时的提示内容,默认值是'No data'">数据为空时提示内容</code>

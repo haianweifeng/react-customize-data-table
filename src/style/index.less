@@ -79,6 +79,13 @@
         justify-content: flex-end;
       }
     }
+
+    &[colspan]:not([colspan='1']) {
+      text-align: center;
+      .@{table-prefix}-cell-header {
+        justify-content: center;
+      }
+    }
   }
 
   // tbody

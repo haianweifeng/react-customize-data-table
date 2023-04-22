@@ -1,3 +1,7 @@
-### 加载中
+---
+title: 加载中
+order: 6
+toc: content
+---
 
-<code src='./Loading.tsx' desc='设置loading将表格设置为加载中'></code>
+<code src='../examples/DefaultLoading.tsx' description='设置`loading`开启加载状态'>默认加载符</code> <code src='../examples/Loading.tsx'>自定义加载符</code>

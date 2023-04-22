@@ -1,4 +1,5 @@
 ---
+toc: content
 title: Icon
 group:
   path: /icon

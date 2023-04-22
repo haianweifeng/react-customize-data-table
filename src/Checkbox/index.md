@@ -1,22 +1,22 @@
-## Checkbox
+---
+toc: content
+title: Checkbox
+group:
+  path: /checkbox
+---
 
-Demo:
+# Checkbox 多选框
 
-```tsx
-import React, { useState } from 'react';
-import { Checkbox } from 'react-data-table';
+### 基本用法
 
-const [checked, setChecked] = useState<boolean | 'indeterminate'>('indeterminate');
+<code src="./demo/Basic.tsx"></code>
 
-const handleChange = (value: boolean, event: any) => {
-  setChecked(value);
-};
+### API
 
-export default () => (
-  <Checkbox checked={checked} onChange={handleChange}>
-    Checkbox
-  </Checkbox>
-);
-```
-
-More skills for writing demo: https://d.umijs.org/guide/basic#write-component-demo
+| 属性      | 类型                                   | 默认值  | 说明             |
+| --------- | -------------------------------------- | ------- | ---------------- |
+| className | string                                 | -       | 扩展 className   |
+| style     | CSSProperties                          | -       | 样式对象         |
+| checked   | `'indeterminate'` \| boolean           | 'false' | 勾选状态         |
+| disabled  | boolean                                | 'false' | 开启禁用状态     |
+| onChange  | (checked: boolean, event: any) => void | -       | 变化时的回调函数 |

@@ -1,13 +1,13 @@
-import React, { useEffect, useRef } from 'react';
 import classnames from 'classnames';
-import Tr from '../Tr';
+import React, { useEffect, useRef } from 'react';
 import type {
   ColumnType,
   Expandable,
+  PrivateColumnsType,
   RowSelection,
   TreeExpandable,
-  PrivateColumnsType,
 } from '../interface';
+import Tr from '../Tr';
 import {
   CLASS_CELL_EMPTY,
   CLASS_EMPTY_CONTENT,
@@ -49,13 +49,11 @@ interface TbodyProps<T> {
     event: Event,
   ) => void;
   rowClassName?: (record: T, index: number) => string;
-  rowStyle?: (record: T, index: number) => React.CSSProperties | React.CSSProperties;
-  cellClassName?: (column: ColumnType<T>, rowIndex: number, colIndex: number) => string | string;
-  cellStyle?: (
-    column: ColumnType<T>,
-    rowIndex: number,
-    colIndex: number,
-  ) => React.CSSProperties | React.CSSProperties;
+  rowStyle?: ((record: T, index: number) => React.CSSProperties) | React.CSSProperties;
+  cellClassName?: ((column: ColumnType<T>, rowIndex: number, colIndex: number) => string) | string;
+  cellStyle?:
+    | ((column: ColumnType<T>, rowIndex: number, colIndex: number) => React.CSSProperties)
+    | React.CSSProperties;
   onRowEvents?: (record: T, rowIndex: number) => object;
   onCellEvents?: (record: T, rowIndex: number) => object;
   onUpdate: (rects: { rowIndex: number; rowHeight: number }[]) => void;
@@ -83,6 +81,7 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
   } = props;
 
   const tbodyRef = useRef<any>(null);
+  const hasChecked = useRef<boolean>(false);
 
   useEffect(() => {
     const update = () => {
@@ -108,13 +107,25 @@ function Tbody<T extends { key?: number | string; children?: T[] }>(props: Tbody
     update();
   }, [startRowIndex, columns, expandedRowKeys, dataSource, onUpdate]);
 
+  useEffect(() => {
+    return () => {
+      hasChecked.current = false;
+    };
+  }, [selectionType]);
+
   const renderTr = (rowData: T, rowIndex: number) => {
     const recordKey = getRecordKey(rowData);
     let checked: boolean | 'indeterminate' = false;
     const hasChildren = rowData?.children && rowData.children.length;
 
     if (selectionType === 'radio' || !hasChildren) {
-      checked = selectedKeys.indexOf(recordKey) >= 0;
+      const exist = selectedKeys.indexOf(recordKey) >= 0;
+      if (selectionType === 'radio') {
+        checked = exist && !hasChecked.current;
+        hasChecked.current = exist;
+      } else {
+        checked = exist;
+      }
     } else {
       checked =
         selectedKeys.indexOf(recordKey) >= 0

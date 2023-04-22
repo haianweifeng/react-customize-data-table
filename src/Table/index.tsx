@@ -1,35 +1,39 @@
-import React, { useMemo, useRef, useState, useEffect, useCallback, useContext } from 'react';
 import classnames from 'classnames';
-import useColumns from '../hooks/useColumns';
-import useSorter from '../hooks/useSorter';
-import useFilter from '../hooks/useFilter';
-import useExpand from '../hooks/useExpand';
-import useSelection from '../hooks/useSelection';
-import usePagination from '../hooks/usePagination';
-import useTreeExpand from '../hooks/useTreeExpand';
-import Thead from '../Thead';
-import Tbody from '../Tbody';
+import normalizeWheel from 'normalize-wheel';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import ResizeObserver from 'resize-observer-polyfill';
+import Bar from '../Bar';
 import Colgroup from '../Colgroup';
-import Pagination from '../Pagination';
-import Spin from '../Spin';
+import useColumns from '../hooks/useColumns';
+import useExpand from '../hooks/useExpand';
+import useFilter from '../hooks/useFilter';
+import usePagination from '../hooks/usePagination';
+import useSelection from '../hooks/useSelection';
+import useSorter from '../hooks/useSorter';
+import useTreeExpand from '../hooks/useTreeExpand';
+import type { PaginationProps } from '../index';
 import type {
-  LocalType,
-  RowKeyType,
+  CachePosition,
+  ColumnGroupType,
   ColumnsType,
   ColumnType,
-  RowSelection,
   Expandable,
-  TreeExpandable,
-  ColumnGroupType,
+  LocalType,
+  PrivateColumnGroupType,
   PrivateColumnsType,
   PrivateColumnType,
-  PrivateColumnGroupType,
   ResizeInfo,
-  CachePosition,
+  RowKeyType,
+  RowSelection,
+  SorterResult,
+  TreeExpandable,
 } from '../interface';
-import type { PaginationProps } from '../index';
+import LocaleContext from '../LocalProvider/context';
+import Pagination from '../Pagination';
+import Spin from '../Spin';
 import '../style/index.less';
-import { getParent } from '../utils/util';
+import Tbody from '../Tbody';
+import Thead from '../Thead';
 import {
   BAR_THUMB_SIZE,
   CLASS_CELL_EMPTY,
@@ -45,11 +49,7 @@ import {
   CLASS_SCROLLBAR_TRACK_SCROLLING,
   PREFIXCLS,
 } from '../utils/constant';
-import { omitColumnProps } from '../utils/util';
-import LocaleContext from '../LocalProvider/context';
-import Bar from '../Bar';
-import normalizeWheel from 'normalize-wheel';
-import ResizeObserver from 'resize-observer-polyfill';
+import { getParent, omitColumnProps } from '../utils/util';
 
 export interface TableProps<T> {
   /** 表格的样式类名 */
@@ -77,15 +77,13 @@ export interface TableProps<T> {
   /** 表格行的类名 */
   rowClassName?: (record: T, index: number) => string;
   /** 表格行的style */
-  rowStyle?: (record: T, index: number) => React.CSSProperties | React.CSSProperties;
+  rowStyle?: ((record: T, index: number) => React.CSSProperties) | React.CSSProperties;
   /** 表体单元格的类名 */
-  cellClassName?: (column: ColumnType<T>, rowIndex: number, colIndex: number) => string | string;
+  cellClassName?: ((column: ColumnType<T>, rowIndex: number, colIndex: number) => string) | string;
   /** 表体单元格的style */
-  cellStyle?: (
-    column: ColumnType<T>,
-    rowIndex: number,
-    colIndex: number,
-  ) => React.CSSProperties | React.CSSProperties;
+  cellStyle?:
+    | ((column: ColumnType<T>, rowIndex: number, colIndex: number) => React.CSSProperties)
+    | React.CSSProperties;
   /** 表头单元格的类名 */
   headerCellClassName?: (
     column: ColumnType<T> | ColumnGroupType<T>,
@@ -93,15 +91,17 @@ export interface TableProps<T> {
     colIndex: number,
   ) => string | string;
   /** 表头单元格的style */
-  headerCellStyle?: (
-    column: ColumnType<T> | ColumnGroupType<T>,
-    rowIndex: number,
-    colIndex: number,
-  ) => React.CSSProperties | React.CSSProperties;
+  headerCellStyle?:
+    | ((
+        column: ColumnType<T> | ColumnGroupType<T>,
+        rowIndex: number,
+        colIndex: number,
+      ) => React.CSSProperties)
+    | React.CSSProperties;
   /** 表头行的类名 */
-  headerRowClassName?: (rowIndex: number) => string | string;
+  headerRowClassName?: ((rowIndex: number) => string) | string;
   /** 表头行的style */
-  headerRowStyle?: (rowIndex: number) => React.CSSProperties | React.CSSProperties;
+  headerRowStyle?: ((rowIndex: number) => React.CSSProperties) | React.CSSProperties;
   /** 设置表头行事件 */
   onHeaderRowEvents?: (rowIndex: number) => object;
   /** 设置表头行单元格事件 */
@@ -138,11 +138,7 @@ export interface TableProps<T> {
   /** 表格行是否可选择配置项 */
   rowSelection?: RowSelection<T>;
   /** 排序事件 */
-  onSort?: (sortResult: {
-    column: ColumnType<T>;
-    order: 'asc' | 'desc' | null;
-    field: string | undefined;
-  }) => void;
+  onSort?: (sortResult: SorterResult<T>) => void;
   /** 筛选事件 */
   onFilter?: (filterInfo: Record<React.Key, React.Key[]>) => void;
   /** 配置展开属性 */
@@ -399,6 +395,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const [isMount, setIsMount] = useState<boolean>(false);
 
   const [scrollWidth, setScrollWidth] = useState<number>(width || 0);
+  // console.log(`scrollWidth: ${scrollWidth}`);
 
   const [startRowIndex, setStartRowIndex] = useState<number>(0);
 
@@ -406,7 +403,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const [offsetRight, setOffsetRight] = useState<number>(0);
 
   const [tbodyClientWidth, setTbodyClientWidth] = useState<number>(0);
-  const [tbodyScrollWidth, setTbodyScrollWidth] = useState<number>(0);
+  // const [tbodyScrollWidth, setTbodyScrollWidth] = useState<number>(0);
+  // console.log(`tbodyScrollWidth: ${tbodyScrollWidth}`);
 
   const [tbodyClientHeight, setTbodyClientHeight] = useState<number>(0);
 
@@ -709,6 +707,13 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     lastScrollTop.current = Math.max(0, lastScrollTop.current);
   }, [expandedRowKeys, tbodyScrollHeight, tbodyClientHeight]);
 
+  // 限制如果是拉宽列宽度 滚动条滚动到最右边后开始缩小表格 需要限制最大滚动距离否则右边可能出现空白
+  useEffect(() => {
+    const spaceWidth = scrollWidth - tbodyClientWidth;
+    lastScrollLeft.current = Math.min(lastScrollLeft.current, spaceWidth);
+    lastScrollLeft.current = Math.max(0, lastScrollLeft.current);
+  }, [scrollWidth, tbodyClientWidth]);
+
   useEffect(() => {
     lastScrollTop.current = 0;
     tbodyScrollTop.current = 0;
@@ -720,13 +725,14 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       if (tbodyRef.current) {
         const tbodyNode = tbodyRef.current;
         const clientWidth = tbodyNode.clientWidth;
-        const tScrollWidth = tbodyNode.scrollWidth;
+        // const tScrollWidth = tbodyNode.scrollWidth;
         const clientHeight = tbodyNode.clientHeight;
-        const hasXScrollbar = tScrollWidth > clientWidth;
+        // const hasXScrollbar = tScrollWidth > clientWidth;
+        const hasXScrollbar = scrollWidth > clientWidth;
         const hasYScrollbar = tbodyScrollHeight > clientHeight;
         if (hasXScrollbar && barXRef.current) {
-          const thumbSize = Math.max((clientWidth / tScrollWidth) * clientWidth, BAR_THUMB_SIZE);
-          const scale = (tScrollWidth - clientWidth) / (clientWidth - thumbSize);
+          const thumbSize = Math.max((clientWidth / scrollWidth) * clientWidth, BAR_THUMB_SIZE);
+          const scale = (scrollWidth - clientWidth) / (clientWidth - thumbSize);
           barXRef.current.style.transform = `translateX(${lastScrollLeft.current / scale}px)`;
         }
         if (hasYScrollbar && barYRef.current) {
@@ -738,7 +744,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           barYRef.current.style.transform = `translateY(${lastScrollTop.current / scale}px)`;
         }
         setTbodyClientWidth(clientWidth);
-        setTbodyScrollWidth(tScrollWidth);
+        // setTbodyScrollWidth(tScrollWidth);
         setTbodyClientHeight(clientHeight);
         setShowScrollbarY(hasYScrollbar);
         setShowScrollbarX(hasXScrollbar);
@@ -758,7 +764,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return () => {
       resizeObserverIns.current?.disconnect();
     };
-  }, [tbodyScrollHeight, currentPage, pageSize, sorterStates]);
+  }, [tbodyScrollHeight, scrollWidth, currentPage, pageSize, sorterStates]);
 
   const handleHorizontalScroll = useCallback(
     (leftOffset: number, isWheel: boolean = true) => {
@@ -847,14 +853,23 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       ? displayedData.slice(startRowIndex, startRowIndex + getRenderMaxRows())
       : displayedData;
   }, [virtualized, displayedData, startRowIndex, getRenderMaxRows]);
-
+  // 如果不是虚拟列表的分页滚动到列表的底部然后点击第二页 会发现展示到最底部的数据但是滚动条在最顶部
   useEffect(() => {
     handleVerticalScroll(lastScrollTop.current, false);
-  }, [expandedRowKeys, handleVerticalScroll]);
+  }, [expandedRowKeys, handleVerticalScroll, currentPage, pageSize]);
 
+  // 如果不是虚拟列表 现在分页是每页10条点击到第二页然后切换到每页30条展示会发现第一页快读滚动后固定列消失
+  // 原因在于只触发了第一次的handleHorizontalScroll 而切换到每页30条后面新增的tr > td 就没有应用了transform 效果
   useEffect(() => {
     handleHorizontalScroll(lastScrollLeft.current, false);
-  }, [mergeColumns, expandedRowKeys, handleHorizontalScroll]);
+  }, [
+    currDataSource,
+    mergeColumns,
+    expandedRowKeys,
+    handleHorizontalScroll,
+    currentPage,
+    pageSize,
+  ]);
 
   // 由于表头表体是通过div 包裹 会导致滚动时候表体先有了scrollLeft 然后表头才有导致更新不同步 表头总是慢于表体 所以采用自定义wheel 事件触发滚动
   useEffect(() => {
@@ -891,7 +906,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         const tbodyEl = tbodyRef.current;
 
         const clientW = tbodyEl.clientWidth;
-        const scrollW = tbodyEl.scrollWidth;
+        const scrollW = scrollWidth;
+        // const scrollW = tbodyEl.scrollWidth;
 
         const clientH = tbodyEl.clientHeight;
         const scrollH = tbodyScrollHeight;
@@ -976,6 +992,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   }, [
     showScrollbarY,
     showScrollbarX,
+    scrollWidth,
     tbodyScrollHeight,
     handleHorizontalScroll,
     handleVerticalScroll,
@@ -1083,7 +1100,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           <Bar
             orientation="horizontal"
             size={tbodyClientWidth}
-            contentSize={tbodyScrollWidth}
+            contentSize={scrollWidth}
+            // contentSize={tbodyScrollWidth}
             ref={barXRef}
             onScroll={handleHorizontalScroll}
           />
@@ -1146,14 +1164,16 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     [className]: !!className,
   });
 
+  // 表头分组中拉宽某些列后然后滚动滚动条会发现右边有空白 而且对于 tbodyRef.current 会发现他也产生了偏移但是没有设置偏移值
   const styles = Object.assign(
     {
       height: height || '100%',
     },
     style,
-    {
-      overflow: loading ? 'hidden' : 'auto',
-    },
+    { overflow: 'hidden' },
+    // {
+    //   overflow: loading ? 'hidden' : 'auto',
+    // },
   );
   return (
     <>

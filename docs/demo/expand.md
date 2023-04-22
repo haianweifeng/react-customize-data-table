@@ -1,3 +1,7 @@
-### 可展开行受控
+---
+title: 可控的展开行
+order: 16
+toc: content
+---
 
-<code src='./Expand.tsx' desc='设置 expandable.expandedRowKeys 属性表示展开会变成受控的'></code>
+<code src='../examples/Expand.tsx' description='设置 expandable.expandedRowKeys 属性表示展开会变成受控的'>受控的展开行</code>

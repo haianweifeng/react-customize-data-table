@@ -1,4 +1,5 @@
 ---
+toc: content
 title: Spin
 group:
   path: /spin

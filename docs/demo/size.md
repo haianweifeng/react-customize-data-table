@@ -1,3 +1,7 @@
-### 尺寸
+---
+title: 尺寸
+order: 4
+toc: content
+---
 
-<code src='./Size.tsx' desc='设置size属性为`large`或`small`来调整表格大小,默认为`default`'></code>
+<code src='../examples/Size.tsx' description='设置`size`属性调整表格大小,默认为`default`'>大小</code>

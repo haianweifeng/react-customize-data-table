@@ -1,3 +1,7 @@
-### 选择行受控
+---
+title: 选择行受控
+order: 8
+toc: content
+---
 
-<code src='./Select.tsx' desc='设置 rowSelection.selectedRowKeys 属性表示选择行会受控'></code>
+<code src='../examples/Select.tsx' description='设置`rowSelection.selectedRowKeys`属性表示控制选中项'>控制选中项</code>

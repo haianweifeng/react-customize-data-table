@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { TreeExpandable } from '../interface';
 
 function useTreeExpand<T extends { key?: React.Key; children?: T[] }>(
@@ -18,7 +18,7 @@ function useTreeExpand<T extends { key?: React.Key; children?: T[] }>(
 
   const handleTreeExpand = useCallback(
     (treeExpanded: boolean, record: T, recordKey: number | string) => {
-      if (treeProps && !treeProps?.expandedRowKeys) {
+      if (!treeProps?.expandedRowKeys) {
         setTreeExpandKeys((prevKeys) => {
           if (!treeExpanded) {
             return prevKeys.filter((key) => key !== recordKey);

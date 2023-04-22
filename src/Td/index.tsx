@@ -1,9 +1,6 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react';
 import classnames from 'classnames';
-import Radio from '../Radio';
-import Tooltip from '../Tooltip';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Checkbox from '../Checkbox';
-import { getPropertyValueSum, omitColumnProps } from '../utils/util';
 import type {
   ColumnType,
   Expandable,
@@ -11,7 +8,9 @@ import type {
   RowSelection,
   TreeExpandable,
 } from '../interface';
+import Radio from '../Radio';
 import '../style/index.less';
+import Tooltip from '../Tooltip';
 import {
   CLASS_CELL_FIXED_FIRST,
   CLASS_CELL_FIXED_FIRST_RIGHT,
@@ -21,6 +20,7 @@ import {
   CLASS_CELL_FIXED_RIGHT,
   PREFIXCLS,
 } from '../utils/constant';
+import { getPropertyValueSum, omitColumnProps } from '../utils/util';
 
 interface TdProps<T> {
   rowData: T;
@@ -54,12 +54,10 @@ interface TdProps<T> {
   ) => void;
   handleExpand: (expanded: boolean, record: T, recordKey: number | string) => void;
   handleTreeExpand: (treeExpanded: boolean, record: T, recordKey: number | string) => void;
-  cellClassName?: (column: ColumnType<T>, rowIndex: number, colIndex: number) => string | string;
-  cellStyle?: (
-    column: ColumnType<T>,
-    rowIndex: number,
-    colIndex: number,
-  ) => React.CSSProperties | React.CSSProperties;
+  cellClassName?: ((column: ColumnType<T>, rowIndex: number, colIndex: number) => string) | string;
+  cellStyle?:
+    | ((column: ColumnType<T>, rowIndex: number, colIndex: number) => React.CSSProperties)
+    | React.CSSProperties;
   onCellEvents?: (record: T, rowIndex: number) => object;
 }
 

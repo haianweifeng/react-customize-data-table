@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import classnames from 'classnames';
-import Checkbox from '../Checkbox';
-import Radio from '../Radio';
-import Icon from '../Icon';
+import { ReactComponent as EmptyIcon } from '@/assets/empty.svg';
 import { ReactComponent as FilterIcon } from '@/assets/filter.svg';
 import { ReactComponent as QueryIcon } from '@/assets/query.svg';
-import { ReactComponent as EmptyIcon } from '@/assets/empty.svg';
+import classnames from 'classnames';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import Checkbox from '../Checkbox';
+import Icon from '../Icon';
 import type { FilterMenus } from '../interface';
+import Radio from '../Radio';
+import { PREFIXCLS } from '../utils/constant';
 import { generateUUID } from '../utils/util';
 import './index.less';
-import { PREFIXCLS } from '../utils/constant';
 
 interface FilterProps {
   locale: Record<string, string>;
@@ -92,87 +93,6 @@ const Filter = (props: FilterProps) => {
     };
   };
 
-  const createPopper = () => {
-    let popperPlaceholder =
-      popperClass.current && document.querySelector(`.${popperClass.current}`);
-    if (!popperPlaceholder) {
-      const div = document.createElement('div');
-      popperClass.current = `popper-placeholder-${generateUUID()}`;
-      div.classList.add(popperClass.current);
-      div.setAttribute('style', 'position: absolute; top: 0; left: 0; width: 100%;');
-      document.body.appendChild(div);
-      popperPlaceholder = div;
-    }
-    const el = popperRef.current;
-    if (el) {
-      const position = getPosition();
-      if (position) {
-        Object.keys(position).map((prop) => {
-          (el.style as any)[prop] = `${(position as any)[prop]}px`;
-        });
-      }
-      popperPlaceholder.appendChild(el);
-    }
-  };
-
-  const handleClick = (event: React.MouseEvent) => {
-    if (!visible) {
-      createPopper();
-    }
-    setVisible((prev) => !prev);
-    event.stopPropagation();
-  };
-
-  useEffect(() => {
-    const removePopper = () => {
-      const popperPlaceholder = document.querySelector(`.${popperClass.current}`);
-      popperPlaceholder && document.body.removeChild(popperPlaceholder);
-    };
-
-    return () => {
-      removePopper();
-    };
-  }, []);
-
-  useEffect(() => {
-    const elementContains = (elem: HTMLElement, target: any) => {
-      let result = false;
-      let parent = target.parentNode;
-      while (parent) {
-        if (parent === elem) {
-          result = true;
-          return result;
-        }
-        parent = parent.parentNode;
-      }
-      return result;
-    };
-
-    const handleDocumentClick = (event: Event) => {
-      const { target } = event;
-      if (
-        !filterContainerRef.current ||
-        elementContains(filterContainerRef.current, target) ||
-        !popperRef.current ||
-        elementContains(popperRef.current, target)
-      ) {
-        return;
-      }
-      onChange(checkedValue);
-      setSearchValue('');
-      setVisible(false);
-      event.stopPropagation();
-    };
-    if (visible) {
-      document.addEventListener('click', handleDocumentClick);
-    } else {
-      document.removeEventListener('click', handleDocumentClick);
-    }
-    return () => {
-      document.removeEventListener('click', handleDocumentClick);
-    };
-  }, [visible, onChange, checkedValue]);
-
   const filterOptions = useMemo(() => {
     return filters.filter((f) => {
       const value = searchValue.trim();
@@ -186,32 +106,34 @@ const Filter = (props: FilterProps) => {
     });
   }, [searchValue, filters, filterSearch]);
 
-  return (
-    <>
-      <div
-        className={`${PREFIXCLS}-filter-container`}
-        ref={filterContainerRef}
-        onClick={handleClick}
-      >
-        {typeof filterIcon === 'function' ? (
-          filterIcon(!!filteredValue.length)
-        ) : (
-          <Icon
-            component={FilterIcon}
-            className={classnames({
-              [`${PREFIXCLS}-filter-icon`]: true,
-              [`${PREFIXCLS}-filter-icon-active`]: filteredValue.length,
-            })}
-          />
-        )}
-      </div>
+  const createPopper = () => {
+    let popperPlaceholder =
+      popperClass.current && document.querySelector(`.${popperClass.current}`);
+    if (!popperPlaceholder) {
+      const div = document.createElement('div');
+      popperClass.current = `popper-placeholder-${generateUUID()}`;
+      div.classList.add(popperClass.current);
+      div.setAttribute('style', 'position: absolute; top: 0; left: 0; width: 100%;');
+      document.body.appendChild(div);
+      popperPlaceholder = div;
+    }
+    const position = getPosition();
+    const styles: React.CSSProperties = {};
+    if (position) {
+      Object.keys(position).map((prop) => {
+        (styles as any)[prop] = `${(position as any)[prop]}px`;
+      });
+    }
+    const el = (
       <div
         ref={popperRef}
-        className={classnames({
-          [`${PREFIXCLS}-filter-popper`]: true,
-          [`${PREFIXCLS}-filter-popper-show`]: visible,
-          [`${PREFIXCLS}-filter-popper-hidden`]: !visible,
-        })}
+        // className={classnames({
+        //   [`${PREFIXCLS}-filter-popper`]: true,
+        //   [`${PREFIXCLS}-filter-popper-show`]: visible,
+        //   [`${PREFIXCLS}-filter-popper-hidden`]: !visible,
+        // })}
+        className={`${PREFIXCLS}-filter-popper`}
+        style={styles}
         onClick={(event: React.MouseEvent) => {
           event.stopPropagation();
         }}
@@ -298,6 +220,85 @@ const Filter = (props: FilterProps) => {
           </div>
         </div>
       </div>
+    );
+    return createPortal(el, popperPlaceholder);
+  };
+
+  const handleClick = (event: React.MouseEvent) => {
+    setVisible((prev) => !prev);
+    event.stopPropagation();
+  };
+
+  useEffect(() => {
+    const removePopper = () => {
+      const popperPlaceholder = document.querySelector(`.${popperClass.current}`);
+      popperPlaceholder && document.body.removeChild(popperPlaceholder);
+    };
+
+    return () => {
+      removePopper();
+    };
+  }, []);
+
+  useEffect(() => {
+    const elementContains = (elem: HTMLElement, target: any) => {
+      let result = false;
+      let parent = target.parentNode;
+      while (parent) {
+        if (parent === elem) {
+          result = true;
+          return result;
+        }
+        parent = parent.parentNode;
+      }
+      return result;
+    };
+
+    const handleDocumentClick = (event: Event) => {
+      const { target } = event;
+      if (
+        !filterContainerRef.current ||
+        elementContains(filterContainerRef.current, target) ||
+        !popperRef.current ||
+        elementContains(popperRef.current, target)
+      ) {
+        return;
+      }
+      onChange(checkedValue);
+      setSearchValue('');
+      setVisible(false);
+      event.stopPropagation();
+    };
+    if (visible) {
+      document.addEventListener('click', handleDocumentClick);
+    } else {
+      document.removeEventListener('click', handleDocumentClick);
+    }
+    return () => {
+      document.removeEventListener('click', handleDocumentClick);
+    };
+  }, [visible, onChange, checkedValue]);
+
+  return (
+    <>
+      <div
+        className={`${PREFIXCLS}-filter-container`}
+        ref={filterContainerRef}
+        onClick={handleClick}
+      >
+        {typeof filterIcon === 'function' ? (
+          filterIcon(!!filteredValue.length)
+        ) : (
+          <Icon
+            component={FilterIcon}
+            className={classnames({
+              [`${PREFIXCLS}-filter-icon`]: true,
+              [`${PREFIXCLS}-filter-icon-active`]: filteredValue.length,
+            })}
+          />
+        )}
+      </div>
+      {visible ? createPopper() : null}
     </>
   );
 };

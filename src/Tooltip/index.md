@@ -1,4 +1,5 @@
 ---
+toc: content
 title: Tooltip
 group:
   path: /tooltip

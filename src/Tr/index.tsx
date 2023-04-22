@@ -1,5 +1,5 @@
-import React, { useRef, useMemo } from 'react';
 import classnames from 'classnames';
+import React, { useMemo, useRef } from 'react';
 import type {
   ColumnType,
   Expandable,
@@ -40,13 +40,11 @@ interface TrProps<T> {
     event: Event,
   ) => void;
   rowClassName?: (record: T, index: number) => string;
-  rowStyle?: (record: T, index: number) => React.CSSProperties | React.CSSProperties;
-  cellClassName?: (column: ColumnType<T>, rowIndex: number, colIndex: number) => string | string;
-  cellStyle?: (
-    column: ColumnType<T>,
-    rowIndex: number,
-    colIndex: number,
-  ) => React.CSSProperties | React.CSSProperties;
+  rowStyle?: ((record: T, index: number) => React.CSSProperties) | React.CSSProperties;
+  cellClassName?: ((column: ColumnType<T>, rowIndex: number, colIndex: number) => string) | string;
+  cellStyle?:
+    | ((column: ColumnType<T>, rowIndex: number, colIndex: number) => React.CSSProperties)
+    | React.CSSProperties;
   onRowEvents?: (record: T, rowIndex: number) => object;
   onCellEvents?: (record: T, rowIndex: number) => object;
 }
@@ -93,7 +91,7 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
     return (
       <tr
         key={`${rowIndex}_expand`}
-        className={classnames({ cls, [CLASS_ROW_EXPAND]: true })}
+        className={classnames({ [cls ?? '']: !!cls, [CLASS_ROW_EXPAND]: true })}
         ref={expandTrRef}
       >
         <td

@@ -1,21 +1,18 @@
 import type React from 'react';
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type {
-  ColumnType,
   PrivateColumnGroupType,
   PrivateColumnsType,
   PrivateColumnType,
   Sorter,
+  SorterResult,
   SortState,
 } from '../interface';
+import { omitColumnProps } from '../utils/util';
 
 function useSorter<T extends { key?: React.Key; children?: T[] }>(
   mergeColumns: PrivateColumnsType<T>,
-  onSort?: (sortResult: {
-    column: ColumnType<T>;
-    order: 'asc' | 'desc' | null;
-    field: string | undefined;
-  }) => void,
+  onSort?: (sortResult: SorterResult<T>) => void,
 ) {
   const generateSortStates = useCallback((columns: PrivateColumnsType<T>) => {
     const sortStates: SortState<T>[] = [];
@@ -59,7 +56,7 @@ function useSorter<T extends { key?: React.Key; children?: T[] }>(
         }
         onSort &&
           onSort({
-            column,
+            column: omitColumnProps(column),
             order: null,
             field: 'dataIndex' in column ? column.dataIndex : undefined,
           });
@@ -102,7 +99,7 @@ function useSorter<T extends { key?: React.Key; children?: T[] }>(
       }
       onSort &&
         onSort({
-          column: column,
+          column: omitColumnProps(column),
           order,
           field: 'dataIndex' in column ? column.dataIndex : undefined,
         });
