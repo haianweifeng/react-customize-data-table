@@ -140,7 +140,7 @@ function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<
       }
       if (!colSpan || !rowSpan) continue;
       const ignoreRightBorder =
-        bordered && (i === columns.length - 1 || colSpan === columns.length);
+        bordered && (i === columns.length - 1 || colSpan + i === columns.length);
       cells.push(
         <Td
           key={i}

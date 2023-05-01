@@ -1,5 +1,11 @@
 import type React from 'react';
 
+export type Summary = {
+  render: () => React.ReactNode;
+  colSpan?: number;
+  rowSpan?: number;
+};
+
 export type FilterState<T> = {
   key: React.Key;
   filteredValue: React.Key[];

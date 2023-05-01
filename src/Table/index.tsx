@@ -26,6 +26,7 @@ import type {
   RowKeyType,
   RowSelection,
   SorterResult,
+  Summary,
   TreeExpandable,
 } from '../interface';
 import LocaleContext from '../LocalProvider/context';
@@ -33,6 +34,7 @@ import Pagination from '../Pagination';
 import Spin from '../Spin';
 import '../style/index.less';
 import Tbody from '../Tbody';
+import Tfoot from '../Tfoot';
 import Thead from '../Thead';
 import {
   BAR_THUMB_SIZE,
@@ -145,6 +147,8 @@ export interface TableProps<T> {
   expandable?: Expandable<T>;
   /** 配置树形数据属性 */
   treeProps?: TreeExpandable<T>;
+  /** 渲染底部信息 */
+  summary?: Summary[][];
 }
 
 function Table<T extends { key?: number | string; children?: T[] }>(props: TableProps<T>) {
@@ -172,6 +176,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     renderMaxRows = 20,
     rowHeight = 46,
     virtualized,
+    summary,
     empty = 'No data',
     onColumnResize,
     locale = localeContext.table,
@@ -366,6 +371,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const theadRef = useRef<any>(null);
   const tbodyRef = useRef<any>(null);
+  const tfootRef = useRef<any>(null);
   const resizeLineRef = useRef<HTMLDivElement>(null);
   const tableContainer = useRef<HTMLDivElement>(null);
 
@@ -725,6 +731,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       if (tbodyRef.current) {
         const tbodyNode = tbodyRef.current;
         const clientWidth = tbodyNode.clientWidth;
+        console.log(tbodyNode.scrollHeight);
+        console.log(`tbodyScrollHeight: ${tbodyScrollHeight}`);
         // const tScrollWidth = tbodyNode.scrollWidth;
         const clientHeight = tbodyNode.clientHeight;
         // const hasXScrollbar = tScrollWidth > clientWidth;
@@ -776,10 +784,10 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         rightOffset = maxScrollWidth - leftOffset;
       }
 
-      [theadRef.current, tbodyRef.current].forEach((el, index) => {
+      [theadRef.current, tbodyRef.current, tfootRef.current].forEach((el, index) => {
         if (!el) return;
         el.querySelector('table').style.transform = `translate(-${leftOffset}px, -${
-          index === 0 ? 0 : tbodyScrollTop.current
+          index === 0 || index === 2 ? 0 : tbodyScrollTop.current
         }px)`;
         el.querySelectorAll('th, td').forEach((cell: HTMLTableDataCellElement) => {
           if (
@@ -1138,6 +1146,18 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     );
   };
 
+  const renderFoot = () => {
+    if (!(summary && summary.length)) return null;
+    return (
+      <div ref={tfootRef} className={`${PREFIXCLS}-tfoot`}>
+        <table style={{ width: scrollWidth }}>
+          <Colgroup columns={flattenColumns} />
+          <Tfoot bordered={!!bordered} columns={flattenColumns} summary={summary} />
+        </table>
+      </div>
+    );
+  };
+
   const renderPagination = () => {
     if (pagination) {
       const pageProps = Object.assign(
@@ -1157,6 +1177,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const tableWrapClass = classnames({
     [`${PREFIXCLS}-container`]: true,
+    [`${PREFIXCLS}-summary`]: !!(summary && summary.length),
     [`${PREFIXCLS}-small`]: size === 'small',
     [`${PREFIXCLS}-large`]: size === 'large',
     [`${PREFIXCLS}-bordered`]: bordered,
@@ -1180,6 +1201,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       <div style={styles} className={tableWrapClass} ref={tableContainer}>
         {showHeader ? renderHeader() : null}
         {renderBody()}
+        {renderFoot()}
         {loading ? (
           <div className={`${PREFIXCLS}-loading`}>
             {typeof loading === 'boolean' ? <Spin /> : loading}
