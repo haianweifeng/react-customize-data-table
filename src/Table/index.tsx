@@ -701,7 +701,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   );
 
   const tbodyScrollHeight = useMemo(() => {
-    return getSumHeight(0, displayedData.length);
+    // 考虑最后一行底部没有border-bottom
+    const sumHeight = getSumHeight(0, displayedData.length);
+    return sumHeight > 0 ? sumHeight - 1 : sumHeight;
   }, [getSumHeight, displayedData]);
 
   // 如果扩展行是全打开然后滚动到底部的话再关闭某一行的扩展行 这时候滚动范围是按当时全部打开的高度计算超过了实际的滚动范围
@@ -731,12 +733,12 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       if (tbodyRef.current) {
         const tbodyNode = tbodyRef.current;
         const clientWidth = tbodyNode.clientWidth;
-        console.log(tbodyNode.scrollHeight);
-        console.log(`tbodyScrollHeight: ${tbodyScrollHeight}`);
         // const tScrollWidth = tbodyNode.scrollWidth;
         const clientHeight = tbodyNode.clientHeight;
         // const hasXScrollbar = tScrollWidth > clientWidth;
         const hasXScrollbar = scrollWidth > clientWidth;
+        console.log(`tbodyScrollHeight: ${tbodyScrollHeight}`);
+        console.log(`clientHeight: ${clientHeight}`);
         const hasYScrollbar = tbodyScrollHeight > clientHeight;
         if (hasXScrollbar && barXRef.current) {
           const thumbSize = Math.max((clientWidth / scrollWidth) * clientWidth, BAR_THUMB_SIZE);
