@@ -693,7 +693,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     (start: number, end: number) => {
       let sumHeight = 0;
       for (let i = start; i < end; i++) {
-        sumHeight += cachePosition[i]?.height || rowHeight;
+        sumHeight += cachePosition[i]?.height ?? rowHeight;
       }
       return sumHeight;
     },
