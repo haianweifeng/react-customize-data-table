@@ -737,8 +737,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
         const clientHeight = tbodyNode.clientHeight;
         // const hasXScrollbar = tScrollWidth > clientWidth;
         const hasXScrollbar = scrollWidth > clientWidth;
-        console.log(`tbodyScrollHeight: ${tbodyScrollHeight}`);
-        console.log(`clientHeight: ${clientHeight}`);
+        // console.log(`tbodyScrollHeight: ${tbodyScrollHeight}`);
+        // console.log(`clientHeight: ${clientHeight}`);
         const hasYScrollbar = tbodyScrollHeight > clientHeight;
         if (hasXScrollbar && barXRef.current) {
           const thumbSize = Math.max((clientWidth / scrollWidth) * clientWidth, BAR_THUMB_SIZE);
@@ -823,8 +823,10 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const handleVerticalScroll = useCallback(
     (offsetTop: number, isWheel = true) => {
+      console.log(`offsetTop: ${offsetTop}`);
       if (virtualized) {
         const item = cachePosition.find((p) => p.bottom > offsetTop);
+        console.log(item);
         if (item) {
           if (lastStartRowIndex.current !== item.index) {
             setStartRowIndex(item.index);
@@ -890,6 +892,9 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     let pixelX = 0;
     let pixelY = 0;
 
+    let touchStartX = 0;
+    let touchStartY = 0;
+
     const wheelEndDetector = (target: HTMLElement, isVertical: boolean) => {
       window.clearTimeout(isVertical ? wheelYEndTimer.current : wheelXEndTimer.current);
       const wheelEndTimer = window.setTimeout(() => {
@@ -933,6 +938,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             const thumbSize = thumbEl.offsetHeight;
             const scale = (scrollH - clientH) / (clientH - thumbSize);
             thumbEl.style.transform = `translateY(${moveY / scale}px)`;
+            // console.log(`moveY: ${moveY}`);
             handleVerticalScroll(moveY);
           }
 
@@ -995,9 +1001,58 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
     const tbodyNode = tbodyRef.current;
 
+    const handleTouchMove = (event: any) => {
+      const position = event.changedTouches[0];
+      const x = position.clientX - touchStartX;
+      const y = position.clientY - touchStartY;
+
+      touchStartX = position.clientX;
+      touchStartY = position.clientY;
+
+      pixelX = -x;
+      pixelY = -y;
+
+      if (Math.abs(pixelX) > Math.abs(pixelY)) {
+        pixelY = 0;
+      } else {
+        pixelX = 0;
+      }
+
+      const isVertical = pixelX === 0;
+
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleWheel();
+          ticking = false;
+        });
+        ticking = true;
+      }
+      if (showScrollbarY && isVertical) {
+        event.preventDefault();
+      }
+      if (showScrollbarX && !isVertical) {
+        event.preventDefault();
+      }
+    };
+
+    const handleTouchEnd = () => {
+      tbodyNode?.removeEventListener('touchmove', handleTouchMove);
+      tbodyNode?.removeEventListener('touchend', handleTouchEnd);
+    };
+
+    const handleTouchStart = (event: any) => {
+      const position = event.changedTouches[0];
+      touchStartX = position.clientX;
+      touchStartY = position.clientY;
+      tbodyNode?.addEventListener('touchmove', handleTouchMove, { passive: false });
+      tbodyNode?.addEventListener('touchend', handleTouchEnd, { passive: false });
+    };
+
     tbodyNode?.addEventListener('wheel', wheelListener, { passive: false });
+    tbodyNode?.addEventListener('touchstart', handleTouchStart, { passive: true });
     return () => {
       tbodyNode?.removeEventListener('wheel', wheelListener);
+      tbodyNode?.removeEventListener('touchstart', handleTouchStart);
     };
   }, [
     showScrollbarY,

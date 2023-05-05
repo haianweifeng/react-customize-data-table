@@ -1,10 +1,10 @@
-import React, { forwardRef, useMemo, useRef, useEffect } from 'react';
 import classnames from 'classnames';
-import './index.less';
-import { extractPixel } from '../utils/util';
+import React, { forwardRef, useEffect, useMemo, useRef } from 'react';
 import { BAR_THUMB_SIZE, CLASS_SCROLLBAR_TRACK, PREFIXCLS } from '../utils/constant';
-// todo 考虑移动端touch事件
-interface VirtualScrollBarProps {
+import { extractPixel } from '../utils/util';
+import './index.less';
+
+interface BarProps {
   className?: string;
   size: number;
   contentSize: number;
@@ -12,7 +12,7 @@ interface VirtualScrollBarProps {
   onScroll?: (offset: number) => void;
 }
 
-const Bar = forwardRef<HTMLDivElement, VirtualScrollBarProps>((props, ref) => {
+const Bar = forwardRef<HTMLDivElement, BarProps>((props, ref) => {
   const { orientation, size, contentSize, className = '', onScroll } = props;
 
   const scrollTrackRef = useRef<HTMLDivElement>(null);
