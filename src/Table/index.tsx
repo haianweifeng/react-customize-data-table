@@ -823,10 +823,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const handleVerticalScroll = useCallback(
     (offsetTop: number, isWheel = true) => {
-      console.log(`offsetTop: ${offsetTop}`);
       if (virtualized) {
         const item = cachePosition.find((p) => p.bottom > offsetTop);
-        console.log(item);
         if (item) {
           if (lastStartRowIndex.current !== item.index) {
             setStartRowIndex(item.index);
