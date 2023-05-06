@@ -87,11 +87,9 @@ export interface TableProps<T> {
     | ((column: ColumnType<T>, rowIndex: number, colIndex: number) => React.CSSProperties)
     | React.CSSProperties;
   /** 表头单元格的类名 */
-  headerCellClassName?: (
-    column: ColumnType<T> | ColumnGroupType<T>,
-    rowIndex: number,
-    colIndex: number,
-  ) => string | string;
+  headerCellClassName?:
+    | ((column: ColumnType<T> | ColumnGroupType<T>, rowIndex: number, colIndex: number) => string)
+    | string;
   /** 表头单元格的style */
   headerCellStyle?:
     | ((
@@ -120,7 +118,7 @@ export interface TableProps<T> {
   locale?: LocalType;
   /** 单行表格的预期高度 */
   rowHeight?: number;
-  /** 单次render的最大行数 如果单次渲染的行数不足以撑开容器的高度则renderMaxRows 自动取值为容器可容纳的行数值 todo */
+  /** 单次render的最大行数 如果单次渲染的行数不足以撑开容器的高度则renderMaxRows 自动取值为容器可容纳的行数值 */
   renderMaxRows?: number;
   /** 表格宽度 固定列或者产生横向滚动一定要设置width */
   width?: number;
@@ -137,7 +135,7 @@ export interface TableProps<T> {
     column: ColumnType<T>,
     event: Event,
   ) => void;
-  /** 表格行是否可选择配置项 */
+  /** 表格行是否可选择 */
   rowSelection?: RowSelection<T>;
   /** 排序事件 */
   onSort?: (sortResult: SorterResult<T>) => void;

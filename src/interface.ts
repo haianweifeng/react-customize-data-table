@@ -153,7 +153,7 @@ export type ColumnType<T> = {
   resizable?: boolean;
   /** 设置单元格属性 */
   onCell?: (record: T, rowIndex: number) => CellType;
-  /** 默认排序 defaultSortOrder */
+  /** 默认排序 */
   defaultSortOrder?: 'asc' | 'desc';
   /** 排序的受控属性,外界可用此控制列的排序 */
   sortOrder?: 'asc' | 'desc' | null;
