@@ -184,7 +184,7 @@ ReactDOM.render(<Table />, container);
 
 | 参数                    | 说明                 | 类型   | 默认值           |
 | ----------------------- | -------------------- | ------ | ---------------- |
-| filterSearchPlaceholder | 自定义列表选择框标题 | string | '在筛选项中搜索' |
+| filterSearchPlaceholder | 筛选搜索框提示语     | string | '在筛选项中搜索' |
 | filterEmptyText         | 无筛选菜单时提示文案 | string | '无筛选项'       |
 | filterResult            | 过滤搜索结果         | string | '未发现'         |
 | filterConfirm           | 过滤确定按钮         | string | '筛选'           |
