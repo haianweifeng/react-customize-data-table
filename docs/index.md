@@ -4,7 +4,7 @@ hero:
   description: React Table Component
   actions:
     - text: 快速上手
-      link: /hello
+      link: /guide
     - text: GitHub
       link: /hello
 features:
@@ -18,5 +18,3 @@ features:
     emoji: 💎
     description: 支持排序、搜索、分页、固定表头、左侧/右侧锁列、自定义操作等复杂功能
 ---
-
-<embed src="../README.md"></embed>

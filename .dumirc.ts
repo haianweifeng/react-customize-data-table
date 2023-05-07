@@ -6,21 +6,10 @@ export default defineConfig({
     name: 'react-data-table',
     logo: 'https://avatars0.githubusercontent.com/u/9441414?s=200&v=4',
     nav: [
-      { title: 'Demo', link: '/demo' },
-      // { title: '组件', link: '/components' }
+      { title: 'Demo', link: '/demo/basic' },
+      { title: 'API', link: '/api' },
+      { title: '指南', link: '/guide' },
     ],
-    // sidebar: {
-    //   '/demo': []
-    // }
-    // sidebar: {
-    //   '/demo': [
-    //     {
-    //       children: [
-    //         { title: '列宽', link: '/column-width' }
-    //       ]
-    //     }
-    //   ]
-    // }
   },
   locales: [
     { id: 'zh-CN', name: '中文' },

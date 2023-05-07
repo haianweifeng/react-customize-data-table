@@ -4,7 +4,7 @@ hero:
   description: React Table Component
   actions:
     - text: Get Started
-      link: /hello
+      link: /guide
     - text: GitHub
       link: /hello
 features:
@@ -18,5 +18,3 @@ features:
     emoji: 💎
     description: Support complex functions such as sorting, searching, pagination, fixed header, left/right lock columns, custom operations, etc.
 ---
-
-<embed src="../README.en-US.md"></embed>
