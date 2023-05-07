@@ -18,3 +18,7 @@ features:
     emoji: 💎
     description: 支持排序、搜索、分页、固定表头、左侧/右侧锁列、自定义操作等复杂功能
 ---
+
+## License
+
+react-data-table is released under the MIT license.

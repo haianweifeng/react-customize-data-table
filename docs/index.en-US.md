@@ -18,3 +18,7 @@ features:
     emoji: 💎
     description: Support complex functions such as sorting, searching, pagination, fixed header, left/right lock columns, custom operations, etc.
 ---
+
+## License
+
+react-data-table is released under the MIT license.

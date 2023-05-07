@@ -113,7 +113,7 @@
 
 选择功能的配置。
 
-| 参数 | 说明 | 类型 | 默认值 |
+| Property | Description | Type | Default |
 | --- | --- | --- | --- | --- |
 | columnTitle | 自定义列表选择框标题 | React.ReactNode | - |
 | columnWidth | 自定义列表选择框宽度 | string \| number | `44px` |
