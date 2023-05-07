@@ -114,14 +114,14 @@ Configuration of tree functions.
 Properties for row selection.
 
 | Property | Description | Type | Default |
-| --- | --- | --- | --- | --- |
+| --- | --- | --- | --- |
 | columnTitle | Set the title of the selection column | React.ReactNode | - |
 | columnWidth | Set the width of the selection column | string \| number | `44px` |
 | getCheckboxProps | Get Checkbox or Radio props | (record: T) => any | - |
 | renderCell | Renderer of the table cell. Same as `render` in column | (checked: boolean, record: T, index: number, originNode: React.ReactNode) => React.ReactNode | - |
-| selectedRowKeys | Controlled selected row keys | string\[] \| number\[] | - |
+| selectedRowKeys | Controlled selected row keys | string[] \| number[] | - |
 | defaultSelectedRowKeys | Initial selected row keys | string\[] \| number\[] | - |
-| type | `checkbox` or `radio` | `checkbox` \| `radio` | `checkbox` |  |
+| type | `checkbox` or `radio` | `checkbox` \| `radio` | `checkbox` |
 | onChange | Callback executed when selected rows change | (selectedRowKeys: (string \| number)[], selectedRows: T[]) => void | - |
 | onSelect | Callback executed when select/deselect one row | (record: T, selected: boolean, selectedRows: T[], nativeEvent: Event) => void | - |
 | onSelectAll | Callback executed when select/deselect all rows | (selected: boolean, selectedRows: T[], changeRows: T[]) => void | - |
