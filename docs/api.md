@@ -113,15 +113,15 @@
 
 选择功能的配置。
 
-| Property | Description | Type | Default |
-| --- | --- | --- | --- | --- |
+| 参数 | 说明 | 类型 | 默认值 |
+| --- | --- | --- | --- |
 | columnTitle | 自定义列表选择框标题 | React.ReactNode | - |
 | columnWidth | 自定义列表选择框宽度 | string \| number | `44px` |
 | getCheckboxProps | 选择框的默认属性配置 | (record: T) => any | - |
 | renderCell | 渲染表体的勾选框 | (checked: boolean, record: T, index: number, originNode: React.ReactNode) => React.ReactNode | - |
-| selectedRowKeys | 指定选中项的 key 数组，需要和 onChange 进行配合 | string\[] \| number\[] | - |
+| selectedRowKeys | 指定选中项的 key 数组，需要和 onChange 进行配合 | string[] \| number[] | - |
 | defaultSelectedRowKeys | 默认选中项的 key 数组 | string\[] \| number\[] | - |
-| type | 多选/单选 | `checkbox` \| `radio` | `checkbox` |  |
+| type | 多选/单选 | `checkbox` \| `radio` | `checkbox` |
 | onChange | 选中项发生变化时的回调 | (selectedRowKeys: (string \| number)[], selectedRows: T[]) => void | - |
 | onSelect | 用户手动选择/取消选择某行的回调 | (record: T, selected: boolean, selectedRows: T[], nativeEvent: Event) => void | - |
 | onSelectAll | 用户手动选择/取消选择所有行的回调 | (selected: boolean, selectedRows: T[], changeRows: T[]) => void | - |
