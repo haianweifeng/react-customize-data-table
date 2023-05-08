@@ -9,6 +9,8 @@
     "table",
     "ui"
   ],
+  "license": "MIT",
+  "homepage": "https://haianweifeng.github.io/react-data-table",
   "scripts": {
     "start": "dumi dev",
     "docs:build": "dumi build",
