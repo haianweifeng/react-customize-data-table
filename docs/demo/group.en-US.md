@@ -1,6 +1,6 @@
 ---
 title: Grouping Table Head
-order: 21
+order: 18
 toc: content
 ---
 

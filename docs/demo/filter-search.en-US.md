@@ -1,6 +1,6 @@
 ---
 title: Filter Search
-order: 10
+order: 7
 toc: content
 ---
 

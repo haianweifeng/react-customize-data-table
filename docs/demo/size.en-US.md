@@ -1,6 +1,6 @@
 ---
 title: Size
-order: 4
+order: 3
 toc: content
 ---
 

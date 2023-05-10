@@ -1,6 +1,6 @@
 ---
 title: Multiple Sorter
-order: 12
+order: 9
 toc: content
 ---
 

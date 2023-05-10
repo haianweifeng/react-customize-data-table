@@ -1,6 +1,6 @@
 ---
 title: Controlled Selection Items
-order: 8
+order: 5
 toc: content
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: Tree Data
-order: 25
+order: 20
 toc: content
 ---
 

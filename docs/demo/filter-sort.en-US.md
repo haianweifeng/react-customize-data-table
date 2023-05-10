@@ -1,6 +1,6 @@
 ---
 title: Controlled Filtering & Sorting
-order: 14
+order: 11
 toc: content
 ---
 

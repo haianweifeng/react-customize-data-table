@@ -1,6 +1,6 @@
 ---
 title: Column Width
-order: 2
+order: 26
 ---
 
 <code src='../examples/ColumnWidth.tsx'></code>

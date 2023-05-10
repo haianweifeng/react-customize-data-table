@@ -1,6 +1,6 @@
 ---
 title: Expandable Row
-order: 15
+order: 12
 toc: content
 ---
 

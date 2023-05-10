@@ -1,6 +1,6 @@
 ---
 title: Controlled Expanded Row
-order: 16
+order: 13
 toc: content
 ---
 

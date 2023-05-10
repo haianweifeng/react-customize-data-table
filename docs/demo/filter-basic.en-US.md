@@ -1,6 +1,6 @@
 ---
 title: Filter & Sort
-order: 9
+order: 6
 toc: content
 ---
 

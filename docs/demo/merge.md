@@ -1,6 +1,6 @@
 ---
 title: 行/列合并
-order: 17
+order: 14
 toc: content
 ---
 

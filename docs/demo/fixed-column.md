@@ -1,6 +1,6 @@
 ---
 title: 固定列
-order: 19
+order: 16
 toc: content
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: 筛选和排序
-order: 9
+order: 6
 toc: content
 ---
 

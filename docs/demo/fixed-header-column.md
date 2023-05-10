@@ -1,6 +1,6 @@
 ---
 title: 固定头和列
-order: 20
+order: 17
 toc: content
 ---
 

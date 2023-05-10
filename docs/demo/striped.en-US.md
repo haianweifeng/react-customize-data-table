@@ -1,6 +1,6 @@
 ---
 title: Bordered & Striped
-order: 3
+order: 2
 toc: content
 ---
 

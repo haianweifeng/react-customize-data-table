@@ -1,6 +1,6 @@
 ---
 title: Selectable Column
-order: 7
+order: 4
 toc: content
 ---
 

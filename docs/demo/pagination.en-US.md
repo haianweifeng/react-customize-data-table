@@ -1,6 +1,6 @@
 ---
 title: Pagination
-order: 24
+order: 21
 toc: content
 ---
 
