@@ -88,17 +88,9 @@ const App = () => {
       rowSelection={rowSelection}
       dataSource={data}
       columns={columns}
-      // rowClassName={(record: DataType) => {
-      //   if (record.name === 'John Brown') {
-      //     return 'custom-row';
-      //   }
-      // }}
       expandable={{
         expandedRowRender: (record: DataType) => <p style={{ margin: 0 }}>{record.description}</p>,
         rowExpandable: (record: DataType) => record.name !== 'Not Expandable',
-        // expandedRowClassName: (record: DataType, index: number) => {
-        //   return 'custom-expand-row';
-        // },
         onExpand: (expanded: boolean, record: DataType) => {
           console.log(`expanded: ${expanded}`, 'record: ', record);
         },

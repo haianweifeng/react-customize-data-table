@@ -15,9 +15,6 @@ interface DataType {
 }
 
 const columns: ColumnsType<DataType> = [
-  // {
-  //   type: 'expand',
-  // },
   {
     title: 'Name',
     dataIndex: 'name',
@@ -149,44 +146,16 @@ for (let i = 0; i < 100; i++) {
 }
 
 const App = () => {
-  // const [list, setList] = useState(data);
-  // const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([2, 28]);
-
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     console.log('触发');
-  //     const data: DataType[] = [];
-  //     for (let i = 30; i < 100; i++) {
-  //       data.push({
-  //         key: i,
-  //         name: 'John Brown',
-  //         age: i + 1,
-  //         street: 'Lake Park',
-  //         building: buildings[i % 4],
-  //         number: 2035,
-  //         companyAddress: 'Lake Street 42',
-  //         companyName: 'SoftLake Co',
-  //         gender: 'M',
-  //       });
-  //     }
-  //     setList((prev) => {
-  //       return [...prev, ...data];
-  //     });
-  //   }, 3000);
-  // }, []);
-
   const renderInfo = ({ total }: { current: number; total: number; pageSize: number }) => {
     return `Total ${total} items`;
   };
 
   return (
     <Table
-      // virtualized
       columns={columns}
       dataSource={data}
       bordered
       height={400}
-      // renderMaxRows={10}
       pagination={{
         size: 'small',
         align: 'right',
@@ -204,58 +173,6 @@ const App = () => {
         }
         return { backgroundColor: 'orange', color: 'orange' };
       }}
-      onHeaderRowEvents={() => {
-        return {
-          onClick: () => {
-            // console.log(`rowIndex: ${rowIndex}`);
-            // console.log('header row click');
-          },
-          // onMouseEnter: () => {
-          //   console.log('row mouse enter');
-          // },
-          // onMouseLeave: () => {
-          //   console.log('row mouse leave');
-          // }
-          // onDoubleClick: () => {
-          //   console.log('row double click')
-          // }
-        };
-      }}
-      onHeaderCellEvents={() => {
-        return {
-          onClick: () => {
-            // console.log(column);
-            // console.log(`rowIndex: ${rowIndex}`);
-            // console.log('cell click');
-          },
-          // onMouseEnter: () => {
-          //   console.log('cell mouse enter');
-          // },
-          // onMouseLeave: () => {
-          //   console.log('cell mouse leave');
-          // }
-          // onDoubleClick: () => {
-          //   console.log(' cell double click')
-          // }
-        };
-      }}
-      // rowSelection={{}}
-      // expandable={{
-      //   // expandedRowKeys,
-      //   defaultExpandAllRows: true,
-      //   expandedRowRender: (record: DataType) => {
-      //     return 'expand content';
-      //   },
-      //   rowExpandable: (record: DataType) => {
-      //     return record.key % 2 === 0;
-      //   },
-      //   onExpand: (expanded: boolean, record: DataType) => {
-      //     console.log(`expanded: ${expanded}`, 'record: ', record);
-      //     setExpandedRowKeys((prev) => {
-      //       return expanded ? [...prev, record.key] : prev.filter((p) => p !== record.key);
-      //     });
-      //   },
-      // }}
     />
   );
 };

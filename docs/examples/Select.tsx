@@ -17,7 +17,6 @@ const columns: ColumnsType<DataType> = [
   },
   {
     title: 'Cash Assets',
-    className: 'column-money',
     dataIndex: 'money',
     align: 'right',
   },
@@ -51,15 +50,6 @@ const data: DataType[] = [
 const App = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
-  // const handleClick = (record: DataType, checked: boolean) => {
-  //   setSelectedRowKeys((prevKeys: React.Key[]) => {
-  //     if (!checked) {
-  //       return [...prevKeys, record.key];
-  //     }
-  //     return prevKeys.filter((key: React.Key) => key !== record.key);
-  //   });
-  // };
-
   const rowSelection = {
     selectedRowKeys,
     onChange: (selectedKeys: (string | number)[], selectedRows: DataType[]) => {
@@ -78,15 +68,6 @@ const App = () => {
       console.log(selectedRows);
       console.log(nativeEvent);
     },
-    // renderCell: (checked: boolean, record: DataType, rowIndex: number, originNode: React.ReactNode) => {
-    //   return (
-    //     <span onClick={() => {
-    //       handleClick(record, checked);
-    //     }}>
-    //       {checked ? '√' : '□'}
-    //     </span>
-    //   );
-    // }
   };
 
   return <Table rowSelection={rowSelection} dataSource={data} columns={columns} bordered />;

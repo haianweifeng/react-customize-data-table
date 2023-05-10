@@ -90,45 +90,9 @@ const App = () => {
       rowSelection={rowSelection}
       dataSource={data}
       columns={columns}
-      // cellClassName="custom-cell-class"
-      // cellClassName={(column, rowIndex: number, colIndex: number) => {
-      //   return 'custom-cell-func';
-      // }}
-      // rowClassName={(record: DataType) => {
-      //   if (record.name === 'John Brown') {
-      //     return 'custom-row';
-      //   }
-      // }}
-      // cellStyle={(column, rowIndex: number, colIndex: number) => {
-      //   return { backgroundColor: 'pink', color: 'blue' };
-      // }}
-      // cellStyle={{ color: 'red', backgroundColor: 'orange' }}
-      // rowStyle={() => {
-      //   return { backgroundColor: 'purple' };
-      // }}
       expandable={{
         expandedRowKeys,
-        // expandedRowKeys: undefined,
-        // defaultExpandedRowKeys: expandedRowKeys,
-        // defaultExpandAllRows: true,
         expandedRowRender: (record: DataType) => <p style={{ margin: 0 }}>{record.description}</p>,
-        // 如果是自定义expandIcon 要配合expandedRowKeys，onExpand 使用，在onExpand 中控制expandedRowKeys
-        // expandIcon: (
-        //   record: DataType,
-        //   expanded: boolean,
-        //   onExpand: (expanded: boolean, record: DataType) => void,
-        // ) => {
-        //   return (
-        //     <span
-        //       onClick={() => {
-        //         onExpand(!expanded, record);
-        //       }}
-        //       style={{ cursor: 'pointer' }}
-        //     >
-        //       {expanded ? 'v' : '>'}
-        //     </span>
-        //   );
-        // },
         onExpand: (expanded: boolean, record: DataType) => {
           console.log(`expanded: ${expanded}`, 'record: ', record);
           setExpandedRowKeys((prev) => {
@@ -136,34 +100,6 @@ const App = () => {
           });
         },
       }}
-      // onRowEvents={(record: DataType, rowIndex: number) => {
-      //   return {
-      //     onClick: () => {
-      //       console.log('click row');
-      //       // console.log(record);
-      //       // console.log(`rowIndex: ${rowIndex}`);
-      //     },
-      //     // onDoubleClick: () => {
-      //     //   console.log('double click');
-      //     // },
-      //     // onMouseEnter: () => {
-      //     //   console.log('mouse enter');
-      //     // },
-      //     // onMouseLeave: () => {
-      //     //   console.log('mouse leave');
-      //     // }
-      //   };
-      // }}
-      // onCellEvents={(record: DataType, rowIndex: number) => {
-      //   return {
-      //     onClick: () => {
-      //       console.log('cell click');
-      //     },
-      //     onDoubleClick: () => {
-      //       console.log('double click');
-      //     },
-      //   };
-      // }}
     />
   );
 };
