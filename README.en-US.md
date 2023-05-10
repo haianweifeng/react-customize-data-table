@@ -31,7 +31,7 @@ $ npm test
 Build library via `father`,
 
 ```bash
-$ npm run build
+$ npm run compile
 ```
 
 ## Example

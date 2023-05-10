@@ -6,7 +6,7 @@ hero:
     - text: Get Started
       link: /guide
     - text: GitHub
-      link: /hello
+      link: https://github.com/haianweifeng/react-data-table
 features:
   - title: High Performance
     emoji: 🚀

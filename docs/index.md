@@ -6,7 +6,7 @@ hero:
     - text: 快速上手
       link: /guide
     - text: GitHub
-      link: /hello
+      link: https://github.com/haianweifeng/react-data-table
 features:
   - title: 高性能
     emoji: 🚀
