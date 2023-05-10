@@ -1,6 +1,6 @@
 ---
 title: Footer Summary
-order: 29
+order: 26
 toc: content
 ---
 

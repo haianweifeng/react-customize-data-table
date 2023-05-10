@@ -1,6 +1,6 @@
 ---
 title: Fixed Header & Column
-order: 17
+order: 14
 toc: content
 ---
 

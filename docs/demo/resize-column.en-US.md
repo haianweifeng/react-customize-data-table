@@ -1,6 +1,6 @@
 ---
 title: Adjust Column Width
-order: 22
+order: 19
 toc: content
 ---
 

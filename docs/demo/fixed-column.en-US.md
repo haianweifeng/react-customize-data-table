@@ -1,6 +1,6 @@
 ---
 title: Fixed Column
-order: 16
+order: 13
 toc: content
 ---
 

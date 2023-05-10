@@ -1,6 +1,6 @@
 ---
 title: 单元格自动省略
-order: 23
+order: 20
 toc: content
 ---
 

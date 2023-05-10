@@ -1,6 +1,6 @@
 ---
 title: Styles & Events
-order: 25
+order: 22
 toc: content
 ---
 

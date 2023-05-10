@@ -1,6 +1,6 @@
 ---
 title: Sort Icon
-order: 10
+order: 9
 toc: content
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: Loading
-order: 28
+order: 25
 toc: content
 ---
 

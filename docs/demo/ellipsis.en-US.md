@@ -1,6 +1,6 @@
 ---
 title: Ellipsis Column
-order: 23
+order: 20
 toc: content
 ---
 

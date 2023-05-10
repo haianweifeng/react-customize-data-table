@@ -1,6 +1,6 @@
 ---
 title: 排序图标
-order: 10
+order: 9
 toc: content
 ---
 

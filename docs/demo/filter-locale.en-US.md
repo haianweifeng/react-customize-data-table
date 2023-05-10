@@ -1,6 +1,6 @@
 ---
 title: Filter Prompt Text
-order: 8
+order: 7
 toc: content
 ---
 
