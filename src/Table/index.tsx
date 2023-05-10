@@ -399,7 +399,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const [isMount, setIsMount] = useState<boolean>(false);
 
   const [scrollWidth, setScrollWidth] = useState<number>(width || 0);
-  // console.log(`scrollWidth: ${scrollWidth}`);
 
   const [startRowIndex, setStartRowIndex] = useState<number>(0);
 
@@ -407,8 +406,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const [offsetRight, setOffsetRight] = useState<number>(0);
 
   const [tbodyClientWidth, setTbodyClientWidth] = useState<number>(0);
-  // const [tbodyScrollWidth, setTbodyScrollWidth] = useState<number>(0);
-  // console.log(`tbodyScrollWidth: ${tbodyScrollWidth}`);
 
   const [tbodyClientHeight, setTbodyClientHeight] = useState<number>(0);
 
@@ -416,9 +413,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
   const [showScrollbarX, setShowScrollbarX] = useState<boolean>(false);
 
   const [cachePosition, setCachePosition] = useState<CachePosition[]>([]);
-  // 全打开后 点击隐藏后高度出现空白
-  // 如果是有展开行且是虚拟滚动 展开行再后面滚动时候才会渲染会导致tbodyScrollHeight处于变化中
-  // expandedRowKeys 是不是只要在mount 时候考虑 是这个useEffect 更新快还是handleUpdate 更新快 结果是不需要加入依赖项否则有bug
+
   useEffect(() => {
     const positions: CachePosition[] = [];
     getDataByTreeExpandKeys(dataSource).map((d, index) => {
@@ -598,7 +593,7 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       const deltaX = event.clientX - startPosX;
       resizeEl.style.cssText = `left: ${initLeft + deltaX}px; display: block`;
     };
-    // 由于是取flatColumns 所以是最后一层的columns 所以只能限制成没有column.children 的才能伸缩列
+
     const handleHeaderMouseUp = (event: Event) => {
       let oldWidth = 0;
       const columnWidth =
@@ -642,7 +637,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     document.addEventListener('mouseup', handleHeaderMouseUp);
   };
 
-  // 4. 待测试-分页情况下表头的全选只针对当前页面数据
   const checked = useMemo(() => {
     if (!selectedKeys.length) {
       return false;
@@ -656,8 +650,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return isAllChecked ? true : isHalfChecked ? 'indeterminate' : false;
   }, [selectedKeys, currentPageAllKeys]);
 
-  // todo 这里没有添加依赖项看eslint 在提交时候会不会报错
-  // todo 为什么输出mergeColumns 或者cachePosition 都是好几遍
   const handleUpdate = useCallback((rects: { rowIndex: number; rowHeight: number }[]) => {
     let hasChange = false;
     const prevPosition = [...lastCachePosition.current];
@@ -704,7 +696,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     return sumHeight > 0 ? sumHeight - 1 : sumHeight;
   }, [getSumHeight, displayedData]);
 
-  // 如果扩展行是全打开然后滚动到底部的话再关闭某一行的扩展行 这时候滚动范围是按当时全部打开的高度计算超过了实际的滚动范围
   useEffect(() => {
     const spaceHeight = tbodyScrollHeight - tbodyClientHeight;
     tbodyScrollTop.current = Math.min(tbodyScrollTop.current, spaceHeight);
@@ -713,7 +704,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     lastScrollTop.current = Math.max(0, lastScrollTop.current);
   }, [expandedRowKeys, tbodyScrollHeight, tbodyClientHeight]);
 
-  // 限制如果是拉宽列宽度 滚动条滚动到最右边后开始缩小表格 需要限制最大滚动距离否则右边可能出现空白
   useEffect(() => {
     const spaceWidth = scrollWidth - tbodyClientWidth;
     lastScrollLeft.current = Math.min(lastScrollLeft.current, spaceWidth);
@@ -731,12 +721,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       if (tbodyRef.current) {
         const tbodyNode = tbodyRef.current;
         const clientWidth = tbodyNode.clientWidth;
-        // const tScrollWidth = tbodyNode.scrollWidth;
         const clientHeight = tbodyNode.clientHeight;
-        // const hasXScrollbar = tScrollWidth > clientWidth;
         const hasXScrollbar = scrollWidth > clientWidth;
-        // console.log(`tbodyScrollHeight: ${tbodyScrollHeight}`);
-        // console.log(`clientHeight: ${clientHeight}`);
         const hasYScrollbar = tbodyScrollHeight > clientHeight;
         if (hasXScrollbar && barXRef.current) {
           const thumbSize = Math.max((clientWidth / scrollWidth) * clientWidth, BAR_THUMB_SIZE);
@@ -752,7 +738,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
           barYRef.current.style.transform = `translateY(${lastScrollTop.current / scale}px)`;
         }
         setTbodyClientWidth(clientWidth);
-        // setTbodyScrollWidth(tScrollWidth);
         setTbodyClientHeight(clientHeight);
         setShowScrollbarY(hasYScrollbar);
         setShowScrollbarX(hasXScrollbar);
@@ -861,13 +846,11 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
       ? displayedData.slice(startRowIndex, startRowIndex + getRenderMaxRows())
       : displayedData;
   }, [virtualized, displayedData, startRowIndex, getRenderMaxRows]);
-  // 如果不是虚拟列表的分页滚动到列表的底部然后点击第二页 会发现展示到最底部的数据但是滚动条在最顶部
+
   useEffect(() => {
     handleVerticalScroll(lastScrollTop.current, false);
   }, [expandedRowKeys, handleVerticalScroll, currentPage, pageSize]);
 
-  // 如果不是虚拟列表 现在分页是每页10条点击到第二页然后切换到每页30条展示会发现第一页快读滚动后固定列消失
-  // 原因在于只触发了第一次的handleHorizontalScroll 而切换到每页30条后面新增的tr > td 就没有应用了transform 效果
   useEffect(() => {
     handleHorizontalScroll(lastScrollLeft.current, false);
   }, [
@@ -918,7 +901,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
         const clientW = tbodyEl.clientWidth;
         const scrollW = scrollWidth;
-        // const scrollW = tbodyEl.scrollWidth;
 
         const clientH = tbodyEl.clientHeight;
         const scrollH = tbodyScrollHeight;
@@ -934,7 +916,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             const thumbSize = thumbEl.offsetHeight;
             const scale = (scrollH - clientH) / (clientH - thumbSize);
             thumbEl.style.transform = `translateY(${moveY / scale}px)`;
-            // console.log(`moveY: ${moveY}`);
             handleVerticalScroll(moveY);
           }
 
@@ -1162,7 +1143,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
             orientation="horizontal"
             size={tbodyClientWidth}
             contentSize={scrollWidth}
-            // contentSize={tbodyScrollWidth}
             ref={barXRef}
             onScroll={handleHorizontalScroll}
           />
@@ -1238,7 +1218,6 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
     [className]: !!className,
   });
 
-  // 表头分组中拉宽某些列后然后滚动滚动条会发现右边有空白 而且对于 tbodyRef.current 会发现他也产生了偏移但是没有设置偏移值
   const styles = Object.assign(
     {
       height: height || '100%',

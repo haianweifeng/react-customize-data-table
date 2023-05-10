@@ -127,11 +127,6 @@ const Filter = (props: FilterProps) => {
     const el = (
       <div
         ref={popperRef}
-        // className={classnames({
-        //   [`${PREFIXCLS}-filter-popper`]: true,
-        //   [`${PREFIXCLS}-filter-popper-show`]: visible,
-        //   [`${PREFIXCLS}-filter-popper-hidden`]: !visible,
-        // })}
         className={`${PREFIXCLS}-filter-popper`}
         style={styles}
         onClick={(event: React.MouseEvent) => {
