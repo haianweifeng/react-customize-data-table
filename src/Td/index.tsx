@@ -9,7 +9,6 @@ import type {
   TreeExpandable,
 } from '../interface';
 import Radio from '../Radio';
-import '../style/index.less';
 import Tooltip from '../Tooltip';
 import {
   CLASS_CELL_FIXED_FIRST,
