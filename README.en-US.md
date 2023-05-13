@@ -38,7 +38,7 @@ $ npm run compile
 
 http://localhost:8000
 
-online example:
+online example: https://haianweifeng.github.io/react-data-table
 
 ## Usage
 

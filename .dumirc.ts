@@ -1,6 +1,8 @@
 import { defineConfig } from 'dumi';
 
 export default defineConfig({
+  base: process.env.NODE_ENV === 'production' ? '/react-data-table' : '/',
+  publicPath: process.env.NODE_ENV === 'production' ? '/react-data-table' : '/',
   favicons: ['https://avatars0.githubusercontent.com/u/9441414?s=200&v=4'],
   themeConfig: {
     name: 'react-data-table',
@@ -8,7 +10,7 @@ export default defineConfig({
     nav: [
       { title: 'Demo', link: '/demo/basic' },
       { title: 'API', link: '/api' },
-      { title: '指南', link: '/guide' },
+      { title: 'Guide', link: '/guide' },
     ],
   },
   locales: [
