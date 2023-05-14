@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main # default branch
-  deploy:
     type: git
     repo: git@github.com:haianweifeng/react-customize-data-table.git
 
