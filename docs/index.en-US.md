@@ -22,3 +22,9 @@ features:
 ## License
 
 react-customize-data-table is released under the MIT license.
+
+<style>
+.dumi-default-hero-title {
+    font-size: 72px;
+}
+</style>
