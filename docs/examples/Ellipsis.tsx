@@ -1,6 +1,6 @@
 import type { ColumnsType } from '@/interface';
 import React from 'react';
-import Table, { Tooltip } from 'react-data-table';
+import Table, { Tooltip } from 'react-customize-data-table';
 
 interface DataType {
   key: React.Key;

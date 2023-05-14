@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Radio } from 'react-data-table';
+import { Radio } from 'react-customize-data-table';
 
 const App = () => {
   const [checked, setChecked] = useState<boolean>(false);

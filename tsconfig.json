@@ -12,7 +12,7 @@
     "paths": {
       "@/*": ["src/*"],
       "@@/*": [".dumi/tmp/*"],
-      "react-data-table": ["src/index.ts"]
+      "react-customize-data-table": ["src/index.ts"]
     }
   },
   "include": [".dumi/**/*", ".dumirc.ts", "**/*.ts", "**/*.tsx"]

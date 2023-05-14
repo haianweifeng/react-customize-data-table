@@ -1,7 +1,7 @@
 import type { ColumnsType, SorterResult } from '@/interface';
 import { useLocale } from 'dumi';
 import React from 'react';
-import Table from 'react-data-table';
+import Table from 'react-customize-data-table';
 
 interface DataType {
   key: React.Key;

@@ -1,4 +1,4 @@
-# react-data-table
+# react-customize-data-table
 
 React Table Component.
 
@@ -38,12 +38,12 @@ $ npm run compile
 
 http://localhost:8000
 
-online example: https://haianweifeng.github.io/react-data-table
+online example: https://haianweifeng.github.io/react-customize-data-table
 
 ## Usage
 
 ```js
-import Table from 'react-data-table';
+import Table from 'react-customize-data-table';
 
 ReactDOM.render(<Table />, container);
 ```

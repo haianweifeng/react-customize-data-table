@@ -1,6 +1,6 @@
 import type { ColumnsType } from '@/interface';
 import React, { useRef, useState } from 'react';
-import Table from 'react-data-table';
+import Table from 'react-customize-data-table';
 
 interface DataType {
   id: React.Key;

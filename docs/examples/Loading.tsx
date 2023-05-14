@@ -1,6 +1,6 @@
 import type { ColumnsType } from '@/interface';
 import React from 'react';
-import Table, { Spin } from 'react-data-table';
+import Table, { Spin } from 'react-customize-data-table';
 
 interface DataType {
   key: number;

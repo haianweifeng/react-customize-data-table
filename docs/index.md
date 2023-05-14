@@ -1,12 +1,12 @@
 ---
 hero:
-  title: react-data-table
+  title: react-customize-data-table
   description: React Table Component
   actions:
     - text: 快速上手
       link: /guide
     - text: GitHub
-      link: https://github.com/haianweifeng/react-data-table
+      link: https://github.com/haianweifeng/react-customize-data-table
 features:
   - title: 高性能
     emoji: 🚀
@@ -21,4 +21,4 @@ features:
 
 ## License
 
-react-data-table is released under the MIT license.
+react-customize-data-table is released under the MIT license.

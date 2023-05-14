@@ -1,5 +1,5 @@
 import React from 'react';
-import { Icon } from 'react-data-table';
+import { Icon } from 'react-customize-data-table';
 
 const App = () => {
   const HeartSvg = () => (

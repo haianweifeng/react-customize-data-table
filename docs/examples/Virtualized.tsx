@@ -2,7 +2,7 @@ import type { ColumnsType } from '@/interface';
 import { faker } from '@faker-js/faker';
 import moment from 'moment';
 import React from 'react';
-import Table from 'react-data-table';
+import Table from 'react-customize-data-table';
 
 interface DataType {
   id: React.Key;

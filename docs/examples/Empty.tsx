@@ -1,7 +1,7 @@
 import { ReactComponent as EmptyIcon } from '@/assets/empty.svg';
 import type { ColumnsType } from '@/interface';
 import React from 'react';
-import Table, { Icon } from 'react-data-table';
+import Table, { Icon } from 'react-customize-data-table';
 
 interface DataType {
   key: React.Key;

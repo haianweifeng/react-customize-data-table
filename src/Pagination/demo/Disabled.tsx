@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pagination } from 'react-data-table';
+import { Pagination } from 'react-customize-data-table';
 
 const App = () => {
   const infoContent = ({ total }: { current: number; total: number; pageSize: number }) => {

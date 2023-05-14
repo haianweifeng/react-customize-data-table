@@ -17,13 +17,13 @@
   "main": "./lib/index",
   "module": "./es/index",
   "types": "./lib/index.d.ts",
-  "homepage": "https://haianweifeng.github.io/react-data-table",
+  "homepage": "https://haianweifeng.github.io/react-customize-data-table",
   "repository": {
     "type": "git",
-    "url": "git@github.com:haianweifeng/react-data-table.git"
+    "url": "git@github.com:haianweifeng/react-customize-data-table.git"
   },
   "bugs": {
-    "url": "https://github.com/haianweifeng/react-data-table/issues"
+    "url": "https://github.com/haianweifeng/react-customize-data-table/issues"
   },
   "license": "MIT",
   "scripts": {

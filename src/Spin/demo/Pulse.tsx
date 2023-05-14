@@ -1,5 +1,5 @@
 import React from 'react';
-import { Spin } from 'react-data-table';
+import { Spin } from 'react-customize-data-table';
 
 const App = () => {
   return (

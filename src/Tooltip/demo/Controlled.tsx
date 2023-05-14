@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Tooltip } from 'react-data-table';
+import { Tooltip } from 'react-customize-data-table';
 
 const App = () => {
   const borderStyle: React.CSSProperties = {

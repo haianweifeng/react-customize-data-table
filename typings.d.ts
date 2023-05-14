@@ -1,4 +1,4 @@
 declare module '*.css';
 declare module '*.less';
 declare module '*.svg';
-declare module 'react-data-table';
+declare module 'react-customize-data-table';

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Checkbox } from 'react-data-table';
+import { Checkbox } from 'react-customize-data-table';
 
 const App = () => {
   const [checked, setChecked] = useState<boolean | 'indeterminate'>('indeterminate');

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pagination } from 'react-data-table';
+import { Pagination } from 'react-customize-data-table';
 
 const App = () => {
   const [current, setCurrent] = useState(6);
