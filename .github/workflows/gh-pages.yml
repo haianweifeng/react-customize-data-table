@@ -9,8 +9,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     type: git
-      repo: git@github.com:haianweifeng/react-customize-data-table.git
-      branch: main
+    repo: git@github.com:haianweifeng/react-customize-data-table.git
+    branch: main
     steps:
       - uses: actions/checkout@v3
       - run: npm install
