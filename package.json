@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "react-customize-data-table",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A React table component designed to display large data with high performance.",
   "keywords": [
     "react",
@@ -60,7 +60,8 @@
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
     "omit.js": "^2.0.2",
-    "react": "^18.0.0"
+    "react": "^18.0.0",
+    "normalize-wheel": "^1.0.1"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
@@ -74,7 +75,6 @@
     "father": "^4.0.0-rc.2",
     "gh-pages": "^3.0.0",
     "lint-staged": "^10.0.7",
-    "normalize-wheel": "^1.0.1",
     "np": "^7.7.0",
     "prettier": "^2.2.1",
     "resize-observer-polyfill": "^1.5.1",
