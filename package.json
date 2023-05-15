@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "react-customize-data-table",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A React table component designed to display large data with high performance.",
   "keywords": [
     "react",
