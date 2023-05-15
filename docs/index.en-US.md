@@ -1,7 +1,7 @@
 ---
 hero:
   title: react-customize-data-table
-  description: React Table Component
+  description: A React table component designed to display large data with high performance.
   actions:
     - text: Get Started
       link: /guide
