@@ -11,15 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    env:
-      MY_EMAIL: 1531297152@qq.com
-      MY_NAME: haianweifeng
     steps:
       - uses: actions/checkout@v3
       - run: |
-        git config --global user.email $MY_EMAIL
-        git config --global user.name $MY_NAME
-        git remote set-url origin https://$MY_NAME:${{ secrets.GH_SECRET }}@github.com/haianweifeng/react-customize-data-table.git
+              git config --global user.email 1531297152@qq.com
+              git config --global user.name haianweifeng
+          git remote set-url origin https://1531297152@qq.com:${{ secrets.GITHUB_TOKEN }}@github.com/haianweifeng/react-customize-data-table.git
       - run: npm install
       # 文档编译命令，如果是 react 模板需要修改为 npm run docs:build
       - run: npm run deploy
