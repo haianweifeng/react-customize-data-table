@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkreact_customize_data_table=self.webpackChunkreact_customize_data_table||[]).push([[448],{65149:function(i,a,e){e.r(a),e.d(a,{default:function(){return u}});var t=e(83466),o=e(67294),r=function(){var d=(0,t.UO)(),m=d.id,s=(0,t.WF)(),c=s.demos,f=c[m]||{},n=f.component;return n&&(0,o.createElement)(n)},u=r}}]);
