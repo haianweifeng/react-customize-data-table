@@ -17,7 +17,6 @@ jobs:
           npm install
           git config --global user.email 1531297152@qq.com
           git config --global user.name haianweifeng
-          git remote set-url origin https://haianweifeng:${{ secrets.GITHUB_TOKEN }}@github.com/haianweifeng/react-customize-data-table.git
       # 文档编译命令，如果是 react 模板需要修改为 npm run docs:build
       - run: npm run deploy
       - name: Deploy
