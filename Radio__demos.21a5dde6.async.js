@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkreact_customize_data_table=self.webpackChunkreact_customize_data_table||[]).push([[7075],{66474:function(h,e,_){_.r(e);var t=_(12741),s=_.n(t),u=_(67294),n=_(99029),d=_(85893),r=function(){var l=(0,u.useState)(!1),a=s()(l,2),o=a[0],c=a[1],m=function(i){c(i)};return(0,d.jsx)(n.Y8,{checked:o,onChange:m,children:"Radio"})};e.default=r}}]);
