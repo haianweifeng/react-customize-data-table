@@ -1,6 +1,6 @@
 # react-customize-data-table
 
-React Table Component.
+A React table component designed to display large data with high performance.
 
 ## Getting Started
 
