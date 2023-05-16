@@ -19,6 +19,8 @@ features:
     description: Support complex functions such as sorting, searching, pagination, fixed header, left/right lock columns, custom operations, etc.
 ---
 
+<embed src="../README.en-US.md"></embed>
+
 ## License
 
 react-customize-data-table is released under the MIT license.

@@ -47,3 +47,7 @@ import Table from 'react-customize-data-table';
 
 ReactDOM.render(<Table />, container);
 ```
+
+## API
+
+<embed src="./docs/api.md"></embed>
