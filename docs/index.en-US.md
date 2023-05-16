@@ -19,7 +19,11 @@ features:
     description: Support complex functions such as sorting, searching, pagination, fixed header, left/right lock columns, custom operations, etc.
 ---
 
-<embed src="../README.en-US.md"></embed>
+## Example
+
+http://localhost:8000
+
+online example: https://haianweifeng.github.io/react-customize-data-table
 
 ## License
 

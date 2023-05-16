@@ -19,7 +19,11 @@ features:
     description: 支持排序、搜索、分页、固定表头、左侧/右侧锁列、自定义操作等复杂功能
 ---
 
-<embed src="../README.md"></embed>
+## Example
+
+http://localhost:8000
+
+online example: https://haianweifeng.github.io/react-customize-data-table
 
 ## License
 

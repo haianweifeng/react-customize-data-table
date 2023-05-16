@@ -2,7 +2,23 @@
 
 A React table component designed to display large data with high performance.
 
-## Getting Started
+## Features
+
+- 🚀High Performance: Turn on virtual scrolling when the amount of data is large
+- 🎨Customization: Simple and flexible API, rich customization capabilities
+- 💎Useful Properties: Support complex functions such as sorting, searching, pagination, fixed header, left/right lock columns, custom operations, etc.
+
+## Example
+
+http://localhost:8000
+
+online example: https://haianweifeng.github.io/react-customize-data-table
+
+## Install
+
+`npm i react-customize-data-table`
+
+## Development
 
 Install dependencies,
 
@@ -33,12 +49,6 @@ Build library via `father`,
 ```bash
 $ npm run compile
 ```
-
-## Example
-
-http://localhost:8000
-
-online example: https://haianweifeng.github.io/react-customize-data-table
 
 ## Usage
 
