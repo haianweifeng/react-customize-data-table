@@ -17,6 +17,8 @@ jobs:
         with:
           node-version: 16
       - run: |
+          git config --global user.email 1531297152@qq.com
+          git config --global user.name haianweifeng
           npm version patch
           npm install
       - run: npm run compile
