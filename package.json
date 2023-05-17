@@ -40,7 +40,8 @@
     "lint:tsc": "tsc -p tsconfig.json --noEmit",
     "lint:style": "stylelint --fix \"src/**/*.less\" --syntax less",
     "lint:fix": "eslint --fix --cache --ext .js,.jsx,.ts,.tsx --format=pretty ./src && npm run lint:style",
-    "prepare": "dumi setup"
+    "prepare": "dumi setup",
+    "semantic-release": "semantic-release"
   },
   "gitHooks": {
     "pre-commit": "lint-staged"
