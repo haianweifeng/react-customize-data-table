@@ -66,11 +66,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
-    "@semantic-release/commit-analyzer": "^9.0.2",
     "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^8.0.7",
-    "@semantic-release/npm": "^10.0.3",
-    "@semantic-release/release-notes-generator": "^11.0.1",
     "@testing-library/jest-dom": "^5.15.1",
     "@testing-library/react": "^13.0.0",
     "@types/jest": "^27.0.3",
@@ -85,8 +81,7 @@
     "np": "^7.7.0",
     "prettier": "^2.2.1",
     "resize-observer-polyfill": "^1.5.1",
-    "semantic-release": "^21.0.2",
-    "semantic-release-cli": "^5.4.4",
+    "semantic-release": "^19.0.5",
     "stylelint": "^13.13.1",
     "typescript": "^4.8.4",
     "yorkie": "^2.0.0"
