@@ -40,8 +40,7 @@
     "lint:tsc": "tsc -p tsconfig.json --noEmit",
     "lint:style": "stylelint --fix \"src/**/*.less\" --syntax less",
     "lint:fix": "eslint --fix --cache --ext .js,.jsx,.ts,.tsx --format=pretty ./src && npm run lint:style",
-    "prepare": "dumi setup",
-    "semantic-release": "semantic-release"
+    "prepare": "dumi setup"
   },
   "gitHooks": {
     "pre-commit": "lint-staged"
@@ -62,8 +61,7 @@
     "moment": "^2.29.4",
     "normalize-wheel": "^1.0.1",
     "omit.js": "^2.0.2",
-    "react": "^18.0.0",
-    "@semantic-release/git": "^10.0.1"
+    "react": "^18.0.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
@@ -72,7 +70,6 @@
     "@types/jest": "^27.0.3",
     "@umijs/fabric": "^2.8.1",
     "@umijs/test": "^3.0.5",
-    "conventional-changelog-cmyr-config": "^2.1.0",
     "dumi": "^2.0.0",
     "eslint": "^7.32.0",
     "father": "^4.0.0-rc.2",
@@ -81,7 +78,6 @@
     "np": "^7.7.0",
     "prettier": "^2.2.1",
     "resize-observer-polyfill": "^1.5.1",
-    "semantic-release": "19.0.5",
     "stylelint": "^13.13.1",
     "typescript": "^4.8.4",
     "yorkie": "^2.0.0"
