@@ -6,6 +6,8 @@ import Spin from './Spin';
 import Table from './Table';
 import Tooltip from './Tooltip';
 
+export type { TableProps } from './Table';
+
 export * from './index.less';
 export type { ColumnsType, ColumnType, FilterMenus, SorterResult } from './interface';
 export type { PaginationProps } from './Pagination';

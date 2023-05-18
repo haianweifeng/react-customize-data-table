@@ -7,8 +7,11 @@
     "react",
     "react-table",
     "table",
-    "ui",
-    "virtual table"
+    "data-table",
+    "virtual table",
+    "virtualized",
+    "scrolling",
+    "list"
   ],
   "files": [
     "lib",
