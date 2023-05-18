@@ -65,7 +65,7 @@ export interface TableProps<T> {
   /** 表格列的配置 */
   columns: ColumnsType<T>;
   /** 表格行 key 默认取值key */
-  rowKey: RowKeyType<T>;
+  rowKey?: RowKeyType<T>;
   /** 是否显示交错斑马底纹 */
   striped?: boolean;
   /** 是否展示外边框和列边框 */
