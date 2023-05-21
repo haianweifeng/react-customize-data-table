@@ -29,7 +29,7 @@
 | locale | The i18n text | [LocalType](#localtype) | - |
 | rowHeight | The expected height of the table row | number | - |
 | renderMaxRows | Maximum number of rows per render | number | - |
-| width | The width of the table, Fixed columns or horizontal scrolling must set width | number | - |
+| width | The width of the table | number | - |
 | height | The height of the table. Unit: px / When this prop is set, if the content height is larger then the set value, the header will be fixed at the top. | number | - |
 | virtualized | Whether to enable the virtual list | boolean | - |
 | onScroll | The callback function after scrolling. | (x: number, y: number) => void | - |

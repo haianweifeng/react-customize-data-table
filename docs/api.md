@@ -29,7 +29,7 @@
 | locale | 默认文案设置 | [LocalType](#localtype) | - |
 | rowHeight | 单行表格的预期高度 | number | - |
 | renderMaxRows | 单次 render 的最大行数 | number | - |
-| width | 表格宽度 固定列或者产生横向滚动一定要设置 width | number | - |
+| width | 表格宽度 | number | - |
 | height | 表格高度，默认为自动高度，如果表格内容大于此值，会固定表头 | number | - |
 | virtualized | 是否开启虚拟列表 | boolean | - |
 | onScroll | 监听滚动回调函数 | (x: number, y: number) => void | - |

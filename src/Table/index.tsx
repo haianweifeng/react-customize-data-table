@@ -120,7 +120,7 @@ export interface TableProps<T> {
   rowHeight?: number;
   /** 单次render的最大行数 如果单次渲染的行数不足以撑开容器的高度则renderMaxRows 自动取值为容器可容纳的行数值 */
   renderMaxRows?: number;
-  /** 表格宽度 固定列或者产生横向滚动一定要设置width */
+  /** 表格宽度 */
   width?: number;
   /** 表格高度，默认为自动高度，如果表格内容大于此值，会固定表头 */
   height?: number;
@@ -1220,7 +1220,8 @@ function Table<T extends { key?: number | string; children?: T[] }>(props: Table
 
   const styles = Object.assign(
     {
-      height: height || '100%',
+      height: height ?? '100%',
+      width: width ?? '100%',
     },
     style,
     { overflow: 'hidden' },
