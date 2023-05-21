@@ -11,6 +11,7 @@ export default defineConfig({
       { title: 'Demo', link: '/demo/basic' },
       { title: 'API', link: '/api' },
       { title: 'Guide', link: '/guide' },
+      { title: 'Question', link: '/question' },
     ],
   },
   locales: [
