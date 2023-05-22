@@ -2,7 +2,7 @@ import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import type { TreeExpandable } from '../interface';
 
-function useTreeExpand<T extends { key?: React.Key; children?: T[] }>(
+function useTreeExpand<T extends Record<string, any> = any>(
   allKeys: React.Key[],
   treeProps?: TreeExpandable<T>,
 ) {

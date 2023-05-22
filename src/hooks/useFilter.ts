@@ -1,10 +1,7 @@
-import type React from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import type { PrivateColumnsType, FilterState } from '../interface';
 
-function useFilter<T extends { key?: React.Key; children?: T[] }>(
-  mergeColumns: PrivateColumnsType<T>,
-) {
+function useFilter<T extends Record<string, any> = any>(mergeColumns: PrivateColumnsType<T>) {
   const generateFilterStates = useCallback((columns: PrivateColumnsType<T>) => {
     const filterStates: FilterState<T>[] = [];
 

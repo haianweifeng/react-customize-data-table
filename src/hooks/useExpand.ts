@@ -2,7 +2,7 @@ import type React from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import type { Expandable } from '../interface';
 
-function useExpand<T extends { key?: React.Key; children?: T[] }>(
+function useExpand<T extends Record<string, any> = any>(
   allKeys: React.Key[],
   expandable?: Expandable<T>,
 ) {

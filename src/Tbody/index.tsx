@@ -59,7 +59,7 @@ interface TbodyProps<T> {
   onUpdate: (rects: { rowIndex: number; rowHeight: number }[]) => void;
 }
 
-function Tbody<T extends { key?: number | string; children?: T[] }>(props: TbodyProps<T>) {
+function Tbody<T extends Record<string, any> = any>(props: TbodyProps<T>) {
   const {
     empty,
     isTree,

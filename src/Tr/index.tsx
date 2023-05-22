@@ -49,7 +49,7 @@ interface TrProps<T> {
   onCellEvents?: (record: T, rowIndex: number) => object;
 }
 
-function Tr<T extends { key?: number | string; children?: T[] }>(props: TrProps<T>) {
+function Tr<T extends Record<string, any> = any>(props: TrProps<T>) {
   const {
     striped,
     checked,

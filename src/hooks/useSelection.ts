@@ -2,7 +2,7 @@ import type React from 'react';
 import { useCallback, useState, useMemo, useEffect } from 'react';
 import type { RowSelection } from '../interface';
 
-function useSelection<T extends { key?: React.Key; children?: T[] }>(
+function useSelection<T extends Record<string, any> = any>(
   dataSource: T[],
   maxTreeLevel: number,
   levelRecordMap: Map<number, Set<T>>,
@@ -49,7 +49,7 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
           const recordKey = getRecordKey(record);
           if (checkedKeys.has(recordKey)) {
             checkedKeyRecordMap.set(recordKey, record);
-            (record?.children || []).forEach((r) => {
+            (record?.children || []).forEach((r: T) => {
               const childRecordKey = getRecordKey(r);
               checkedKeys.add(childRecordKey);
               checkedKeyRecordMap.set(childRecordKey, r);
@@ -71,7 +71,7 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
 
           let allChecked = true;
           let isHalfChecked = false;
-          (parentData.children || []).forEach((c) => {
+          (parentData.children || []).forEach((c: T) => {
             const childKey = getRecordKey(c);
             const exist = checkedKeys.has(childKey);
             if ((exist || halfCheckedKeys.has(childKey)) && !isHalfChecked) {
@@ -115,7 +115,7 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
           const recordKey = getRecordKey(record);
           const checked = checkedKeys.has(recordKey);
           if (!checked && !halfCheckedKeys.has(recordKey)) {
-            (record?.children || []).forEach((r) => {
+            (record?.children || []).forEach((r: T) => {
               const childRecordKey = getRecordKey(r);
               checkedKeys.delete(childRecordKey);
               halfCheckedKeys.delete(childRecordKey);
@@ -142,7 +142,7 @@ function useSelection<T extends { key?: React.Key; children?: T[] }>(
           let allChecked = true;
           let isHalfChecked = false;
 
-          (parentData.children || []).forEach((c) => {
+          (parentData.children || []).forEach((c: T) => {
             const childRecordKey = getRecordKey(c);
             if (
               (checkedKeys.has(childRecordKey) || halfCheckedKeys.has(childRecordKey)) &&

@@ -1,4 +1,3 @@
-import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import type {
   PrivateColumnGroupType,
@@ -10,7 +9,7 @@ import type {
 } from '../interface';
 import { omitColumnProps } from '../utils/util';
 
-function useSorter<T extends { key?: React.Key; children?: T[] }>(
+function useSorter<T extends Record<string, any> = any>(
   mergeColumns: PrivateColumnsType<T>,
   onSort?: (sortResult: SorterResult<T>) => void,
 ) {

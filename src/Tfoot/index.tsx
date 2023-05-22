@@ -15,7 +15,7 @@ interface TfootProps<T> {
   columns: PrivateColumnsType<T>;
 }
 
-function Tfoot<T extends { key?: number | string; children?: T[] }>(props: TfootProps<T>) {
+function Tfoot<T extends Record<string, any> = any>(props: TfootProps<T>) {
   const { summary, columns, bordered } = props;
 
   const renderTd = (summaryItem: Summary, colIndex: number) => {

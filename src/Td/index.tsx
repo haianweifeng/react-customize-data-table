@@ -60,7 +60,7 @@ interface TdProps<T> {
   onCellEvents?: (record: T, rowIndex: number) => object;
 }
 
-function Td<T extends { key?: number | string; children?: T[] }>(props: TdProps<T>) {
+function Td<T extends Record<string, any> = any>(props: TdProps<T>) {
   const {
     isTree,
     rowData,

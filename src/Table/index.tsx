@@ -149,7 +149,7 @@ export interface TableProps<T> {
   summary?: Summary[][];
 }
 
-function Table<T extends { key?: number | string; children?: T[] }>(props: TableProps<T>) {
+function Table<T extends Record<string, any> = any>(props: TableProps<T>) {
   const localeContext = useContext(LocaleContext);
 
   const {
