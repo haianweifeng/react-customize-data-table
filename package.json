@@ -65,10 +65,10 @@
     "normalize-wheel": "^1.0.1",
     "omit.js": "^2.0.2",
     "resize-observer-polyfill": "^1.5.1",
+    "@faker-js/faker": "^7.6.0",
     "react": "^18.0.0"
   },
   "devDependencies": {
-    "@faker-js/faker": "^7.6.0",
     "@testing-library/jest-dom": "^5.15.1",
     "@testing-library/react": "^13.0.0",
     "@types/jest": "^27.0.3",
