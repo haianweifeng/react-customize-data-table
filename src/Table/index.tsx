@@ -721,9 +721,10 @@ function Table<T extends Record<string, any> = any>(props: TableProps<T>) {
       if (tbodyRef.current) {
         const tbodyNode = tbodyRef.current;
         const clientWidth = tbodyNode.clientWidth;
-        const clientHeight = tbodyNode.clientHeight;
+        // 为了解决虚拟滚动条滚动到底部，滚动条底部会被遮挡
+        const clientHeight = Math.max(tbodyNode.clientHeight - 1, 0);
         const hasXScrollbar = scrollWidth > clientWidth;
-        const hasYScrollbar = tbodyScrollHeight > clientHeight;
+        const hasYScrollbar = tbodyScrollHeight > clientHeight + 1;
         if (hasXScrollbar && barXRef.current) {
           const thumbSize = Math.max((clientWidth / scrollWidth) * clientWidth, BAR_THUMB_SIZE);
           const scale = (scrollWidth - clientWidth) / (clientWidth - thumbSize);
@@ -902,7 +903,8 @@ function Table<T extends Record<string, any> = any>(props: TableProps<T>) {
         const clientW = tbodyEl.clientWidth;
         const scrollW = scrollWidth;
 
-        const clientH = tbodyEl.clientHeight;
+        // const clientH = tbodyEl.clientHeight;
+        const clientH = Math.max(tbodyEl.clientHeight - 1, 0);
         const scrollH = tbodyScrollHeight;
 
         // vertical wheel
