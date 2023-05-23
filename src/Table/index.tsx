@@ -486,11 +486,11 @@ function Table<T extends Record<string, any> = any>(props: TableProps<T>) {
           }
         });
 
-        if (remainWidth > 0) {
+        if (remainWidth > 0 && noMaxWidthColumnKeys.length) {
           averageWidth = parseInt(`${remainWidth / noMaxWidthColumnKeys.length}`, 10);
           flattenTargetColumns.map((c) => {
             if (noMaxWidthColumnKeys.indexOf(c._columnKey) >= 0) {
-              const oldWidth = columnsWidth.get(c._columnKey);
+              const oldWidth = columnsWidth.get(c._columnKey) ?? 0;
               columnsWidth.set(c._columnKey, parseInt(`${Number(oldWidth) + averageWidth}`, 10));
             }
           });
